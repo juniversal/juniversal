@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>org.eclipse.jdt.astview - AST View</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="author" content="JDT/UI Team">
+<meta name="keywords" content="JDT/UI, JDT, Java Development Tooling UI, Java, java, development, tools, java ide, Eclipse"><link rel="stylesheet" type="text/css" href="AST%20View_files/small.css" title="small"><link rel="alternate stylesheet" type="text/css" href="AST%20View_files/large.css" title="large"><link rel="stylesheet" type="text/css" href="AST%20View_files/visual.css" media="screen"><link rel="stylesheet" type="text/css" href="AST%20View_files/layout.css" media="screen"><!--[if IE]> 	<link rel="stylesheet" type="text/css" href="/eclipse.org-common/themes/Phoenix/css/ie_style.css" media="screen"/> <![endif]-->
+
+<link rel="stylesheet" type="text/css" href="AST%20View_files/print.css" media="print">
+<link rel="stylesheet" type="text/css" href="AST%20View_files/header.css" media="screen">
+<script type="text/javascript" src="AST%20View_files/styleswitcher.js"></script>
+<style type="text/css">
+.homeitem3col ol li {
+	list-style-image: none;
+}
+</style></head><body>
+<div id="header">
+	<div id="header-graphic" class="eclipse-main">
+		<a href="http://www.eclipse.org/"><img src="AST%20View_files/eclipse_home_header.jpg" alt=""></a><h1>Eclipse</h1>	
+	</div>
+	<div id="header-global-holder" class="eclipse-main-global">
+		
+		<div id="header-global-links">
+			<ul>
+				<li><a href="http://www.eclipse.org/org/foundation/contact.php" class="first_one">Contact</a></li>
+				<li><a href="http://www.eclipse.org/legal/">Legal</a></li>
+			</ul>
+		</div>
+		<div id="header-icons">
+			<a href="http://live.eclipse.org/"><img src="AST%20View_files/Icon_Live.png" alt="Eclipse Live" title="Eclipse Live" height="28" width="28"></a>
+			<a href="http://www.eclipseplugincentral.com/"><img src="AST%20View_files/Icon_plugin.png" alt="Eclipse Plugin Central" title="Eclipse Plugin Central" height="28" width="28"></a>
+			<a href="http://www.planeteclipse.org/"><img src="AST%20View_files/Icon_planet.png" alt="Planet Eclipse" title="Planet Eclipse" height="28" width="28"></a>
+		</div>
+	</div>
+</div><div id="header-menu"><div id="header-nav">
+		<ul>
+		<li><a class="first_one" href="http://www.eclipse.org/" target="_self">Home</a></li> 
+				<li><a href="http://www.eclipse.org/community/" target="_self">Community</a></li> 
+				<li><a href="http://www.eclipse.org/membership/" target="_self">Membership</a></li> 
+				<li><a href="http://wiki.eclipse.org/index.php/Development_Resources" target="_self">Committers</a></li> 
+				<li><a href="http://www.eclipse.org/downloads/" target="_self">Downloads</a></li> 
+				<li><a href="http://www.eclipse.org/resources/" target="_self">Resources</a></li> 
+				<li><a href="http://www.eclipse.org/projects/" target="_self">Projects</a></li> 
+				<li><a href="http://www.eclipse.org/org/" target="_self">About Us</a></li> 
+				</ul>
+	</div>
+	<div id="header-utils">
+		<form action="/search/search.cgi" method="get">
+				<input class="input" value="" name="q" type="text">
+				<input class="button" onclick="this.submit();" alt="Search" title="Search" src="AST%20View_files/search_btn.gif" height="18" type="image" width="54">
+		</form>
+		<ul>
+						<li class="text_size"><a class="smallText" title="Small Text" href="#" onclick="setActiveStyleSheet('small');return false;">A</a> <a class="largeText" title="Large Text" href="#" onclick="setActiveStyleSheet('large');return false;">A</a></li>
+		</ul>
+	</div></div><div id="leftcol">
+<ul id="leftnav">
+<li><a href="http://wiki.eclipse.org/index.php/Development_Resources">Committers</a></li>
+<li><a href="http://www.eclipse.org/newsgroups/">Newsgroups</a></li>
+<li><a href="https://bugs.eclipse.org/bugs/">Bugs</a></li>
+<li><a href="http://www.eclipse.org/articles/">Articles</a></li>
+<li><a href="http://www.eclipse.org/mail/">Mailing Lists</a></li>
+<li class="separator"><a class="separator" href="http://www.eclipse.org/platform/">Platform &nbsp;&nbsp;<img src="AST%20View_files/leftnav_bullet_down.gif" alt="" border="0"></a></li>
+<li class="separator"><a class="separator" href="http://www.eclipse.org/jdt/index.php">JDT Components &nbsp;&nbsp;<img src="AST%20View_files/leftnav_bullet_down.gif" alt="" border="0"></a></li>
+<li><a href="http://www.eclipse.org/jdt/apt/index.html">APT</a></li>
+<li><a href="http://www.eclipse.org/jdt/core/index.php">Core</a></li>
+<li><a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/jdt-debug-home/index.html">Debug</a></li>
+<li><a href="http://www.eclipse.org/jdt/ui/index.php">UI</a></li>
+<li style="border-style: none; background-image: url(/eclipse.org-common/themes/Phoenix/images/leftnav_fade.jpg); background-repeat: repeat-x;"><br><br><br><br><br><br><br><br>
+</li>
+</ul>
+
+</div>
+<div id="container">
+	<div id="midcolumn">
+		<h1>org.eclipse.jdt.astview - AST View</h1>
+		
+		<div class="homeitem3col">
+			<a name="purpose"></a>
+			<h3>Purpose</h3>
+			<p>
+				A view to visualize the AST (abstract syntax tree) of a Java
+				file open in the editor. Navigate from text selection to AST nodes and
+				from nodes to selections. Show bindings and compare them.<br>
+			</p>
+			
+			<a name="install"></a>
+			<h3>Install</h3>
+			
+			<br>
+      		<h4>Update Site:</h4>
+      		
+			<p>
+				</p><ul>
+					<li>
+						<span style="font-weight: bold;">http://www.eclipse.org/jdt/ui/update-site</span>
+					</li>
+				</ul>
+			
+			
+			<br>
+			<h4>Manual Install:</h4>
+			<p>
+				</p><ul>
+					<li>
+						for Eclipse 3.4 M3 and higher
+						<a href="http://www.eclipse.org/jdt/ui/update-site/plugins/org.eclipse.jdt.astview_1.1.5.200710301359.jar">org.eclipse.jdt.astview_1.1.5.200710301359.jar</a>
+						(copy to 'plugins' directory)
+					</li>				
+					<li>
+						for Eclipse 3.3.*:
+						<a href="http://www.eclipse.org/jdt/ui/update-site/plugins/org.eclipse.jdt.astview_1.1.4.jar">org.eclipse.jdt.astview_1.1.4.jar</a>
+						(copy to 'plugins' directory)
+					</li>
+					<li>
+						for Eclipse 3.2.*:
+						<a href="http://www.eclipse.org/jdt/ui/update-site/plugins/org.eclipse.jdt.astview_1.1.3.jar">org.eclipse.jdt.astview_1.1.3.jar</a>
+						(copy to 'plugins' directory)
+					</li>
+					<li>
+						for Eclipse 3.1.*:
+						<a href="http://www.eclipse.org/jdt/ui/update-site/plugins/org.eclipse.jdt.astview_1.0.10.jar">org.eclipse.jdt.astview_1.0.10.jar</a>
+						(copy to 'plugins' directory)
+					</li>
+					<li>
+						for Eclipse 3.0.*:
+						<a href="http://www.eclipse.org/jdt/ui/astview/org.eclipse.jdt.astview_1.0.1.zip">org.eclipse.jdt.astview_1.0.1.zip</a>
+						(<i>extract</i> into 'plugins' directory)
+					</li>
+				</ul>
+			
+  
+			<a name="usage"></a>
+			<h3>Usage</h3>
+			<p>
+		      </p><ol>
+		        <li>Open the AST view
+				  <ul>
+				    <li class="nodash">from the view menu: Window &gt; Show View &gt; Other..., Java &gt; AST View</li>
+				    <li class="nodash">via shortcut: Alt+Shift+Q, A</li>
+				  </ul>
+                </li>
+		        <li>Open a Java file in the editor</li>
+		        <li>Click on 'Show AST of active editor' (<img style="width: 16px; height: 16px;" src="AST%20View_files/setfocus.gif" alt=""> ) to
+		populate the view: The view shows the AST of the file opened in the
+		editor and will also reveal the element corresponding to the current
+		text selection<br>
+		        </li>
+		        <li><font color="#000000">Enable 'Link with editor' (</font><img style="width: 16px; height: 16px;" src="AST%20View_files/synced.gif" alt="">) to
+		automatically track the active editor and the selection in the active
+		editor.<br>
+		        </li>
+		        <li>Double click on AST nodes to get the corresponding element
+		revealed in the editor.</li>
+		        <li>Double click again to see the 'extended range' of a node,
+		that means the range including all comments associated with it (comment
+		mapper heuristic).</li>
+		        <li>Open the context menu on a binding to add it to the comparison tray</li>
+		        <li>When the AST's underlying document has been changed use
+		'Refresh' (<img style="width: 16px; height: 16px;" src="AST%20View_files/refresh.gif" alt="">)&nbsp; to update the AST.<br>
+		        </li>
+		      </ol>
+			
+      
+      
+			<h4>AST View Elements</h4>
+			<p>The AST view shows the following nodes:<br>
+				<img alt="AST View" src="AST%20View_files/view.gif"></p>
+			<ul>
+				<li>AST nodes are shown in gray color and with source range
+				information. Children of AST nodes are the node properties.<br>
+				</li>
+				<li>node properties have names that are all all capitalized.
+				Node properties represent lists of child nodes, a child node or a
+				primitive node attribute (String, int or boolean)<br>
+				</li>
+				<li>bindings are shown in blue. Only selected bindings are
+				shown</li>
+			</ul>
+			
+			<br>
+			<h4>Advanced Features</h4>
+			<ul>
+				<li>You can toggle between the AST Level 2 and AST level 3 in
+				the view menu (triangle). AST level 3 is the extended and modified AST
+				that includes the new 5.0 language constructs. Note that the AST level
+				3 is only available in 3.1 and later builds
+				</li>
+				<li>You can choose to show or hide bindings in the view menu
+				</li>
+				<li>You can choose the method to generate an AST in 'Advance Options' in the view menu
+				</li>
+				<li>You can choose 'Add to Comparison Tray' in the context menu of a binding.
+				This moves the binding to a special area in the view. When you select another binding
+				in the tree, the comparison tray shows various relationships between the selection
+				and the chosen binding
+				</li>
+			</ul>
+				
+				
+			<br>
+			<h4>Comments and Requests</h4>
+			<ul>
+				<li>
+					Source is included in the plugin archive<br>
+				</li>
+				<li>Comments to
+					<a href="mailto:Martin_Aeschlimann%5Bat%5Dch.ibm.com">Martin_Aeschlimann[at]ch.ibm.com</a>
+				</li>
+			</ul>
+			
+			<p>
+				Thanks and credits go to Christian Hauser: The current AST view plugin
+				is based his AST view implementation from the Zuerich Code Camp. Thanks
+				a lot!<br>
+				Markus Keller has helped absorbing AST changes and implemented more features.
+			</p>
+
+	</div>
+	
+</div><div id="footer">
+<ul id="footernav">
+<li class="first"><a href="http://www.eclipse.org/">Home</a></li>
+<li><a href="http://www.eclipse.org/legal/privacy.php">Privacy Policy</a></li>
+<li><a href="http://www.eclipse.org/legal/termsofuse.php">Terms of Use</a></li>
+</ul>
+<p>Copyright © 2007 The Eclipse Foundation. All Rights Reserved</p>
+</div></div></body></html>

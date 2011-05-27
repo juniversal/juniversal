@@ -1,0 +1,4 @@
+# Ignore Eclipse workspace
+/.metadata/
+# Ignore build directories
+*/build/

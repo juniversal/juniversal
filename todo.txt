@@ -1,0 +1,5 @@
+- Ensure that const is applicable in all variable declaration contexts
+- Check size of float types
+- Review rules for Java identifier names; ensure subset of C++
+- Handle Java identifier names that are C++ reserved words
+
