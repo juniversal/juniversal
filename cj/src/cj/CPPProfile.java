@@ -15,7 +15,7 @@ public class CPPProfile {
 	private String float32Type = "float";
 	private String float64Type = "double";
 	private String unsignedInt32UnicodeCharType = "unsigned short";
-	private int tabStop = 1;
+	private int tabStop = -1;
 	private int preferredIndent = 4;
 	private boolean classBraceOnSameLine = true;
 

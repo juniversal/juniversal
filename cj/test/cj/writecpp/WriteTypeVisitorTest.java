@@ -17,7 +17,7 @@ import cj.CPPProfile;
 import cj.SourceNotSupportedException;
 import cj.writecpp.astwriters.ASTWriters;
 
-public class WriteCPPTest {
+public class WriteTypeVisitorTest {
 	@Test public void returnTest() {	
 		m_sourceTabStop = 4; m_destTabStop = -1;
 		testWriteStatement("return 3;");
@@ -67,17 +67,6 @@ public class WriteCPPTest {
 						   "{ int i = 3; bool b = false; if ( b )\r\n return 5; else return 6; }");
 	}
 
-	@Test public void classTest() {
-		testWriteClass(
-"class Foo {\r\n" +
-"	private int abc;\r\n" +
-"}\r\n",
-"class Foo {\r\n" +
-"private:\r\n" +
-"    int abc;\r\n" +
-"}\r\n");
-	}
-
 	public void testWriteStatement(String javaStatement, String expectedCPPStatement) {		
 		String java = "class TestClass{ void testMethod() {\n" + javaStatement + "\n} }";
 
@@ -87,15 +76,6 @@ public class WriteCPPTest {
 		ASTNode firstStatement = (ASTNode) block.statements().get(0);
 
 		testWriteNode(firstStatement, java, compilationUnit, 4, expectedCPPStatement);
-	}
-
-	public void testWriteClass(String java, String expectedCPPClassHeader) {		
-		CompilationUnit compilationUnit = parseCompilationUnit(java);
-
-		Block block = getFirstMethodBlock(compilationUnit);
-		ASTNode firstStatement = (ASTNode) block.statements().get(0);
-
-		testWriteNode(firstStatement, java, compilationUnit, 4, expectedCPPClassHeader);
 	}
 
 	public void testWriteStatement(String javaExpressionAndCpp) {

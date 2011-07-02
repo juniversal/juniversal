@@ -9,18 +9,19 @@ import org.eclipse.jdt.core.dom.IExtendedModifier;
 import cj.ASTUtil;
 import cj.CJException;
 import cj.CPPProfile;
-import cj.SourceNotSupportedException;
+import cj.UserViewableException;
 
-public class WriteCPPContext {
+public class Context {
 	private CompilationUnit compilationUnit;
 	private CPPProfile cppProfile;
 	private CPPWriter cppWriter;
 	private SourceCopier sourceCopier;
 	private int position;
-	private OutputType outputType; 
+	private OutputType outputType;
+	private boolean writingVariableDeclarationNeedingStar;
+	private boolean writingMethodImplementation;
 
-
-	public WriteCPPContext(CompilationUnit compilationUnit, String source, int sourceTabStop, CPPProfile cppProfile,
+	public Context(CompilationUnit compilationUnit, String source, int sourceTabStop, CPPProfile cppProfile,
 			CPPWriter cppWriter, OutputType outputType) {
 		this.compilationUnit = compilationUnit;
 		this.cppProfile = cppProfile;
@@ -51,6 +52,22 @@ public class WriteCPPContext {
 		this.position = position;
 	}
 
+	public void setWritingMethodImplementation(boolean value) {
+		this.writingMethodImplementation = value;
+	}
+
+	public boolean isWritingMethodImplementation() {
+		return this.writingMethodImplementation;
+	}
+
+	public boolean isWritingVariableDeclarationNeedingStar() {
+		return writingVariableDeclarationNeedingStar;
+	}
+
+	public void setWritingVariableDeclarationNeedingStar(boolean value) {
+		this.writingVariableDeclarationNeedingStar = value;
+	}
+
 	/**
 	 * Get the CPPProfile object, describing the target C++ compiler and how the C++ should be
 	 * generated.
@@ -70,8 +87,20 @@ public class WriteCPPContext {
 	 */
 	public void assertPositionIs(int expectedPosition) {
 		if (position != expectedPosition)
-			throw new CJException("Context is positioned at " + position + " when expected it to be positioned at "
-					+ expectedPosition);
+			throw new ContextPositionMismatchException("Context is positioned at:\n" + getPositionDescription(position) + "\n  when expected it to be positioned at:\n"
+					+ getPositionDescription(expectedPosition));
+	}
+
+	public SourceCopier getSourceCopier() {
+		return sourceCopier;
+	}
+
+	public String getPositionDescription(int position) {
+		return sourceCopier.getPositionDescription(position);
+	}
+
+	public int getSourceLogicalColumn(int position) {
+		return sourceCopier.getSourceLogicalColumn(position);
 	}
 
 	/**
@@ -82,11 +111,33 @@ public class WriteCPPContext {
 	 *            node in question
 	 */
 	public void copySpaceAndComments() {
-		position = sourceCopier.copySpaceAndComments(position);
+		position = sourceCopier.copySpaceAndComments(position, false);
+	}
+
+	/**
+	 * Copies to output the whitespace, newlines, and comments that appear right after the specified
+	 * position in the source.
+	 * 
+	 * @param node
+	 *            node in question
+	 */
+	public void copySpaceAndCommentsUntilEOL() {
+		position = sourceCopier.copySpaceAndComments(position, true);
 	}
 
 	public void skipSpaceAndComments() {
 		position = sourceCopier.skipSpaceAndComments(position);
+	}
+
+	/**
+	 * Ensure that the Java source contains the specified match string at it's current position &
+	 * advance past
+	 * 
+	 * @param match
+	 *            string to ensure occurs in source
+	 */
+	public void match(String match) {
+		position = sourceCopier.match(position, match);
 	}
 
 	/**
@@ -165,14 +216,18 @@ public class WriteCPPContext {
 		int size = extendedModifiers.size();
 		if (size == 0)
 			return;
-		IExtendedModifier lastExtendedModifier = ((IExtendedModifier) extendedModifiers.get(size - 1));
+		IExtendedModifier lastExtendedModifier = (IExtendedModifier) extendedModifiers.get(size - 1);
 		setPosition(ASTUtil.getEndPosition((ASTNode) lastExtendedModifier));
 	}
 
 	public void throwSourceNotSupported(String baseMessage) {
-		throw new SourceNotSupportedException(compilationUnit, position, baseMessage);
+		throw new UserViewableException(baseMessage + "\n" + getPositionDescription(position));
 	}
-	
+
+	public void throwInvalidAST(String baseMessage) {
+		throw new CJException(baseMessage + "\n" + getPositionDescription(position));
+	}
+
 	public OutputType getOutputType() {
 		return outputType;
 	}
