@@ -2,8 +2,8 @@ package juniversal.cplusplus.astwriters;
 
 import java.util.HashMap;
 
-import juniversal.CJException;
-import juniversal.CPPProfile;
+import juniversal.JUniversalException;
+import juniversal.cplusplus.CPPProfile;
 import juniversal.cplusplus.Context;
 import juniversal.cplusplus.SourceCopier;
 
@@ -166,7 +166,7 @@ public class ASTWriters {
 	
 				Expression initializer = singleVariableDeclaration.getInitializer();
 				if (initializer != null)
-					throw new CJException("Unexpected initializer present for SingleVariableDeclaration");
+					throw new JUniversalException("Unexpected initializer present for SingleVariableDeclaration");
 			}
 		});
 
@@ -499,7 +499,7 @@ public class ASTWriters {
 				// invocation; it's allowed otherwise in Java but I don't think it does anything
 				// MyClass.this.   -->   this->MyClass::
 				if (thisExpression.getQualifier() != null)
-					throw new CJException("Qualified this expression isn't supported yet");
+					throw new JUniversalException("Qualified this expression isn't supported yet");
 
 				context.matchAndWrite("this");
 			}
@@ -679,7 +679,7 @@ public class ASTWriters {
 	public ASTWriter getVisitor(Class<? extends ASTNode> clazz) {
 		ASTWriter visitor = m_visitors.get(clazz);
 		if (visitor == null)
-			throw new CJException("No visitor found for class " + clazz.getName());
+			throw new JUniversalException("No visitor found for class " + clazz.getName());
 		return visitor;
 	}
 }

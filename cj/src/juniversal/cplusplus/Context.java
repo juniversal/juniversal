@@ -3,8 +3,7 @@ package juniversal.cplusplus;
 import java.util.List;
 
 import juniversal.ASTUtil;
-import juniversal.CJException;
-import juniversal.CPPProfile;
+import juniversal.JUniversalException;
 import juniversal.UserViewableException;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -226,7 +225,7 @@ public class Context {
 	}
 
 	public void throwInvalidAST(String baseMessage) {
-		throw new CJException(baseMessage + "\n" + getPositionDescription(position));
+		throw new JUniversalException(baseMessage + "\n" + getPositionDescription(position));
 	}
 
 	public OutputType getOutputType() {

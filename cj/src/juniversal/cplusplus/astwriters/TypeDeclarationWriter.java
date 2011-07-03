@@ -4,7 +4,7 @@ import java.util.List;
 
 import juniversal.ASTUtil;
 import juniversal.AccessLevel;
-import juniversal.CJException;
+import juniversal.JUniversalException;
 import juniversal.cplusplus.Context;
 import juniversal.cplusplus.OutputType;
 
@@ -134,7 +134,7 @@ public class TypeDeclarationWriter extends ASTWriter {
 				else privateMethods.add(MethodDeclaration);
 			}
 			else if (! (bodyDeclaration instanceof FieldDeclaration)) 
-				throw new CJException("Unexpected bodyDeclaration type" + bodyDeclaration.getClass());
+				throw new JUniversalException("Unexpected bodyDeclaration type" + bodyDeclaration.getClass());
 		}
 
 		writeMethodDeclarationsForAccessLevel(publicMethods, context, AccessLevel.PUBLIC);

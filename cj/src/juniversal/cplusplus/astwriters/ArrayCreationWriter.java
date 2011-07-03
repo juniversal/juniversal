@@ -3,7 +3,7 @@ package juniversal.cplusplus.astwriters;
 import java.util.List;
 
 import juniversal.ASTUtil;
-import juniversal.CJException;
+import juniversal.JUniversalException;
 import juniversal.cplusplus.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -26,12 +26,12 @@ public class ArrayCreationWriter extends ASTWriter {
 		List<?> dimensions = arrayCreation.dimensions();
 		// TODO: Support multidimensional arrays
 		if (dimensions.size() > 1)
-			throw new CJException("Multidimensional arrays not currently supported");
+			throw new JUniversalException("Multidimensional arrays not currently supported");
 		Expression dimensionSizeExpression = (Expression) dimensions.get(0);
 
 		// TODO: Support array initializers
 		if (arrayCreation.getInitializer() != null)
-			throw new CJException("Array initializers not currently supported");
+			throw new JUniversalException("Array initializers not currently supported");
 
 		context.setPosition(dimensionSizeExpression.getStartPosition());
 

@@ -1,6 +1,6 @@
 package juniversal.cplusplus;
 
-import juniversal.CJException;
+import juniversal.JUniversalException;
 
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
@@ -20,7 +20,7 @@ public class SourceCopier {
 
 	public int match(int startPosition, String match) {
 		if (! source.startsWith(match, startPosition))
-			throw new CJException("Expected source to contain '" + match + "' at position " + startPosition
+			throw new JUniversalException("Expected source to contain '" + match + "' at position " + startPosition
 					+ ", but it doesn't");
 		return startPosition + match.length();
 	}

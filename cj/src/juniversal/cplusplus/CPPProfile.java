@@ -1,4 +1,4 @@
-package juniversal;
+package juniversal.cplusplus;
 
 /**
  * The CPPProfile class describes how the C++ should be generated.  Primarily this class gives

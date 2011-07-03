@@ -9,8 +9,7 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
-import juniversal.CJException;
-import juniversal.CPPProfile;
+import juniversal.JUniversalException;
 import juniversal.UserViewableException;
 
 
@@ -31,7 +30,7 @@ public class CPPWriter {
 			init(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "Cp1252")),
 					cppProfile);
 		} catch (UnsupportedEncodingException e) {
-			throw new CJException(e);
+			throw new JUniversalException(e);
 		} catch (FileNotFoundException e) {
 			throw new UserViewableException("Ouptut file " + file.getAbsolutePath()
 					+ " could not be created");
@@ -72,7 +71,7 @@ public class CPPWriter {
 			for (int i = 0; i < length; ++i)
 				writeCharInternal(string.charAt(i));
 		} catch (IOException e) {
-			throw new CJException(e);
+			throw new JUniversalException(e);
 		}
 	}
 
@@ -80,7 +79,7 @@ public class CPPWriter {
 		try {
 			writeCharInternal(character);
 		} catch (IOException e) {
-			throw new CJException(e);
+			throw new JUniversalException(e);
 		}
 	}
 
@@ -117,7 +116,7 @@ public class CPPWriter {
 			++currColumn;
 		}
 		else if (character == '\t')
-			throw new CJException("Can't directly write tabs to a CPPWriter");
+			throw new JUniversalException("Can't directly write tabs to a CPPWriter");
 		else {
 			// Write any accumulated indentation plus any defined additional indentation
 			if (accumulatingSpacesAtBeginningOfLine) {

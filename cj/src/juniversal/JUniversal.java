@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import juniversal.cplusplus.CPPProfile;
 import juniversal.cplusplus.CPPWriter;
 import juniversal.cplusplus.Context;
 import juniversal.cplusplus.ContextPositionMismatchException;
@@ -18,7 +19,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
-public class CJ {
+public class JUniversal {
 
 	public static void main(String[] args) {
 
@@ -64,7 +65,7 @@ public class CJ {
 		catch (RuntimeException e) {
 			if (e instanceof ContextPositionMismatchException)
 				throw e;
-			else throw new CJException(e.getMessage() + "\nError occurred with context at position\n"
+			else throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
 					+ context.getPositionDescription(context.getPosition()), e);
 		}
 
@@ -92,9 +93,9 @@ public class CJ {
 
 			return stringBuilder.toString();
 		} catch (FileNotFoundException e) {
-			throw new CJException(e);
+			throw new JUniversalException(e);
 		} catch (IOException ioe) {
-			throw new CJException(ioe);
+			throw new JUniversalException(ioe);
 		}
 	}
 }

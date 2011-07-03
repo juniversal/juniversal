@@ -6,7 +6,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 
-import juniversal.CPPProfile;
 
 
 public class MemoryCPPWriterFactory extends CPPWriterFactory {

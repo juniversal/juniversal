@@ -5,8 +5,8 @@ import static org.junit.Assert.fail;
 
 import java.io.StringWriter;
 
-import juniversal.CPPProfile;
 import juniversal.SourceNotSupportedException;
+import juniversal.cplusplus.CPPProfile;
 import juniversal.cplusplus.CPPWriter;
 import juniversal.cplusplus.Context;
 import juniversal.cplusplus.OutputType;
