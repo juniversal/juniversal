@@ -3,13 +3,14 @@ package juniversal.cplusplus;
 import java.util.List;
 
 import juniversal.ASTUtil;
+import juniversal.ContextPositionMismatchException;
 import juniversal.JUniversalException;
 import juniversal.UserViewableException;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
-
+import org.eclipse.jdt.core.dom.SimpleName;
 
 public class Context {
 	private CompilationUnit compilationUnit;
@@ -18,8 +19,11 @@ public class Context {
 	private SourceCopier sourceCopier;
 	private int position;
 	private OutputType outputType;
+	private int preferredIndent = 4;    // TODO: Set
+
 	private boolean writingVariableDeclarationNeedingStar;
 	private boolean writingMethodImplementation;
+	private SimpleName typeDeclarationName;
 
 	public Context(CompilationUnit compilationUnit, String source, int sourceTabStop, CPPProfile cppProfile,
 			CPPWriter cppWriter, OutputType outputType) {
@@ -30,6 +34,10 @@ public class Context {
 
 		sourceCopier = new SourceCopier(compilationUnit, source, sourceTabStop, cppWriter);
 		position = compilationUnit.getStartPosition();
+	}
+
+	public CompilationUnit getCompilationUnit() {
+		return compilationUnit;
 	}
 
 	/**
@@ -52,6 +60,10 @@ public class Context {
 		this.position = position;
 	}
 
+	public int getPreferredIndent() {
+		return preferredIndent;
+	}
+
 	public void setWritingMethodImplementation(boolean value) {
 		this.writingMethodImplementation = value;
 	}
@@ -66,6 +78,14 @@ public class Context {
 
 	public void setWritingVariableDeclarationNeedingStar(boolean value) {
 		this.writingVariableDeclarationNeedingStar = value;
+	}
+
+	public void setTypeDeclarationName(SimpleName typeName) {
+		this.typeDeclarationName = typeName;
+	}
+
+	public SimpleName getTypeDeclarationName() {
+		return this.typeDeclarationName;
 	}
 
 	/**
@@ -87,8 +107,8 @@ public class Context {
 	 */
 	public void assertPositionIs(int expectedPosition) {
 		if (position != expectedPosition)
-			throw new ContextPositionMismatchException("Context is positioned at:\n" + getPositionDescription(position) + "\n  when expected it to be positioned at:\n"
-					+ getPositionDescription(expectedPosition));
+			throw new ContextPositionMismatchException("Context is positioned at:\n" + getPositionDescription(position)
+					+ "\n  when expected it to be positioned at:\n" + getPositionDescription(expectedPosition));
 	}
 
 	public SourceCopier getSourceCopier() {
@@ -103,30 +123,36 @@ public class Context {
 		return sourceCopier.getSourceLogicalColumn(position);
 	}
 
-	/**
-	 * Copies to output the whitespace, newlines, and comments that appear right after the specified
-	 * position in the source.
-	 * 
-	 * @param node
-	 *            node in question
-	 */
+	public int getSourceLogicalColumn() {
+		return sourceCopier.getSourceLogicalColumn(getPosition());
+	}
+
 	public void copySpaceAndComments() {
 		position = sourceCopier.copySpaceAndComments(position, false);
 	}
 
-	/**
-	 * Copies to output the whitespace, newlines, and comments that appear right after the specified
-	 * position in the source.
-	 * 
-	 * @param node
-	 *            node in question
-	 */
 	public void copySpaceAndCommentsUntilEOL() {
 		position = sourceCopier.copySpaceAndComments(position, true);
 	}
 
 	public void skipSpaceAndComments() {
-		position = sourceCopier.skipSpaceAndComments(position);
+		position = sourceCopier.skipSpaceAndComments(position, false);
+	}
+
+	public void skipSpaceAndCommentsUntilEOL() {
+		position = sourceCopier.skipSpaceAndComments(position, true);
+	}
+
+	public void skipNewline() {
+		position = sourceCopier.skipNewline(position);
+	}
+
+	public void backwardSkipSpaceAndComments() {
+		position = sourceCopier.skipSpaceAndCommentsBackward(position);
+	}
+
+	public void skipSpacesAndTabsBackward() {
+		position = sourceCopier.skipSpacesAndTabsBackward(position);
 	}
 
 	/**
@@ -175,7 +201,18 @@ public class Context {
 	public void write(String string) {
 		cppWriter.write(string);
 	}
-	
+
+	/**
+	 * Write the specified number of spaces to the output.
+	 * 
+	 * @param string
+	 *            string to write to C++ output.
+	 */
+	public void writeSpaces(int count) {
+		for (int i = 0; i < count; ++i)
+			cppWriter.write(" ");
+	}
+
 	/**
 	 * Write the specified string to the C++ output, followed by a newline.
 	 * 

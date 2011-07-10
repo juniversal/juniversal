@@ -1,5 +1,6 @@
 package juniversal;
 
+import java.io.File;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -7,9 +8,73 @@ import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
 import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class ASTUtil {
+
+	public static void parseJava(List<File> javaProjectDirectories) {
+		
+		/*
+		ArrayList<File> files = new ArrayList<File>();
+		for (File javaProjectDirectory : javaProjectDirectories)
+			Util.getFilesRecursive(javaProjectDirectory, ".java", files);
+	
+		ArrayList<String> filePathsList = new ArrayList<String>();
+		for (File file : files) {
+			filePathsList.add(file.getPath());
+		}
+
+		String[] filePaths = filePathsList.toArray(new String[filePathsList.size()]);
+
+		ASTParser parser = ASTParser.newParser(AST.JLS3);
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+
+		parser.createASTs(filePaths, encodings, bindingKeys, requestor, monitor)
+
+		String source = readFile(args[0]);
+		parser.setSource(source.toCharArray());
+
+		CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null /xx* IProgressMonitor *xx/);
+
+		TypeDeclaration typeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
+
+		StringWriter writer = new StringWriter();
+		CPPProfile profile = new CPPProfile();
+		// profile.setTabStop(4);
+
+		CPPWriter cppWriter = new CPPWriter(writer, profile);
+
+		Context context = new Context((CompilationUnit) compilationUnit.getRoot(), source, 8, profile, cppWriter,
+				OutputType.SOURCE);
+
+		context.setPosition(typeDeclaration.getStartPosition());
+
+		ASTWriters astWriters = new ASTWriters();
+
+		try {
+			context.setPosition(typeDeclaration.getStartPosition());
+			context.skipSpaceAndComments();
+
+			astWriters.writeNode(typeDeclaration, context);
+		} catch (UserViewableException e) {
+			System.err.println(e.getMessage());
+			System.exit(1);
+		} catch (RuntimeException e) {
+			if (e instanceof ContextPositionMismatchException)
+				throw e;
+			else
+				throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
+						+ context.getPositionDescription(context.getPosition()), e);
+		}
+
+		String cppOutput = writer.getBuffer().toString();
+
+		System.out.println("Output:");
+		System.out.println(cppOutput);
+		*/
+		
+	}
 
 	public static TypeDeclaration getFirstTypeDeclaration(CompilationUnit compilationUnit) {
 		return (TypeDeclaration) compilationUnit.types().get(0);

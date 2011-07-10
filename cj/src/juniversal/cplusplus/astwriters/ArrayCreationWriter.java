@@ -43,7 +43,7 @@ public class ArrayCreationWriter extends ASTWriter {
 		ArrayType arrayType = arrayCreation.getType();
 		context.setPosition(arrayType.getStartPosition());
 
-		context.write("array<");
+		context.write("Array<");
 		getASTWriters().writeNode(arrayType.getComponentType(), context);
 		context.skipSpaceAndComments();
 		context.write(">");

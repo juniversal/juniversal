@@ -9,7 +9,6 @@ public class SourceCopier {
 	private CompilationUnit compilationUnit;
 	private String source;
 	private int sourceTabStop;
-	private CPPWriter cppWriter;
 
 	public SourceCopier(CompilationUnit compilationUnit, String source, int sourceTabStop, CPPWriter cppWriter) {
 		this.compilationUnit = compilationUnit;
@@ -17,6 +16,8 @@ public class SourceCopier {
 		this.sourceTabStop = sourceTabStop;
 		this.cppWriter = cppWriter;
 	}
+
+	private CPPWriter cppWriter;
 
 	public int match(int startPosition, String match) {
 		if (! source.startsWith(match, startPosition))
@@ -60,6 +61,150 @@ public class SourceCopier {
 				position = copyMultilineComment(position);
 			else
 				return position;
+		}
+	}
+	
+	/**
+	 * Skips all whitespace, newlines, and comments from the source starting at startPosition and
+	 * continuing until the end of the whitespace/newlines/comments.
+	 * 
+	 * @param startPosition
+	 *            starting position in source
+	 * @param justUntilEOL
+	 *            if true, then the skipping stops just short of the end of line (not including \r
+	 *            or \n characters); if there's a multiline comment, it's skipped in its entirety
+	 *            and the copying stops at the first EOL or code character after that
+	 * @return ending position--position of character following space and comments
+	 */
+	public int skipSpaceAndComments(int startPosition, boolean justUntilEOL) {
+		int position = startPosition;
+		while (true) {
+			int currChar = getSourceCharAt(position);
+
+			if (currChar == -1)
+				return position;
+			else if (currChar == ' ' || currChar == '\t')
+				position = skipSpacesAndTabs(position);
+			else if (currChar == '\r' || currChar == '\n') {
+				if (justUntilEOL)
+					return position;
+
+				++position;
+			}
+			else if (currChar == '/' && getSourceCharAt(position + 1) == '/') {
+				position += 2;
+
+				while (true) {
+					currChar = getSourceCharAt(position);
+
+					if (currChar == -1 || currChar == '\r' || currChar == '\n')
+						break;
+					else if (currChar == ' ' || currChar == '\t')
+						position = skipSpacesAndTabs(position);
+					else
+						++position;
+				}
+			} else if (currChar == '/' && getSourceCharAt(position + 1) == '*') {
+				position += 2;
+
+				while (true) {
+					currChar = getSourceCharAt(position);
+
+					if (currChar == -1)
+						break;
+					else if (currChar == '*' && getSourceCharAt(position + 1) == '/') {
+						position += 2;
+						break;
+					} else if (currChar == ' ' || currChar == '\t')
+						position = skipSpacesAndTabs(position);
+					else
+						++position;
+				}
+			} else
+				return position;
+		}
+	}
+
+	/**
+	 * Skips all whitespace, newlines, and comments from the source starting at startPosition and
+	 * continuing backwards until the beginning of the whitespace/newlines/comments. The returned
+	 * position points to the beginning of the whitespace/newlines/comments or the original position
+	 * if there wasn't any whitespace/newlines/comments.
+	 * 
+	 * @param startPosition
+	 *            starting position in source
+	 * @return position of first character in sequence of space and comments
+	 */
+	public int skipSpaceAndCommentsBackward(int startPosition) {
+		int position = startPosition - 1;
+
+		while (true) {
+			int currChar = getSourceCharAtForBackward(position);
+
+			if (currChar == -1)
+				return position + 1;
+			else if (currChar == ' ' || currChar == '\t' || currChar == '\r')
+				--position;
+			else if (currChar == '\n') {
+				int lineStartPosition = compilationUnit.getPosition(compilationUnit.getLineNumber(position), 0);
+				int lineCommentStartPosition = getLineCommentStartPosition(lineStartPosition);
+
+				if (lineCommentStartPosition != -1)
+					position = lineCommentStartPosition - 1;
+				else
+					--position;
+			}
+			else if (currChar == '/' && getSourceCharAtForBackward(position - 1) == '*') {
+				position -= 2;
+
+				while (true) {
+					currChar = getSourceCharAtForBackward(position);
+
+					if (currChar == -1)
+						break;
+					else if (currChar == '*' && getSourceCharAtForBackward(position - 1) == '/') {
+						position -= 2;
+						break;
+					}
+					else --position;
+				}
+			} else return position + 1;
+		}
+	}
+
+	/**
+	 * Given the start position for a line, return the start position of any line ("//") comment on
+	 * the line, or -1 if there is no line comment. If a position is returned, it's the position of
+	 * the first / character for the line comment.
+	 * 
+	 * @param lineStartPosition
+	 * @return
+	 */
+	private int getLineCommentStartPosition(int lineStartPosition) {
+		int position = lineStartPosition;
+		while (true) {
+			int currChar = getSourceCharAt(position);
+
+			if (currChar == '\r' || currChar == '\n' || currChar == -1)
+				return -1;
+			else if (currChar == '/' && getSourceCharAt(position + 1) == '/')
+				return position;
+			else if (currChar == '/' && getSourceCharAt(position + 1) == '*') {
+				position += 2;
+
+				while (true) {
+					currChar = getSourceCharAt(position);
+
+					if (currChar == '\r' || currChar == '\n' || currChar == -1)
+						return -1;
+					else if (currChar == '*' && getSourceCharAt(position + 1) == '/') {
+						position += 2;
+						break;
+					} else
+						++position;
+				}
+			} else
+				++position;
 		}
 	}
 
@@ -160,60 +305,6 @@ public class SourceCopier {
 	}
 
 	/**
-	 * Skips all whitespace, newlines, and comments from the source starting at startPosition and
-	 * continuing until the end of the whitespace/newlines/comments.
-	 * 
-	 * @param startPosition
-	 *            starting position in source
-	 * @return ending position--position of character following space and comments
-	 */
-	public int skipSpaceAndComments(int startPosition) {
-
-		int position = startPosition;
-		while (true) {
-			int currChar = getSourceCharAt(position);
-
-			if (currChar == -1)
-				return position;
-			else if (currChar == ' ' || currChar == '\t')
-				position = skipSpacesAndTabs(position);
-			else if (currChar == '\r' || currChar == '\n')
-				++position;
-			else if (currChar == '/' && getSourceCharAt(position + 1) == '/') {
-				position += 2;
-
-				while (true) {
-					currChar = getSourceCharAt(position);
-
-					if (currChar == -1 || currChar == '\r' || currChar == '\n')
-						break;
-					else if (currChar == ' ' || currChar == '\t')
-						position = skipSpacesAndTabs(position);
-					else
-						++position;
-				}
-			} else if (currChar == '/' && getSourceCharAt(position + 1) == '*') {
-				position += 2;
-
-				while (true) {
-					currChar = getSourceCharAt(position);
-
-					if (currChar == -1)
-						break;
-					else if (currChar == '*' && getSourceCharAt(position + 1) == '/') {
-						position += 2;
-						break;
-					} else if (currChar == ' ' || currChar == '\t')
-						position = skipSpacesAndTabs(position);
-					else
-						++position;
-				}
-			} else
-				return position;
-		}
-	}
-
-	/**
 	 * Copies to output contiguous spaces and tabs from the source starting at startPosition and
 	 * continuing until the end of the spaces/tabs. Any tabs in the source are expanded; tabs are
 	 * reintroduced as appropriate at output time by the CPPWriter class.
@@ -276,6 +367,49 @@ public class SourceCopier {
 	}
 
 	/**
+	 * Skips all spaces and tabs from the source starting at startPosition and continuing backwards
+	 * until the beginning of the spaces/tabs. The returned position points to the beginning of the
+	 * whitespace or the original position if there wasn't any whitespace before the current
+	 * position.
+	 * 
+	 * @param startPosition
+	 *            starting position in source
+	 * @return position of first character in sequence of spaces/tabs
+	 */
+	public int skipSpacesAndTabsBackward(int startPosition) {
+		int position = startPosition - 1;
+
+		while (true) {
+			int currChar = getSourceCharAtForBackward(position);
+
+			if (currChar == -1)
+				return position + 1;
+			else if (currChar == ' ' || currChar == '\t')
+				--position;
+			else return position + 1;
+		}
+	}
+
+	/**
+	 * If position is at the end of the line, the first position on the following line is returned.
+	 * Else, the current position is returned.
+	 * 
+	 * @param startPosition starting position in source
+	 * @return position just past the end of line, if there is one at that position
+	 */
+	public int skipNewline(int position) {
+		// Skip carriage returns & only pay attention to newline characters. That way both \n
+		// and \r\n line endings are supported.
+
+		if (getSourceCharAt(position) == '\r')
+			++position;
+		if (getSourceCharAt(position) == '\n')
+			++position;
+
+		return position;
+	}
+
+	/**
 	 * Skips contiguous spaces, tabs, and newlines from the source starting at startPosition and continuing
 	 * until the end of the spaces/tabs.
 	 * 
@@ -303,6 +437,20 @@ public class SourceCopier {
 	 */
 	public int getSourceCharAt(int position) {
 		if (position >= source.length())
+			return -1;
+		return source.charAt(position);
+	}
+
+	/**
+	 * Get the character from the source at the specified position or -1 if before the beginning of
+	 * the source.
+	 * 
+	 * @param position
+	 *            source position in question
+	 * @return character at that position or -1 if past beginning
+	 */
+	public int getSourceCharAtForBackward(int position) {
+		if (position < 0)
 			return -1;
 		return source.charAt(position);
 	}

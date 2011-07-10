@@ -109,7 +109,7 @@ public class CPPWriter {
 			currColumn = additionalIndentation;
 		}
 		else if (character == ' ') {
-			if (spacesAtBeginningOfLine != -1)
+			if (accumulatingSpacesAtBeginningOfLine)
 				++spacesAtBeginningOfLine;
 			else writer.write(' ');
 
@@ -160,19 +160,5 @@ public class CPPWriter {
 		}
 
 		return oldValue;
-	}
-
-	/**
-	 * Increment the additional indentation by whatever the preferred indent is.
-	 */
-	public void incrementByPreferredIndent() {
-		setAdditionalIndentation(additionalIndentation + cppProfile.getPreferredIndent());
-	}
-
-	/**
-	 * Decrement the additional indentation by whatever the preferred indent is.
-	 */
-	public void decrementByPreferredIndent() {
-		setAdditionalIndentation(additionalIndentation - cppProfile.getPreferredIndent());
 	}
 }

@@ -35,11 +35,13 @@ public class MethodDeclarationWriter extends ASTWriter {
 			Type returnType = methodDeclaration.getReturnType2();
 			if (returnType == null)
 				context.matchAndWrite("void");
-			else getASTWriters().writeNode(returnType, context);
+			else getASTWriters().writeType(returnType, context, false);
 
 			context.copySpaceAndComments();
 		}
 
+		if (context.isWritingMethodImplementation())
+			context.write(context.getTypeDeclarationName() + "::");
 		context.matchAndWrite(methodDeclaration.getName().getIdentifier());
 		context.copySpaceAndComments();
 
@@ -64,40 +66,48 @@ public class MethodDeclarationWriter extends ASTWriter {
 		}
 
 		context.matchAndWrite(")");
-		context.copySpaceAndComments();
 
 		// If there are any checked exceptions, output them just as a comment. We don't turn them
 		// into C++ checked exceptions because we don't declare runtime exceptions in the C++; since
 		// we don't declare all exceptions for C++ we can't declare any since we never want
 		// unexpected() to be called
 		List<?> thrownExceptions = methodDeclaration.thrownExceptions();
-		boolean outputException = false;
-		for (Object object : thrownExceptions) {
-			Name exceptionName = (Name) object;
+		if (thrownExceptions.size() > 0) {
 
-			if (! outputException) {
-				context.write("/* ");
-				context.matchAndWrite("throws");
-				context.write(" ");
+			context.copySpaceAndComments();
+
+			context.write("/* ");
+			context.matchAndWrite("throws");
+
+			first = true;
+			for (Object exceptionNameObject : thrownExceptions) {
+				Name exceptionName = (Name) exceptionNameObject;
+
 				context.skipSpaceAndComments();
-			}
-			else {
-				context.matchAndWrite(",");
-				context.write(" ");
-				context.skipSpaceAndComments();
-			}
+				if (first)
+					context.write(" ");
+				else {
+					context.matchAndWrite(",");
 
-			context.matchAndWrite(exceptionName.toString());
-			context.write(" ");
-			context.skipSpaceAndComments();
-
-			outputException = true;
+					context.skipSpaceAndComments();
+					context.write(" ");
+				}
+	
+				context.matchAndWrite(exceptionName.toString());
+	
+				first = false;
+			}
+			context.write(" */");
 		}
-		if (outputException)
-			context.write("*/ ");
 
-		if (context.isWritingMethodImplementation())
+		if (context.isWritingMethodImplementation()) {
+			context.copySpaceAndComments();
 			getASTWriters().writeNode(methodDeclaration.getBody(), context);
-		else context.matchAndWrite(";");
+		}
+		else {
+			context.skipSpaceAndComments();
+			context.write(";");
+			context.setPosition(ASTUtil.getEndPosition(methodDeclaration));
+		}
 	}
 }

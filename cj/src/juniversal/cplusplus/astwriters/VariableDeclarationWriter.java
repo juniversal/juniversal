@@ -48,9 +48,9 @@ public class VariableDeclarationWriter extends ASTWriter {
 		}
 
 		// Write the type
-		getASTWriters().writeNode(type, context);
+		getASTWriters().writeType(type, context, false);
 
-		boolean needStar = !type.isPrimitiveType();
+		boolean needStar = false;
 		context.setWritingVariableDeclarationNeedingStar(needStar);
 
 		// Write the variable declaration(s)

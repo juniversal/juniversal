@@ -2,100 +2,87 @@ package juniversal;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.StringWriter;
-
-import juniversal.cplusplus.CPPProfile;
-import juniversal.cplusplus.CPPWriter;
-import juniversal.cplusplus.Context;
-import juniversal.cplusplus.ContextPositionMismatchException;
-import juniversal.cplusplus.OutputType;
-import juniversal.cplusplus.astwriters.ASTWriters;
-
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
+import java.util.ArrayList;
+import java.util.List;
 
 public class JUniversal {
+	private List<File> javaProjectDirectories;
+	private File outputDirectory;
+	private int preferredIndent = 4;
 
 	public static void main(String[] args) {
+		JUniversal jUniversal = new JUniversal(args);
 
-		ASTParser parser = ASTParser.newParser(AST.JLS3); 
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+		new juniversal.cplusplus.Translator(jUniversal).translate();
 
-		if (args.length != 2) {
-			System.out.println("Usage: CJ <input-file> <output-directory>");
-			System.exit(1);
-		}
-
-		String source = readFile(args[0]);
-		parser.setSource(source.toCharArray());
-
-		CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null /* IProgressMonitor */);
-		
-		TypeDeclaration typeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
-
-
-		StringWriter writer = new StringWriter();
-		CPPProfile profile = new CPPProfile();
-		//profile.setTabStop(4);
-
-		CPPWriter cppWriter = new CPPWriter(writer, profile);
-
-		Context context = new Context((CompilationUnit) compilationUnit.getRoot(),
-			source, 8, profile, cppWriter, OutputType.SOURCE);
-
-		context.setPosition(typeDeclaration.getStartPosition());
-
-		ASTWriters astWriters = new ASTWriters();
-
-		try {
-			context.setPosition(typeDeclaration.getStartPosition());
-			context.skipSpaceAndComments();
-
-			astWriters.writeNode(typeDeclaration, context);
-		}
-		catch (UserViewableException e) {
-			System.err.println(e.getMessage());
-			System.exit(1);
-		}
-		catch (RuntimeException e) {
-			if (e instanceof ContextPositionMismatchException)
-				throw e;
-			else throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
-					+ context.getPositionDescription(context.getPosition()), e);
-		}
-
-		String cppOutput = writer.getBuffer().toString();
-
-		System.out.println("Output:");
-		System.out.println(cppOutput);
+		System.out.println("Translation complete; output is in " + jUniversal.outputDirectory);
 	}
 
-	public static String readFile(String filePath) {
-		File file = new File(filePath);
+	public JUniversal(String[] args) {
+		this.javaProjectDirectories = new ArrayList<File>();
 
-		FileReader fileReader = null;
-		try {
-			StringBuilder stringBuilder = new StringBuilder();
+		for (int i = 0; i < args.length; ++i) {
+			String arg = args[i];
 
-			fileReader = new FileReader(file);
+			if (arg.startsWith("-")) {
+				if (arg.equals("-o")) {
+					++i;
+					if (i >= args.length)
+						usageError();
+					arg = args[i];
 
-			char[] contentsBuffer = new char[1024];
-			int charsRead = 0;
-			while ((charsRead = fileReader.read(contentsBuffer)) != -1)
-				stringBuilder.append(contentsBuffer, 0, charsRead);
-
-			fileReader.close();
-
-			return stringBuilder.toString();
-		} catch (FileNotFoundException e) {
-			throw new JUniversalException(e);
-		} catch (IOException ioe) {
-			throw new JUniversalException(ioe);
+					this.outputDirectory = new File(arg);
+				} else
+					usageError();
+			} else
+				this.javaProjectDirectories.add(new File(arg));
 		}
+
+		// Ensure that there's at least one input directory & the output directory is specified
+		if (this.javaProjectDirectories.size() == 0 || this.outputDirectory == null)
+			usageError();
+	}
+
+	private void usageError() {
+		System.err.println("Usage: juniversal <java-project-directories>... -o <output-directory>");
+		System.exit(1);
+	}
+
+	public List<File> getJavaProjectDirectories() {
+		return javaProjectDirectories; 
+	}
+
+	public File getOutputDirectory() {
+		return outputDirectory; 
+	}
+
+	public int getPreferredIndent() { 
+		return preferredIndent;
+	}
+
+	/**
+	 * Get all the source files in the specified Java project directories.
+	 * 
+	 * @return list of all files in the project directories, in project directory order specified on
+	 *         command line
+	 */
+	public String[] getJavaFiles() {
+		ArrayList<File> files = new ArrayList<File>();
+
+		for (File directory : javaProjectDirectories) {
+			System.out.println(directory);
+			try {
+				Util.getFilesRecursive(directory, ".java", files);
+			} catch (FileNotFoundException e) {
+				throw new UserViewableException("Java project directory " + directory + " not found or not an accessible directory");
+			}
+		}
+
+		int length = files.size();
+		String[] filePathsArray = new String[length];
+		for (int i = 0; i < length; ++i)
+			filePathsArray [i] = files.get(i).getPath(); 
+
+		return filePathsArray;
 	}
 }

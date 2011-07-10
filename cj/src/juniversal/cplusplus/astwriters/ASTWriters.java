@@ -97,7 +97,7 @@ public class ASTWriters {
 	
 				// Write the type
 				context.skipSpaceAndComments();
-				writeNode(fieldDeclaration.getType(), context);
+				writeType(fieldDeclaration.getType(), context, false);
 	
 				boolean first = true;
 				for (Object fragment : fieldDeclaration.fragments()) {
@@ -149,17 +149,18 @@ public class ASTWriters {
 			@Override
 			public void write(ASTNode node, Context context) {
 				SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) node;
-				
+
 				// TODO: Handle syntax with extra dimensions on array
 				if (singleVariableDeclaration.getExtraDimensions() > 0)
 					context.throwSourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
 	
 				// TODO: Handle final & varargs
 	
-				writeNode(singleVariableDeclaration.getType(), context);
+				Type type = singleVariableDeclaration.getType();
+				writeType(type, context, true);
 	
 				context.copySpaceAndComments();
-	
+
 				writeNode(singleVariableDeclaration.getName(), context);
 	
 				context.copySpaceAndComments();
@@ -186,7 +187,7 @@ public class ASTWriters {
 			public void write(ASTNode node, Context context) {
 				ArrayType arrayType = (ArrayType) node;
 
-				context.write("array<");
+				context.write("Array<");
 				writeNode(arrayType.getComponentType(), context);
 				context.skipSpaceAndComments();
 				context.write(">");
@@ -333,28 +334,8 @@ public class ASTWriters {
 			}
 		});
 
+		// For statement
 		addWriter(ForStatement.class, new ForStatementWriter(this));
-
-		addWriter(WhileStatement.class, new ASTWriter() {
-			@Override
-			public void write(ASTNode node, Context context) {
-				WhileStatement whileStatement = (WhileStatement) node;
-
-				context.matchAndWrite("while");
-				context.copySpaceAndComments();
-
-				context.matchAndWrite("(");
-				context.copySpaceAndComments();
-
-				writeNode(whileStatement.getExpression(), context);
-				context.copySpaceAndComments();
-				
-				context.matchAndWrite(")");
-				context.copySpaceAndComments();
-
-				writeNode(whileStatement.getBody(), context);
-			}
-		});
 
 		// Return statement
 		addWriter(ReturnStatement.class, new ASTWriter() {
@@ -391,6 +372,7 @@ public class ASTWriters {
 			}
 		});
 
+		// Delegating constructor invocation 
 		addWriter(ConstructorInvocation.class, new ASTWriter() {
 			@Override
 			public void write(ASTNode node, Context context) {
@@ -645,7 +627,7 @@ public class ASTWriters {
 			if (sourceCopier.getSourceCharAt(nodeStartPosition) == '/'
 					&& sourceCopier.getSourceCharAt(nodeStartPosition + 1) == '*'
 					&& sourceCopier.getSourceCharAt(nodeStartPosition + 1) == '*')
-				context.assertPositionIs(sourceCopier.skipSpaceAndComments(nodeStartPosition));
+				context.assertPositionIs(sourceCopier.skipSpaceAndComments(nodeStartPosition, false));
 			else context.assertPositionIs(nodeStartPosition);
 		}
 
@@ -656,7 +638,33 @@ public class ASTWriters {
 	}
 
 	private void addWriter(Class<? extends ASTNode> clazz, ASTWriter visitor) {
+		if (m_visitors.get(clazz) != null)
+			throw new JUniversalException("Writer for class " + clazz + " already added to ASTWriters");
 		m_visitors.put(clazz, visitor);
+	}
+
+	/**
+	 * Write out a type, when it's used (as opposed to defined).
+	 * 
+	 * @param type type to write
+	 * @param context context
+	 */
+	public void writeType(Type type, Context context, boolean useRawPointer) {
+		boolean referenceType = ! type.isPrimitiveType();
+
+		if (! referenceType)
+			writeNode(type, context);
+		else {
+			if (useRawPointer) {
+				writeNode(type, context);
+				context.write("*");
+			}
+			else {
+				context.write("ptr<");
+				writeNode(type, context);
+				context.write(">");
+			}
+		}
 	}
 
 	static int mem;

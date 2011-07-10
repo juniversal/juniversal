@@ -16,7 +16,6 @@ public class CPPProfile {
 	private String float64Type = "double";
 	private String unsignedInt32UnicodeCharType = "unsigned short";
 	private int tabStop = -1;
-	private int preferredIndent = 4;
 	private boolean classBraceOnSameLine = true;
 
 
@@ -46,26 +45,6 @@ public class CPPProfile {
 	 */
 	public void setTabStop(int tabStop) {
 		this.tabStop = tabStop;
-	}
-
-	/**
-	 * Gets the preferred indent, used for output that's generated as opposed to just copying the
-	 * source indent.
-	 * 
-	 * @return preferred indent
-	 */
-	public int getPreferredIndent() {
-		return preferredIndent;
-	}
-
-	/**
-	 * Sets the preferred indent, used for output that's generated as opposed to just copying the
-	 * source indent.
-	 * 
-	 * @param preferredIndent
-	 */
-	public void setPreferredIndent(int preferredIndent) {
-		this.preferredIndent = preferredIndent;
 	}
 
 	/**

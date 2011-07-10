@@ -1,6 +1,5 @@
-package juniversal.cplusplus;
+package juniversal;
 
-import juniversal.JUniversalException;
 
 @SuppressWarnings("serial")
 public class ContextPositionMismatchException extends JUniversalException {
