@@ -1,4 +1,15 @@
-# Ignore Eclipse workspace
-/.metadata/
-# Ignore build directories
-*/build/
+/cpplib/Debug
+/cpplib/Release
+/javalib-test/cpp/build
+/javalib-lang/build/cpp
+/javalib-lang/build/jar
+/javalib/cpp/Debug
+/testdata/smarterphone/cpp-actual/*.cpp
+/testdata/smarterphone/cpp-actual/*.h
+/testdata/test1/cpp-actual/*.cpp
+/testdata/test1/cpp-actual/*.h
+Debug/
+Release/
+/testdata/test1/bin/
+/.metadata
+*.class
