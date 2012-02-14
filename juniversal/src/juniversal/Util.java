@@ -2,9 +2,8 @@ package juniversal;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 
 public class Util {
@@ -55,6 +54,30 @@ public class Util {
 				if (file.getName().endsWith(suffix))
 					files.add(file);
 			}
+		}
+	}
+
+	public static String readFile(String filePath) {
+		File file = new File(filePath);
+
+		FileReader fileReader = null;
+		try {
+			StringBuilder stringBuilder = new StringBuilder();
+
+			fileReader = new FileReader(file);
+
+			char[] contentsBuffer = new char[1024];
+			int charsRead = 0;
+			while ((charsRead = fileReader.read(contentsBuffer)) != -1)
+				stringBuilder.append(contentsBuffer, 0, charsRead);
+
+			fileReader.close();
+
+			return stringBuilder.toString();
+		} catch (FileNotFoundException e) {
+			throw new JUniversalException(e);
+		} catch (IOException ioe) {
+			throw new JUniversalException(ioe);
 		}
 	}
 }

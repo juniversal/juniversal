@@ -1,13 +1,13 @@
 package juniversal.cplusplus.astwriters;
 
 import java.util.HashMap;
+import java.util.List;
 
 import juniversal.JUniversalException;
+import juniversal.SourceCopier;
 import juniversal.cplusplus.CPPProfile;
 import juniversal.cplusplus.Context;
-import juniversal.cplusplus.SourceCopier;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
@@ -15,9 +15,15 @@ import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.BreakStatement;
 import org.eclipse.jdt.core.dom.CastExpression;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
+import org.eclipse.jdt.core.dom.ContinueStatement;
+import org.eclipse.jdt.core.dom.DoStatement;
 import org.eclipse.jdt.core.dom.EmptyStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
@@ -29,8 +35,10 @@ import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ParenthesizedExpression;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
@@ -42,6 +50,8 @@ import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.StringLiteral;
+import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.Type;
@@ -79,6 +89,9 @@ public class ASTWriters {
 	 * Add visitors for class, method, field, and type declarations.
 	 */
 	private void addDeclarationWriters() {
+		// Compilation unit
+		addWriter(CompilationUnit.class, new CompilationUnitWriter(this));
+
 		// Type (class/interface) declaration
 		addWriter(TypeDeclaration.class, new TypeDeclarationWriter(this));
 
@@ -86,37 +99,7 @@ public class ASTWriters {
 		addWriter(MethodDeclaration.class, new MethodDeclarationWriter(this));
 
 		// Field declaration
-		addWriter(FieldDeclaration.class, new ASTWriter() {
-			@Override
-			public void write(ASTNode node, Context context) {
-				FieldDeclaration fieldDeclaration = (FieldDeclaration) node;
-	
-				// TODO: Handle final/const
-	
-				context.skipModifiers(fieldDeclaration.modifiers());
-	
-				// Write the type
-				context.skipSpaceAndComments();
-				writeType(fieldDeclaration.getType(), context, false);
-	
-				boolean first = true;
-				for (Object fragment : fieldDeclaration.fragments()) {
-					VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) fragment;
-
-					context.copySpaceAndComments();
-					if (! first) {
-						context.matchAndWrite(",");
-						context.copySpaceAndComments();
-					}
-					writeNode(variableDeclarationFragment, context);
-	
-					first = false;
-				}
-	
-				context.copySpaceAndComments();
-				context.matchAndWrite(";");
-			}
-		});
+		addWriter(FieldDeclaration.class, new FieldDeclarationWriter(this));
 
 		// Variable declaration fragment
 		addWriter(VariableDeclarationFragment.class, new ASTWriter() {
@@ -177,7 +160,53 @@ public class ASTWriters {
 			public void write(ASTNode node, Context context) {
 				SimpleType simpleType = (SimpleType) node;
 
-				writeNode(simpleType.getName(), context);
+				Name name = simpleType.getName();
+				if (name instanceof QualifiedName) {
+					QualifiedName qualifiedName = (QualifiedName) name;
+
+					context.write(ASTWriterUtil.getNamespaceNameForPackageName(qualifiedName.getQualifier()));
+					context.setPositionToEndOfNode(qualifiedName.getQualifier());
+
+					context.copySpaceAndComments();
+					context.matchAndWrite(".", "::");
+					context.matchAndWrite(qualifiedName.getName().getIdentifier());
+				}
+				else {
+					SimpleName simpleName = (SimpleName) name;
+
+					context.matchAndWrite(simpleName.getIdentifier());
+				}
+			}
+		});
+
+		// Parameterized type
+		addWriter(ParameterizedType.class, new ASTWriter() {
+			@Override
+			public void write(ASTNode node, Context context) {
+				ParameterizedType parameterizedType = (ParameterizedType) node;
+
+				writeNode(parameterizedType.getType(), context);
+
+				context.copySpaceAndComments();
+				context.matchAndWrite("<");
+
+				boolean first = true;
+				List<?> typeArguments = parameterizedType.typeArguments();
+				for (Object typeArgumentObject : typeArguments) {
+					Type typeArgument = (Type) typeArgumentObject;
+
+					if (! first) {
+						context.copySpaceAndComments();
+						context.matchAndWrite(",");
+					}
+
+					context.copySpaceAndComments();
+					writeNode(typeArgument, context);
+
+					first = false;
+				}
+
+				context.matchAndWrite(">");
 			}
 		});
 
@@ -217,10 +246,7 @@ public class ASTWriters {
 				else if (code == PrimitiveType.INT)
 					context.matchAndWrite("int", profile.getInt32Type());
 				else if (code == PrimitiveType.LONG) {
-					String int64Type = profile.getInt64Type();
-					if (int64Type == null)
-						context.throwSourceNotSupported("long type isn't supported by default; need to specify target C++ type for 64 bit int");
-					context.matchAndWrite("long", int64Type);
+					context.matchAndWrite("long", profile.getInt64Type());
 				} else if (code == PrimitiveType.FLOAT)
 					context.matchAndWrite("float", profile.getFloat32Type());
 				else if (code == PrimitiveType.DOUBLE)
@@ -241,17 +267,27 @@ public class ASTWriters {
 	private void addStatementWriters() {
 		// Block
 		addWriter(Block.class, new ASTWriter() {
+			@SuppressWarnings("unchecked")
 			@Override
 			public void write(ASTNode node, Context context) {
 				Block block = (Block) node;
 
 				context.matchAndWrite("{");
 
-				for (Object statementObject : block.statements()) {
-					Statement statement = (Statement) statementObject;
-					context.copySpaceAndComments();
+				boolean firstStatement = true;
+				for (Statement statement : (List<Statement>) block.statements()) {
+					// If the first statement is a super constructor invocation, we skip it since
+					// it's included as part of the method declaration in C++. If a super
+					// constructor invocation is a statement other than the first, which it should
+					// never be, we let that error out since writeNode won't find a match for it.
+					if (firstStatement && statement instanceof SuperConstructorInvocation)
+						context.setPositionToEndOfNodeSpaceAndComments(statement);
+					else {
+						context.copySpaceAndComments();
+						writeNode(statement, context);
+					}
 
-					writeNode(statement, context);
+					firstStatement = false;
 				}
 
 				context.copySpaceAndComments();
@@ -274,8 +310,8 @@ public class ASTWriters {
 				ExpressionStatement expressionStatement = (ExpressionStatement) node;
 
 				writeNode(expressionStatement.getExpression(), context);
-				context.copySpaceAndComments();
 
+				context.copySpaceAndComments();
 				context.matchAndWrite(";");
 			}
 		});
@@ -319,18 +355,78 @@ public class ASTWriters {
 				WhileStatement whileStatement = (WhileStatement) node;
 
 				context.matchAndWrite("while");
-				context.copySpaceAndComments();
 
+				context.copySpaceAndComments();
 				context.matchAndWrite("(");
-				context.copySpaceAndComments();
 
+				context.copySpaceAndComments();
 				writeNode(whileStatement.getExpression(), context);
-				context.copySpaceAndComments();
 
+				context.copySpaceAndComments();
 				context.matchAndWrite(")");
-				context.copySpaceAndComments();
 
+				context.copySpaceAndComments();
 				writeNode(whileStatement.getBody(), context);
+			}
+		});
+
+		// Do while statement
+		addWriter(DoStatement.class, new ASTWriter() {
+			@Override
+			public void write(ASTNode node, Context context) {
+				DoStatement doStatement = (DoStatement) node;
+
+				context.matchAndWrite("do");
+
+				context.copySpaceAndComments();
+				writeNode(doStatement.getBody(), context);
+
+				context.copySpaceAndComments();
+				context.matchAndWrite("while");
+
+				context.copySpaceAndComments();
+				context.matchAndWrite("(");
+
+				context.copySpaceAndComments();
+				writeNode(doStatement.getExpression(), context);
+
+				context.copySpaceAndComments();
+				context.matchAndWrite(")");
+
+				context.copySpaceAndComments();
+				context.matchAndWrite(";");
+			}
+		});
+
+		// Continue statement
+		addWriter(ContinueStatement.class, new ASTWriter() {
+			@Override
+			public void write(ASTNode node, Context context) {
+				ContinueStatement continueStatement = (ContinueStatement) node;
+				
+				if (continueStatement.getLabel() != null)
+					context.throwSourceNotSupported("continue statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
+
+				context.matchAndWrite("continue");
+
+				context.copySpaceAndComments();
+				context.matchAndWrite(";");
+			}
+		});
+
+		// Break statement 
+		addWriter(BreakStatement.class, new ASTWriter() {
+			@Override
+			public void write(ASTNode node, Context context) {
+				BreakStatement breakStatement = (BreakStatement) node;
+				
+				if (breakStatement.getLabel() != null)
+					context.throwSourceNotSupported("break statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
+
+				context.matchAndWrite("break");
+				
+				context.copySpaceAndComments();
+				context.matchAndWrite(";");
 			}
 		});
 
@@ -344,11 +440,14 @@ public class ASTWriters {
 				ReturnStatement returnStatement = (ReturnStatement) node;
 
 				context.matchAndWrite("return");
-				context.copySpaceAndComments();
 
-				writeNode(returnStatement.getExpression(), context);
-				context.copySpaceAndComments();
+				Expression expression = returnStatement.getExpression();
+				if (expression != null) {
+					context.copySpaceAndComments();
+					writeNode(returnStatement.getExpression(), context);
+				}
 
+				context.copySpaceAndComments();
 				context.matchAndWrite(";");
 			}
 		});
@@ -391,6 +490,9 @@ public class ASTWriters {
 
 		// Method invocation
 		addWriter(MethodInvocation.class, new MethodInvocationWriter(this));
+		
+		// Super Method invocation
+		addWriter(SuperMethodInvocation.class, new MethodInvocationWriter(this));
 		
 		// Class instance creation
 		addWriter(ClassInstanceCreation.class, new ClassInstanceCreationWriter(this));
@@ -458,15 +560,37 @@ public class ASTWriters {
 
 				Expression expression = instanceofExpression.getLeftOperand();
 				writeNode(expression, context);
-				context.skipSpaceAndComments();
 
+				context.skipSpaceAndComments();
 				context.match("instanceof");
+				
 				context.skipSpaceAndComments();
-
 				Type type = instanceofExpression.getRightOperand();
 				writeNode(type, context);
 
 				context.write(")");
+			}
+		});
+
+		// conditional expression
+		addWriter(ConditionalExpression.class, new ASTWriter() {
+			@Override
+			public void write(ASTNode node, Context context) {
+				ConditionalExpression conditionalExpression = (ConditionalExpression) node;
+				
+				writeNode(conditionalExpression.getExpression(), context);
+				
+				context.copySpaceAndComments();
+				context.matchAndWrite("?");
+				
+				context.copySpaceAndComments();
+				writeNode(conditionalExpression.getThenExpression(), context);
+				
+				context.copySpaceAndComments();
+				context.matchAndWrite(":");
+
+				context.copySpaceAndComments();
+				writeNode(conditionalExpression.getElseExpression(), context);
 			}
 		});
 
@@ -527,13 +651,16 @@ public class ASTWriters {
 			public void write(ASTNode node, Context context) {
 				QualifiedName qualifiedName = (QualifiedName) node;
 
-				// TODO: Figure out the other cases where this can occur & make them all correct 
+				// TODO: Figure out the other cases where this can occur & make them all correct
+				
+				// Here assume that a QualifiedName refers to field access; if it refers to a type,
+				// the caller should catch that case itself and ensure it never gets here
 
 				writeNode(qualifiedName.getQualifier(), context);
 				context.copySpaceAndComments();
 
 				context.matchAndWrite(".", "->");
-
+				
 				writeNode(qualifiedName.getName(), context);
 			}
 		});
@@ -561,17 +688,26 @@ public class ASTWriters {
 				CastExpression castExpression = (CastExpression) node;
 
 				context.matchAndWrite("(", "static_cast<");
-				context.copySpaceAndComments();
 
+				context.copySpaceAndComments();
 				writeNode(castExpression.getType(), context);
+
+				context.copySpaceAndComments();
+				context.matchAndWrite(")", ">");
+
+				// Skip just whitespace as that's not normally present here in C++ unlike Java, but
+				// if there's a newline or comment, preserve that
+				context.skipSpaceAndComments();
 				context.copySpaceAndComments();
 
-				context.matchAndWrite(")", ">(");
-				context.copySpaceAndComments();
-
+				// Write out the parentheses unless by chance the casted expression already includes
+				// them
+				boolean needParentheses = !(castExpression.getExpression() instanceof ParenthesizedExpression);
+				if (needParentheses)
+					context.write("(");
 				writeNode(castExpression.getExpression(), context);
-
-				context.write(")");
+				if (needParentheses)
+					context.write(")");
 			}
 		});
 	
@@ -592,7 +728,18 @@ public class ASTWriters {
 				context.matchAndWrite(booleanLiteral.booleanValue() ? "true" : "false");
 			}
 		});
+		
+		// Character literal
+		addWriter(CharacterLiteral.class, new ASTWriter() {
+			@Override
+			public void write(ASTNode node, Context context) {
+				CharacterLiteral characterLiteral = (CharacterLiteral) node;
 
+				// TODO: Map character escape sequences
+				context.matchAndWrite(characterLiteral.getEscapedValue());
+			}
+		});
+		
 		// Null literal
 		addWriter(NullLiteral.class, new ASTWriter() {
 			@Override
@@ -615,18 +762,20 @@ public class ASTWriters {
 
 	private static final boolean VALIDATE_CONTEXT_POSITION = true;
 	public void writeNode(ASTNode node, Context context) {
-
 		int nodeStartPosition;
 		if (VALIDATE_CONTEXT_POSITION) {
 			nodeStartPosition = node.getStartPosition();
 
 			// If the node starts with Javadoc (true for method declarations with Javadoc before
 			// them), then skip past it; the caller is always expected to handle any comments,
-			// Javadoc or not, coming before the start of code proper for the node
+			// Javadoc or not, coming before the start of code proper for the node. The exception to
+			// that rule is the CompilationUnit; as outermost node it handles any comments at the
+			// beginning itself.
 			SourceCopier sourceCopier = context.getSourceCopier();
 			if (sourceCopier.getSourceCharAt(nodeStartPosition) == '/'
 					&& sourceCopier.getSourceCharAt(nodeStartPosition + 1) == '*'
-					&& sourceCopier.getSourceCharAt(nodeStartPosition + 1) == '*')
+					&& sourceCopier.getSourceCharAt(nodeStartPosition + 2) == '*'
+					&& ! (node instanceof CompilationUnit))
 				context.assertPositionIs(sourceCopier.skipSpaceAndComments(nodeStartPosition, false));
 			else context.assertPositionIs(nodeStartPosition);
 		}
@@ -635,6 +784,23 @@ public class ASTWriters {
 
 		if (VALIDATE_CONTEXT_POSITION)
 			context.assertPositionIs(nodeStartPosition + node.getLength());
+	}
+
+	/**
+	 * Write a node that's not at the current context position. The context position is unchanged by
+	 * this method--the position is restored to the original position when done. No comments
+	 * before/after the node are written. This method can be used to write a node multiple times.
+	 * 
+	 * @param node
+	 *            node to write
+	 * @param context
+	 *            the context
+	 */
+	public void writeNodeAtDifferentPosition(ASTNode node, Context context) {
+		int originalPosition = context.getPosition();
+		context.setPosition(node.getStartPosition());
+		writeNode(node, context);
+		context.setPosition(originalPosition);
 	}
 
 	private void addWriter(Class<? extends ASTNode> clazz, ASTWriter visitor) {
@@ -660,28 +826,11 @@ public class ASTWriters {
 				context.write("*");
 			}
 			else {
-				context.write("ptr<");
+				context.write("ptr< ");
 				writeNode(type, context);
-				context.write(">");
+				context.write(" >");
 			}
 		}
-	}
-
-	static int mem;
-
-	void testit() {
-		juniversal.cplusplus.astwriters.ASTWriters.mem = 3;
-
-		int[][] arr[], barr[][][];
-		arr = new int[3][][];
-		barr = new int[3][3][][][];
-		arr[3][0][0] = 5;
-		barr[10][10] = new int[21][][];
-
-		IProject project;
-		// JavaCore.create();
-		org.eclipse.jdt.internal.compiler.batch.Main main;
-
 	}
 
 	public ASTWriter getVisitor(Class<? extends ASTNode> clazz) {

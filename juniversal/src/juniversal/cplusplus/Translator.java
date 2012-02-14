@@ -1,8 +1,6 @@
 package juniversal.cplusplus;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -10,6 +8,7 @@ import juniversal.ASTUtil;
 import juniversal.ContextPositionMismatchException;
 import juniversal.JUniversal;
 import juniversal.JUniversalException;
+import juniversal.SourceFile;
 import juniversal.UserViewableException;
 import juniversal.cplusplus.astwriters.ASTWriters;
 
@@ -22,6 +21,8 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 public class Translator {
 	private JUniversal jUniversal;
 	private ASTWriters astWriters;
+	private CPPProfile cppProfile = new CPPProfile();
+	String s;
 
 	public Translator(JUniversal jUniversal) {
 		this.jUniversal = jUniversal;
@@ -34,94 +35,83 @@ public class Translator {
 		parser.setEnvironment(new String[0], new String[0], null, false);
 		parser.setResolveBindings(true);
 
-
 		FileASTRequestor astRequestor = new FileASTRequestor() {
 			public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
 				System.out.println("Called to accept AST for " + sourceFilePath);
 				translateAST(sourceFilePath, compilationUnit);
 			}
-		}; 
+		};
 
 		parser.createASTs(jUniversal.getJavaFiles(), null, new String[0], astRequestor, null);
 
 		/*
-		String source = readFile(jUniversal.getJavaProjectDirectories().get(0).getPath());
-		parser.setSource(source.toCharArray());
-
-		CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
-		
-
-		TypeDeclaration typeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
-
-		FileWriter writer;
-		try {
-			writer = new FileWriter(jUniversal.getOutputDirectory());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		CPPProfile profile = new CPPProfile();
-		// profile.setTabStop(4);
-
-		CPPWriter cppWriter = new CPPWriter(writer, profile);
-
-		Context context = new Context((CompilationUnit) compilationUnit.getRoot(), source, 8, profile, cppWriter,
-				OutputType.SOURCE);
-
-		context.setPosition(typeDeclaration.getStartPosition());
-
-		ASTWriters astWriters = new ASTWriters();
-
-		try {
-			context.setPosition(typeDeclaration.getStartPosition());
-			context.skipSpaceAndComments();
-
-			astWriters.writeNode(typeDeclaration, context);
-		} catch (UserViewableException e) {
-			System.err.println(e.getMessage());
-			System.exit(1);
-		} catch (RuntimeException e) {
-			if (e instanceof ContextPositionMismatchException)
-				throw e;
-			else
-				throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
-						+ context.getPositionDescription(context.getPosition()), e);
-		}
-
-		try {
-			writer.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		*/
+		 * String source = readFile(jUniversal.getJavaProjectDirectories().get(0).getPath());
+		 * parser.setSource(source.toCharArray());
+		 * 
+		 * CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
+		 * 
+		 * 
+		 * TypeDeclaration typeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
+		 * 
+		 * FileWriter writer; try { writer = new FileWriter(jUniversal.getOutputDirectory()); }
+		 * catch (IOException e) { throw new RuntimeException(e); }
+		 * 
+		 * CPPProfile profile = new CPPProfile(); // profile.setTabStop(4);
+		 * 
+		 * CPPWriter cppWriter = new CPPWriter(writer, profile);
+		 * 
+		 * Context context = new Context((CompilationUnit) compilationUnit.getRoot(), source, 8,
+		 * profile, cppWriter, OutputType.SOURCE);
+		 * 
+		 * context.setPosition(typeDeclaration.getStartPosition());
+		 * 
+		 * ASTWriters astWriters = new ASTWriters();
+		 * 
+		 * try { context.setPosition(typeDeclaration.getStartPosition());
+		 * context.skipSpaceAndComments();
+		 * 
+		 * astWriters.writeNode(typeDeclaration, context); } catch (UserViewableException e) {
+		 * System.err.println(e.getMessage()); System.exit(1); } catch (RuntimeException e) { if (e
+		 * instanceof ContextPositionMismatchException) throw e; else throw new
+		 * JUniversalException(e.getMessage() + "\nError occurred with context at position\n" +
+		 * context.getPositionDescription(context.getPosition()), e); }
+		 * 
+		 * try { writer.close(); } catch (IOException e) { throw new RuntimeException(e); }
+		 */
 	}
 
 	private void translateAST(String sourceFilePath, CompilationUnit compilationUnit) {
-		TypeDeclaration typeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
+		// profile.setTabStop(4);
+		
+		SourceFile sourceFile = new SourceFile(compilationUnit, sourceFilePath);
+		
+		writeCPPFile(sourceFile, OutputType.HEADER);
+		writeCPPFile(sourceFile, OutputType.SOURCE);
+	}
+
+	private void writeCPPFile(SourceFile sourceFile, OutputType outputType) {
+		CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
+		TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
+
+		String typeName = mainTypeDeclaration.getName().getIdentifier();
+
+		String fileName = outputType == OutputType.HEADER ? typeName + ".h" : typeName + ".cpp";
+		File file = new File(jUniversal.getOutputDirectory(), fileName);
 
 		FileWriter writer;
 		try {
-			writer = new FileWriter(jUniversal.getOutputDirectory());
+			writer = new FileWriter(file);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+		CPPWriter cppWriter = new CPPWriter(writer, cppProfile);
 
-		CPPProfile profile = new CPPProfile();
-		// profile.setTabStop(4);
+		Context context = new Context(sourceFile, 4, cppProfile, cppWriter, outputType);
 
-		CPPWriter cppWriter = new CPPWriter(writer, profile);
-
-		String source = readFile(sourceFilePath);
-		Context context = new Context((CompilationUnit) compilationUnit.getRoot(), source, 8, profile, cppWriter,
-				OutputType.SOURCE);
-
-		context.setPosition(typeDeclaration.getStartPosition());
+		context.setPosition(compilationUnit.getStartPosition());
 
 		try {
-			context.setPosition(typeDeclaration.getStartPosition());
-			context.skipSpaceAndComments();
-
-			astWriters.writeNode(typeDeclaration, context);
+			astWriters.writeNode(compilationUnit, context);
 		} catch (UserViewableException e) {
 			System.err.println(e.getMessage());
 			System.exit(1);
@@ -137,30 +127,6 @@ public class Translator {
 			writer.close();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		}
-	}
-
-	public static String readFile(String filePath) {
-		File file = new File(filePath);
-
-		FileReader fileReader = null;
-		try {
-			StringBuilder stringBuilder = new StringBuilder();
-
-			fileReader = new FileReader(file);
-
-			char[] contentsBuffer = new char[1024];
-			int charsRead = 0;
-			while ((charsRead = fileReader.read(contentsBuffer)) != -1)
-				stringBuilder.append(contentsBuffer, 0, charsRead);
-
-			fileReader.close();
-
-			return stringBuilder.toString();
-		} catch (FileNotFoundException e) {
-			throw new JUniversalException(e);
-		} catch (IOException ioe) {
-			throw new JUniversalException(ioe);
 		}
 	}
 }

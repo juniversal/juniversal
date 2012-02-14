@@ -11,7 +11,7 @@ public class CPPProfile {
 	private String int8Type = "char";
 	private String int16Type = "short";
 	private String int32Type = "int";
-	private String int64Type = null;   // Not supported by default
+	private String int64Type = "long64";
 	private String float32Type = "float";
 	private String float64Type = "double";
 	private String unsignedInt32UnicodeCharType = "unsigned short";

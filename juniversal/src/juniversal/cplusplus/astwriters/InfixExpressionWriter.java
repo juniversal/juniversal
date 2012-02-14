@@ -1,10 +1,12 @@
 package juniversal.cplusplus.astwriters;
 
 import java.util.HashMap;
+import java.util.List;
 
 import juniversal.cplusplus.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
 
 
@@ -42,18 +44,46 @@ public class InfixExpressionWriter extends ASTWriter {
 		equivalentOperators.put(InfixExpression.Operator.CONDITIONAL_OR, "||");
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void write(ASTNode node, Context context) {
 		InfixExpression infixExpression = (InfixExpression) node;
+		
+		InfixExpression.Operator operator = infixExpression.getOperator();
 
-		getASTWriters().writeNode(infixExpression.getLeftOperand(), context);
-		context.copySpaceAndComments();
+		if (operator == InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED) {
+			context.write("rightShiftUnsigned(");
+			getASTWriters().writeNode(infixExpression.getLeftOperand(), context);
 
-		String operatorToken = this.equivalentOperators.get(infixExpression.getOperator());
-		context.matchAndWrite(operatorToken);
-		context.copySpaceAndComments();
+			// Skip spaces before the >>> but if there's a newline (or comments) there, copy them
+			context.skipSpacesAndTabs();
+			context.copySpaceAndComments();
+			context.matchAndWrite(">>>", ",");
 
-		context.copySpaceAndComments();
-		getASTWriters().writeNode(infixExpression.getRightOperand(), context);
+			context.copySpaceAndComments();
+			getASTWriters().writeNode(infixExpression.getRightOperand(), context);
+			context.write(")");
+		}
+		else {
+			getASTWriters().writeNode(infixExpression.getLeftOperand(), context);
+	
+			context.copySpaceAndComments();
+			String operatorToken = this.equivalentOperators.get(infixExpression.getOperator());
+			context.matchAndWrite(operatorToken);
+	
+			context.copySpaceAndComments();
+			getASTWriters().writeNode(infixExpression.getRightOperand(), context);
+	
+			if (infixExpression.hasExtendedOperands()) {
+				for (Expression extendedOperand : (List<Expression>) infixExpression.extendedOperands()) {
+					
+					context.copySpaceAndComments();
+					context.matchAndWrite(operatorToken);
+	
+					context.copySpaceAndComments();
+					getASTWriters().writeNode(extendedOperand, context);
+				}
+			}
+		}
 	}
 }

@@ -27,11 +27,12 @@ public class ArrayCreationWriter extends ASTWriter {
 		// TODO: Support multidimensional arrays
 		if (dimensions.size() > 1)
 			throw new JUniversalException("Multidimensional arrays not currently supported");
-		Expression dimensionSizeExpression = (Expression) dimensions.get(0);
 
 		// TODO: Support array initializers
 		if (arrayCreation.getInitializer() != null)
 			throw new JUniversalException("Array initializers not currently supported");
+
+		Expression dimensionSizeExpression = (Expression) dimensions.get(0);
 
 		context.setPosition(dimensionSizeExpression.getStartPosition());
 

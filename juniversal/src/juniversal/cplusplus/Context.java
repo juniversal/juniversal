@@ -5,15 +5,17 @@ import java.util.List;
 import juniversal.ASTUtil;
 import juniversal.ContextPositionMismatchException;
 import juniversal.JUniversalException;
+import juniversal.SourceCopier;
+import juniversal.SourceFile;
 import juniversal.UserViewableException;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
-import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class Context {
-	private CompilationUnit compilationUnit;
+	private SourceFile sourceFile;
 	private CPPProfile cppProfile;
 	private CPPWriter cppWriter;
 	private SourceCopier sourceCopier;
@@ -23,21 +25,21 @@ public class Context {
 
 	private boolean writingVariableDeclarationNeedingStar;
 	private boolean writingMethodImplementation;
-	private SimpleName typeDeclarationName;
+	private TypeDeclaration typeDeclaration;
 
-	public Context(CompilationUnit compilationUnit, String source, int sourceTabStop, CPPProfile cppProfile,
-			CPPWriter cppWriter, OutputType outputType) {
-		this.compilationUnit = compilationUnit;
+	public Context(SourceFile sourceFile, int sourceTabStop, CPPProfile cppProfile, CPPWriter cppWriter,
+			OutputType outputType) {
+		this.sourceFile = sourceFile;
 		this.cppProfile = cppProfile;
 		this.cppWriter = cppWriter;
 		this.outputType = outputType;
 
-		sourceCopier = new SourceCopier(compilationUnit, source, sourceTabStop, cppWriter);
-		position = compilationUnit.getStartPosition();
+		sourceCopier = new SourceCopier(sourceFile, sourceTabStop, cppWriter);
+		position = sourceFile.getCompilationUnit().getStartPosition();
 	}
 
 	public CompilationUnit getCompilationUnit() {
-		return compilationUnit;
+		return sourceFile.getCompilationUnit();
 	}
 
 	/**
@@ -58,6 +60,56 @@ public class Context {
 	 */
 	public void setPosition(int position) {
 		this.position = position;
+	}
+	
+	/**
+	 * Set the position to the beginning of the whitespace/comments for a node, ignoring any
+	 * comments associated with the previous node. The heuristic used here is that
+	 * whitespace/comments that come before a node are for that node, unless they are on the end of
+	 * a line containing the previous node.
+	 * 
+	 * One consequence of these rules is that if the previous node (or its trailing comment) &
+	 * current node are on the same line, all comments/space between them are assumed to be for the
+	 * previous node. Otherwise, the position will be set to the beginning of the line following the
+	 * previous node / previous node's line ending comment.
+	 * 
+	 * @param node
+	 *            node in question
+	 */
+	public void setPositionToStartOfNodeSpaceAndComments(ASTNode node) {
+		setPosition(node.getStartPosition());
+		skipSpaceAndCommentsBackward();      // Now at the end of the previous node
+		skipSpaceAndCommentsUntilEOL();      // Skip any comments on previous node's line
+		skipNewline();                       // Skip the newline character if present
+	}
+
+	/**
+	 * Sets the position to the end of the node & any trailing spaces/comments for the node. When
+	 * called on a statement node or other node that's the last thing on a line, normally the
+	 * context will now be positioned at the newline character.
+	 * 
+	 * @param node node in question
+	 */
+	public void setPositionToEndOfNodeSpaceAndComments(ASTNode node) {
+		setPositionToEndOfNode(node);
+		skipSpaceAndCommentsUntilEOL();
+	}
+
+	/**
+	 * Sets the position to the beginning of the node's code. The AST parser includes Javadoc before
+	 * a node with the node; we skip past that as we treat spaces/comments separately. Use
+	 * setPositionToStartOfNodeSpaceAndComments if you want to include the space/comments that our
+	 * heuristics pair to a node.
+	 * 
+	 * @param node
+	 */
+	public void setPositionToStartOfNode(ASTNode node) {
+		setPosition(node.getStartPosition());
+		skipSpaceAndComments();
+	}
+
+	public void setPositionToEndOfNode(ASTNode node) {
+		setPosition(ASTUtil.getEndPosition(node));
 	}
 
 	public int getPreferredIndent() {
@@ -80,12 +132,12 @@ public class Context {
 		this.writingVariableDeclarationNeedingStar = value;
 	}
 
-	public void setTypeDeclarationName(SimpleName typeName) {
-		this.typeDeclarationName = typeName;
+	public void setTypeDeclaration(TypeDeclaration typeDeclaration) {
+		this.typeDeclaration = typeDeclaration;
 	}
 
-	public SimpleName getTypeDeclarationName() {
-		return this.typeDeclarationName;
+	public TypeDeclaration getTypeDeclaration() {
+		return this.typeDeclaration;
 	}
 
 	/**
@@ -127,7 +179,7 @@ public class Context {
 		return sourceCopier.getSourceLogicalColumn(getPosition());
 	}
 
-	public void copySpaceAndComments() {
+	public void copySpaceAndComments() { 
 		position = sourceCopier.copySpaceAndComments(position, false);
 	}
 
@@ -143,11 +195,19 @@ public class Context {
 		position = sourceCopier.skipSpaceAndComments(position, true);
 	}
 
+	public void skipSpacesAndTabs() {
+		position = sourceCopier.skipSpacesAndTabs(position);
+	}
+
+	public void skipBlankLines() {
+		position = sourceCopier.skipBlankLines(position);
+	}
+
 	public void skipNewline() {
 		position = sourceCopier.skipNewline(position);
 	}
 
-	public void backwardSkipSpaceAndComments() {
+	public void skipSpaceAndCommentsBackward() {
 		position = sourceCopier.skipSpaceAndCommentsBackward(position);
 	}
 
@@ -229,6 +289,14 @@ public class Context {
 	 */
 	public void writeln() {
 		cppWriter.write("\n");
+	}
+
+	/**
+	 * Write specified number of newlines to the output.
+	 */
+	public void writeln(int count) {
+		for (int i = 0; i < count; ++i)
+			cppWriter.write("\n");
 	}
 
 	/**

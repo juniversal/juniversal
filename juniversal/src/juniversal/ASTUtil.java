@@ -8,7 +8,6 @@ import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
 import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class ASTUtil {
@@ -117,6 +116,22 @@ public class ASTUtil {
 	}
 
 	/**
+	 * Returns true if the list of extended modifiers (modifiers & annotations) includes "abstract".
+	 * 
+	 * @param extendedModifiers
+	 *            extended modifiers to check
+	 * @return true if and only if list contains "static"
+	 */
+	public static boolean containsAbstract(List<?> extendedModifiers) {
+		for (Object extendedModifierObject : extendedModifiers) {
+			IExtendedModifier extendedModifier = (IExtendedModifier) extendedModifierObject;
+			if (extendedModifier.isModifier() && ((Modifier) extendedModifier).isAbstract())
+				return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Determines the access modifier specified in list of modifiers. If no access modifier is
 	 * specified, the default access of Package is returned.
 	 * 
@@ -152,6 +167,23 @@ public class ASTUtil {
 	 */
 	public static int getEndPosition(ASTNode node) {
 		return node.getStartPosition() + node.getLength();
+	}
+
+	/**
+	 * Returns the position following the last character in the last node in the list. Note that the
+	 * end position may be (one) past the end of the source.
+	 * 
+	 * @param nodes
+	 *            list of nodes; each item in the list should actually be of a type that's a
+	 *            subclass of ASTNode
+	 * @return last position of the last node in the list + 1
+	 */
+	public static int getEndPosition(List<?> nodes) {
+		Object lastNodeObject = null;
+		for (Object node : nodes)
+			lastNodeObject = node;
+
+		return getEndPosition((ASTNode) lastNodeObject);
 	}
 
 	public static String simpleNameFromQualifiedName(String qualifiedName) {

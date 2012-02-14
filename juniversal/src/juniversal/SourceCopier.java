@@ -1,18 +1,16 @@
-package juniversal.cplusplus;
-
-import juniversal.JUniversalException;
+package juniversal;
+import juniversal.cplusplus.CPPWriter;
 
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
-
 public class SourceCopier {
-	private CompilationUnit compilationUnit;
+	private SourceFile sourceFile;
 	private String source;
 	private int sourceTabStop;
 
-	public SourceCopier(CompilationUnit compilationUnit, String source, int sourceTabStop, CPPWriter cppWriter) {
-		this.compilationUnit = compilationUnit;
-		this.source = source;
+	public SourceCopier(SourceFile sourceFile, int sourceTabStop, CPPWriter cppWriter) {
+		this.sourceFile = sourceFile;
+		this.source = sourceFile.getSource();
 		this.sourceTabStop = sourceTabStop;
 		this.cppWriter = cppWriter;
 	}
@@ -127,6 +125,42 @@ public class SourceCopier {
 
 	/**
 	 * Skips all whitespace, newlines, and comments from the source starting at startPosition and
+	 * continuing until the end of the whitespace/newlines/comments.
+	 * 
+	 * @param startPosition
+	 *            starting position in source
+	 * @param justUntilEOL
+	 *            if true, then the skipping stops just short of the end of line (not including \r
+	 *            or \n characters); if there's a multiline comment, it's skipped in its entirety
+	 *            and the copying stops at the first EOL or code character after that
+	 * @return ending position--position of character following space and comments
+	 */
+	public int skipBlankLines(int startPosition) {
+		int position = startPosition;
+
+		while (isRestOfLineBlank(position) && ! isEOF(position)) {
+			position = skipSpacesAndTabs(position);
+			position = skipNewline(position);
+		}
+
+		return position;
+	}
+
+	/**
+	 * Determines if the rest of the line just contains whitespace.
+	 *  
+	 * @param startPosition position in question
+	 * @return true if rest of line is blank
+	 */
+	public boolean isRestOfLineBlank(int startPosition) {
+		int position = skipSpacesAndTabs(startPosition);
+		
+		int currChar = getSourceCharAt(position);
+		return currChar == -1 || currChar == '\r' || currChar == '\n';
+	}
+
+	/**
+	 * Skips all whitespace, newlines, and comments from the source starting at startPosition and
 	 * continuing backwards until the beginning of the whitespace/newlines/comments. The returned
 	 * position points to the beginning of the whitespace/newlines/comments or the original position
 	 * if there wasn't any whitespace/newlines/comments.
@@ -146,6 +180,7 @@ public class SourceCopier {
 			else if (currChar == ' ' || currChar == '\t' || currChar == '\r')
 				--position;
 			else if (currChar == '\n') {
+				CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
 				int lineStartPosition = compilationUnit.getPosition(compilationUnit.getLineNumber(position), 0);
 				int lineCommentStartPosition = getLineCommentStartPosition(lineStartPosition);
 
@@ -410,8 +445,8 @@ public class SourceCopier {
 	}
 
 	/**
-	 * Skips contiguous spaces, tabs, and newlines from the source starting at startPosition and continuing
-	 * until the end of the spaces/tabs.
+	 * Skips contiguous spaces, tabs, and newlines from the source starting at startPosition and
+	 * continuing until the end of the spaces/tabs.
 	 * 
 	 * @param startPosition
 	 *            starting position in source
@@ -442,6 +477,17 @@ public class SourceCopier {
 	}
 
 	/**
+	 * Returns true if the specifed position is at or past the end of the source.
+	 * 
+	 * @param position
+	 *            source position in question
+	 * @return true if position is at EOF
+	 */
+	public boolean isEOF(int position) {
+		return position >= source.length();
+	}
+
+	/**
 	 * Get the character from the source at the specified position or -1 if before the beginning of
 	 * the source.
 	 * 
@@ -464,7 +510,9 @@ public class SourceCopier {
 	 * @return logical column
 	 */
 	public int getSourceLogicalColumn(int position) {
-		int physicalColumn = compilationUnit.getColumnNumber(position);
+		int physicalColumn = sourceFile.getCompilationUnit().getColumnNumber(position);
+		if (physicalColumn < 0)
+			throw new JUniversalException("Position is invalid: " + position);
 
 		int logicalColumn = 0;
 		for (int i = position - physicalColumn; i < position; ++i) {
@@ -490,14 +538,24 @@ public class SourceCopier {
 	 * @return description string for position, with one line break in the middle
 	 */
 	public String getPositionDescription(int position) {
+		String prefix = sourceFile.isDiskFile() ? "    File " + sourceFile.getSourceFilePath() + "\n" : "";
+
+		CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
+
 		int lineNumber = compilationUnit.getLineNumber(position);
+		if (lineNumber < 0) {
+			if (position == source.length())
+				return prefix + "End of file";
+			else return prefix + "Position " + position + " isn't valid";
+		}
+
 		int columnNumber = getSourceLogicalColumn(position);
 
 		int startPosition = compilationUnit.getPosition(lineNumber, 0);
 		int endPosition = compilationUnit.getPosition(lineNumber + 1, 0) - 1;
 
 		// Chop off newlines / carriage returns on the end of the line 
-		while (source.charAt(endPosition) == '\n' || source.charAt(endPosition) == '\r')
+		while (endPosition >= 0 && (source.charAt(endPosition) == '\n' || source.charAt(endPosition) == '\r'))
 			--endPosition;
 		if (endPosition < position)
 			endPosition = position;
@@ -506,7 +564,7 @@ public class SourceCopier {
 
 		String line = source.substring(startPosition, endPosition + 1);
 
-		StringBuilder description = new StringBuilder();
+		StringBuilder description = new StringBuilder(prefix);
 
 		description.append(linePrefix);
 		description.append(line + "\n");

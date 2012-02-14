@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 
 import java.io.StringWriter;
 
+import juniversal.SourceFile;
 import juniversal.SourceNotSupportedException;
 import juniversal.cplusplus.CPPProfile;
 import juniversal.cplusplus.CPPWriter;
@@ -138,8 +139,8 @@ public class WriteCPPTest {
 		
 		CPPWriter cppWriter = new CPPWriter(writer, profile);
 
-		Context context = new Context((CompilationUnit) compilationUnit.getRoot(),
-				javaSource, m_sourceTabStop, profile, cppWriter, OutputType.SOURCE);
+		Context context = new Context(new SourceFile(compilationUnit, null, javaSource), m_sourceTabStop, profile,
+				cppWriter, OutputType.SOURCE);
 
 		context.setPosition(node.getStartPosition());
 		getWriteCPP().writeNode(node, context);

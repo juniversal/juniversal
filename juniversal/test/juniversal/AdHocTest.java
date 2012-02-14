@@ -2,7 +2,7 @@ package juniversal;
 
 import org.junit.Test;
 
-public class AdHocTest {
+public @SuppressWarnings("unused") class AdHocTest {
 	@Test public void test() {
 		char a = 'a';
 		short b = (short) -10000;

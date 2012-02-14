@@ -15,7 +15,7 @@ import juniversal.UserViewableException;
 
 public class CPPWriter {
 	private int currLine;                             // Current line (1 based)
-	private int currColumn;                           // Current column on line (1 based)
+	private int currColumn;                           // Current column on line (0 based)
 	private boolean accumulatingSpacesAtBeginningOfLine;
 	private int spacesAtBeginningOfLine;
 	private Writer writer;
@@ -47,7 +47,7 @@ public class CPPWriter {
 		destTabStop = cppProfile.getTabStop();
 
 		currLine = 1;
-		currColumn = 1;
+		currColumn = 0;
 		accumulatingSpacesAtBeginningOfLine = true;
 		spacesAtBeginningOfLine = 0;
 	}
@@ -57,7 +57,7 @@ public class CPPWriter {
 	public int getCurrLine() { return currLine; }
 
 	/**
-	 * Return the current column, where the next output character will go.
+	 * Return the current column (0 based), where the next output character will go.
 	 * 
 	 * @return current column
 	 */
@@ -153,7 +153,7 @@ public class CPPWriter {
 		this.additionalIndentation = value;
 
 		// If we're at the beginning of the line, then make the additional indentation take effect immediately
-		if (currColumn == oldValue + 1) {
+		if (currColumn == oldValue) {
 			int delta = value - oldValue;
 			currColumn += delta;
 			spacesAtBeginningOfLine += delta; 
