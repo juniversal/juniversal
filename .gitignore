@@ -13,3 +13,6 @@ Release/
 /testdata/test1/bin/
 /.metadata
 *.class
+
+.gradle
+build/
