@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: org.eclipse.osgi.source_3.10.0.v20140606-1445">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/translator/libs/org.eclipse.osgi.source_3.10.0.v20140606-1445.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

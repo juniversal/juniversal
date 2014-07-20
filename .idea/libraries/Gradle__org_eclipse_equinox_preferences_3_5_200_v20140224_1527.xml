@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: org.eclipse.equinox.preferences_3.5.200.v20140224-1527">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/translator/libs/org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
