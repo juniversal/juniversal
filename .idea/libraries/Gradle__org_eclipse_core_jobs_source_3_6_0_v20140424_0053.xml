@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: org.eclipse.core.jobs.source_3.6.0.v20140424-0053">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/translator/libs/org.eclipse.core.jobs.source_3.6.0.v20140424-0053.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
