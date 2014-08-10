@@ -16,7 +16,9 @@ public class InfixExpressionWriter extends ASTWriter {
 	public InfixExpressionWriter(ASTWriters astWriters) {
 		super(astWriters);
 
-		equivalentOperators = new HashMap<>();
+        // TODO: Handle fact that Swift's operator precedence is different than Java's
+
+        equivalentOperators = new HashMap<>();
 		equivalentOperators.put(InfixExpression.Operator.TIMES, "*");
 		equivalentOperators.put(InfixExpression.Operator.DIVIDE, "/");
 		equivalentOperators.put(InfixExpression.Operator.REMAINDER, "%");
@@ -26,7 +28,7 @@ public class InfixExpressionWriter extends ASTWriter {
 		// TODO: Test signed / unsigned semantics here
 		equivalentOperators.put(InfixExpression.Operator.LEFT_SHIFT, "<<");
 		equivalentOperators.put(InfixExpression.Operator.RIGHT_SHIFT_SIGNED, ">>");
-		//cppOperators.put(InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED, "==");
+		//cppOperators.put(InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED, ">>>");
 
 		equivalentOperators.put(InfixExpression.Operator.LESS, "<");
 		equivalentOperators.put(InfixExpression.Operator.GREATER, ">");
@@ -35,8 +37,8 @@ public class InfixExpressionWriter extends ASTWriter {
 		equivalentOperators.put(InfixExpression.Operator.EQUALS, "==");
 		equivalentOperators.put(InfixExpression.Operator.NOT_EQUALS, "!=");
 
+        equivalentOperators.put(InfixExpression.Operator.AND, "&");
 		equivalentOperators.put(InfixExpression.Operator.XOR, "^");
-		equivalentOperators.put(InfixExpression.Operator.AND, "&");
 		equivalentOperators.put(InfixExpression.Operator.OR, "|");
 
 		equivalentOperators.put(InfixExpression.Operator.CONDITIONAL_AND, "&&");
@@ -47,10 +49,14 @@ public class InfixExpressionWriter extends ASTWriter {
 	@Override
 	public void write(ASTNode node, Context context) {
 		InfixExpression infixExpression = (InfixExpression) node;
+
+        // TODO: Add spaces to left & right of binary operators if needed, per Swift's rules about needing space on
+        // both sides or neither
 		
 		InfixExpression.Operator operator = infixExpression.getOperator();
 
 		if (operator == InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED) {
+            // TODO: Handle this
 			context.write("rightShiftUnsigned(");
 			getASTWriters().writeNode(infixExpression.getLeftOperand(), context);
 
@@ -65,14 +71,14 @@ public class InfixExpressionWriter extends ASTWriter {
 		}
 		else {
 			getASTWriters().writeNode(infixExpression.getLeftOperand(), context);
-	
+
 			context.copySpaceAndComments();
 			String operatorToken = this.equivalentOperators.get(infixExpression.getOperator());
 			context.matchAndWrite(operatorToken);
-	
+
 			context.copySpaceAndComments();
 			getASTWriters().writeNode(infixExpression.getRightOperand(), context);
-	
+
 			if (infixExpression.hasExtendedOperands()) {
 				for (Expression extendedOperand : (List<Expression>) infixExpression.extendedOperands()) {
 					

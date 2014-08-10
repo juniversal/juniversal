@@ -460,7 +460,6 @@ public class ASTWriters {
         // Variable declaration expression (used in a for statement)
         addWriter(VariableDeclarationExpression.class, new VariableDeclarationWriter(this));
 
-        // TODO: Implement this
         // Infix expression
         addWriter(InfixExpression.class, new InfixExpressionWriter(this));
 
