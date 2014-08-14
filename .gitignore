@@ -1,3 +1,7 @@
+# IDEA user specific files (rest of files in .idea directory should be checked in)
+.idea/workspace.xml
+.idea/tasks.xml
+
 /cpplib/Debug
 /cpplib/Release
 /javalib-test/cpp/build
