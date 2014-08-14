@@ -24,16 +24,19 @@ package org.juniversal.translator.swift.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.ASTUtil;
+import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 import org.juniversal.translator.cplusplus.OutputType;
 
 
 public class CompilationUnitWriter extends ASTWriter {
-	public CompilationUnitWriter(ASTWriters astWriters) {
-		super(astWriters);
-	}
+    private SwiftASTWriters swiftASTWriters;
 
-	public void write(ASTNode node, Context context) {
+    public CompilationUnitWriter(SwiftASTWriters swiftASTWriters) {
+        this.swiftASTWriters = swiftASTWriters;
+    }
+    
+    public void write(ASTNode node, Context context) {
 		CompilationUnit compilationUnit = (CompilationUnit) node;
 
 		TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
@@ -71,7 +74,7 @@ public class CompilationUnitWriter extends ASTWriter {
 		// Copy class Javadoc or other comments before the class starts
 		context.copySpaceAndComments();
 
-		getASTWriters().writeNode(mainTypeDeclaration, context);
+        swiftASTWriters.writeNode(mainTypeDeclaration, context);
 
 		context.copySpaceAndComments();
 
@@ -92,7 +95,7 @@ public class CompilationUnitWriter extends ASTWriter {
 		context.setPosition(mainTypeDeclaration.getStartPosition());
 		context.skipSpaceAndComments();   // Skip any Javadoc included in the node
 
-		getASTWriters().writeNode(mainTypeDeclaration, context);
+        swiftASTWriters.writeNode(mainTypeDeclaration, context);
 
 		context.skipSpaceAndComments();
 	}

@@ -22,6 +22,7 @@
 
 package org.juniversal.translator.cplusplus.astwriters;
 
+import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -30,11 +31,13 @@ import org.eclipse.jdt.core.dom.ForStatement;
 
 
 public class ForStatementWriter extends ASTWriter {
-	public ForStatementWriter(ASTWriters astWriters) {
-		super(astWriters);
-	}
+    private CPlusPlusASTWriters cPlusPlusASTWriters;
 
-	@Override
+    public ForStatementWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+    }
+
+    @Override
 	public void write(ASTNode node, Context context) {
 		ForStatement forStatement = (ForStatement) node;
 
@@ -53,7 +56,7 @@ public class ForStatementWriter extends ASTWriter {
 				context.copySpaceAndComments();
 			}
 
-			getASTWriters().writeNode(initializerExpression, context);
+            cPlusPlusASTWriters.writeNode(initializerExpression, context);
 			context.copySpaceAndComments();
 
 			first = false;
@@ -64,7 +67,7 @@ public class ForStatementWriter extends ASTWriter {
 
 		Expression forExpression = forStatement.getExpression();
 		if (forExpression != null) {
-			getASTWriters().writeNode(forStatement.getExpression(), context);
+            cPlusPlusASTWriters.writeNode(forStatement.getExpression(), context);
 			context.copySpaceAndComments();
 		}
 
@@ -80,7 +83,7 @@ public class ForStatementWriter extends ASTWriter {
 				context.copySpaceAndComments();
 			}
 
-			getASTWriters().writeNode(updaterExpression, context);
+            cPlusPlusASTWriters.writeNode(updaterExpression, context);
 			context.copySpaceAndComments();
 
 			first = false;
@@ -89,6 +92,6 @@ public class ForStatementWriter extends ASTWriter {
 		context.matchAndWrite(")");
 		context.copySpaceAndComments();
 
-		getASTWriters().writeNode(forStatement.getBody(), context);
+        cPlusPlusASTWriters.writeNode(forStatement.getBody(), context);
 	}
 }

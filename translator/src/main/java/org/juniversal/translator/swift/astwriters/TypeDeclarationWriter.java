@@ -24,21 +24,24 @@ package org.juniversal.translator.swift.astwriters;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 
 public class TypeDeclarationWriter extends ASTWriter {
-	public TypeDeclarationWriter(ASTWriters astWriters) {
-		super(astWriters);
-	}
+    private SwiftASTWriters swiftASTWriters;
 
-	public void write(ASTNode node, Context context) {
+    public TypeDeclarationWriter(SwiftASTWriters swiftASTWriters) {
+        this.swiftASTWriters = swiftASTWriters;
+    }
+
+    public void write(ASTNode node, Context context) {
 		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
 
 		TypeDeclaration oldTypeDeclaration = context.getTypeDeclaration();
 		context.setTypeDeclaration(typeDeclaration);
 
-		new WriteTypeDeclaration(typeDeclaration, context, getASTWriters());
+        new WriteTypeDeclaration(typeDeclaration, context, swiftASTWriters);
 
 		context.setTypeDeclaration(oldTypeDeclaration);
 	}

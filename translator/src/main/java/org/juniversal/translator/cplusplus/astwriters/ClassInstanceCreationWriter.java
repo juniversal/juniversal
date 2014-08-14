@@ -24,6 +24,7 @@ package org.juniversal.translator.cplusplus.astwriters;
 
 import java.util.List;
 
+import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -32,11 +33,13 @@ import org.eclipse.jdt.core.dom.Expression;
 
 
 public class ClassInstanceCreationWriter extends ASTWriter {
-	public ClassInstanceCreationWriter(ASTWriters astWriters) {
-		super(astWriters);
-	}
+    private CPlusPlusASTWriters cPlusPlusASTWriters;
 
-	@Override
+    public ClassInstanceCreationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+    }
+
+    @Override
 	public void write(ASTNode node, Context context) {
 		ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) node;
 
@@ -50,7 +53,7 @@ public class ClassInstanceCreationWriter extends ASTWriter {
 		context.matchAndWrite("new");
 		context.copySpaceAndComments();
 
-		getASTWriters().writeNode(classInstanceCreation.getType(), context);
+        cPlusPlusASTWriters.writeNode(classInstanceCreation.getType(), context);
 		context.copySpaceAndComments();
 
 		context.matchAndWrite("(");
@@ -67,7 +70,7 @@ public class ClassInstanceCreationWriter extends ASTWriter {
 				context.copySpaceAndComments();
 			}
 
-			getASTWriters().writeNode(argument, context);
+            cPlusPlusASTWriters.writeNode(argument, context);
 			context.copySpaceAndComments();
 
 			first = false;

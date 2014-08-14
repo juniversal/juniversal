@@ -26,7 +26,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.juniversal.translator.cplusplus.astwriters.ASTWriters;
+import org.juniversal.translator.cplusplus.astwriters.CPlusPlusASTWriters;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -37,13 +37,13 @@ import org.juniversal.translator.core.*;
 
 public class Translator {
 	private JUniversal jUniversal;
-	private ASTWriters astWriters;
+	private CPlusPlusASTWriters astWriters;
 	private CPPProfile cppProfile = new CPPProfile();
 	String s;
 
 	public Translator(JUniversal jUniversal) {
 		this.jUniversal = jUniversal;
-		this.astWriters = new ASTWriters();
+		this.astWriters = new CPlusPlusASTWriters();
 	}
 
 	public void translate() {

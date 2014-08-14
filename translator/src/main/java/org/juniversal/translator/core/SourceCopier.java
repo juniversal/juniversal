@@ -41,20 +41,19 @@ public class SourceCopier {
     public int match(int startPosition, String match) {
         if (!source.startsWith(match, startPosition))
             throw new JUniversalException("Expected source to contain '" + match + "' at position " + startPosition
-                    + ", but it doesn't");
+                                          + ", but it doesn't");
         return startPosition + match.length();
     }
 
     /**
-     * Copies to output all whitespace, newlines, and comments from the source starting at
-     * startPosition and continuing until the end of the whitespace/newlines/comments. Any tabs in
-     * the source are expanded; tabs are reintroduced as appropriate at output time by the CPPWriter
-     * class.
+     * Copies to output all whitespace, newlines, and comments from the source starting at startPosition and continuing
+     * until the end of the whitespace/newlines/comments. Any tabs in the source are expanded; tabs are reintroduced as
+     * appropriate at output time by the CPPWriter class.
      *
      * @param startPosition starting position in source
-     * @param justUntilEOL  if true, then the copying stops just short of the end of line (not including \r or
-     *                      \n characters); if there's a multiline comment, it's copied in its entirety and
-     *                      the copying stops at the first EOL or code character after that
+     * @param justUntilEOL  if true, then the copying stops just short of the end of line (not including \r or \n
+     *                      characters); if there's a multiline comment, it's copied in its entirety and the copying
+     *                      stops at the first EOL or code character after that
      * @return ending position--position of character following space and comments
      */
     public int copySpaceAndComments(int startPosition, boolean justUntilEOL) {
@@ -82,13 +81,13 @@ public class SourceCopier {
     }
 
     /**
-     * Skips all whitespace, newlines, and comments from the source starting at startPosition and
-     * continuing until the end of the whitespace/newlines/comments.
+     * Skips all whitespace, newlines, and comments from the source starting at startPosition and continuing until the
+     * end of the whitespace/newlines/comments.
      *
      * @param startPosition starting position in source
-     * @param justUntilEOL  if true, then the skipping stops just short of the end of line (not including \r
-     *                      or \n characters); if there's a multiline comment, it's skipped in its entirety
-     *                      and the copying stops at the first EOL or code character after that
+     * @param justUntilEOL  if true, then the skipping stops just short of the end of line (not including \r or \n
+     *                      characters); if there's a multiline comment, it's skipped in its entirety and the copying
+     *                      stops at the first EOL or code character after that
      * @return ending position--position of character following space and comments
      */
     public int skipSpaceAndComments(int startPosition, boolean justUntilEOL) {
@@ -140,13 +139,13 @@ public class SourceCopier {
     }
 
     /**
-     * Skips all whitespace, newlines, and comments from the source starting at startPosition and
-     * continuing until the end of the whitespace/newlines/comments.
+     * Skips all whitespace, newlines, and comments from the source starting at startPosition and continuing until the
+     * end of the whitespace/newlines/comments.
      *
      * @param startPosition starting position in source
-     * @param justUntilEOL  if true, then the skipping stops just short of the end of line (not including \r
-     *                      or \n characters); if there's a multiline comment, it's skipped in its entirety
-     *                      and the copying stops at the first EOL or code character after that
+     * @param justUntilEOL  if true, then the skipping stops just short of the end of line (not including \r or \n
+     *                      characters); if there's a multiline comment, it's skipped in its entirety and the copying
+     *                      stops at the first EOL or code character after that
      * @return ending position--position of character following space and comments
      */
     public int skipBlankLines(int startPosition) {
@@ -174,10 +173,9 @@ public class SourceCopier {
     }
 
     /**
-     * Skips all whitespace, newlines, and comments from the source starting at startPosition and
-     * continuing backwards until the beginning of the whitespace/newlines/comments. The returned
-     * position points to the beginning of the whitespace/newlines/comments or the original position
-     * if there wasn't any whitespace/newlines/comments.
+     * Skips all whitespace, newlines, and comments from the source starting at startPosition and continuing backwards
+     * until the beginning of the whitespace/newlines/comments. The returned position points to the beginning of the
+     * whitespace/newlines/comments or the original position if there wasn't any whitespace/newlines/comments.
      *
      * @param startPosition starting position in source
      * @return position of first character in sequence of space and comments
@@ -219,9 +217,9 @@ public class SourceCopier {
     }
 
     /**
-     * Given the start position for a line, return the start position of any line ("//") comment on
-     * the line, or -1 if there is no line comment. If a position is returned, it's the position of
-     * the first / character for the line comment.
+     * Given the start position for a line, return the start position of any line ("//") comment on the line, or -1 if
+     * there is no line comment. If a position is returned, it's the position of the first / character for the line
+     * comment.
      *
      * @param lineStartPosition
      * @return
@@ -341,7 +339,7 @@ public class SourceCopier {
                 // same amount, relative to the first of the comment, as they are in the
                 // source
                 targetWriter.writeSpacesUntilColumn(commentStartOutputColumn
-                        + (currSourceColumn - commentStartSourceColumn));
+                                                    + (currSourceColumn - commentStartSourceColumn));
             } else {
                 targetWriter.write((char) currChar);
                 ++position;
@@ -351,9 +349,9 @@ public class SourceCopier {
     }
 
     /**
-     * Copies to output contiguous spaces and tabs from the source starting at startPosition and
-     * continuing until the end of the spaces/tabs. Any tabs in the source are expanded; tabs are
-     * reintroduced as appropriate at output time by the CPPWriter class.
+     * Copies to output contiguous spaces and tabs from the source starting at startPosition and continuing until the
+     * end of the spaces/tabs. Any tabs in the source are expanded; tabs are reintroduced as appropriate at output time
+     * by the CPPWriter class.
      *
      * @param startPosition starting position in source
      */
@@ -394,8 +392,8 @@ public class SourceCopier {
     }
 
     /**
-     * Skips contiguous spaces and tabs from the source starting at startPosition and continuing
-     * until the end of the spaces/tabs.
+     * Skips contiguous spaces and tabs from the source starting at startPosition and continuing until the end of the
+     * spaces/tabs.
      *
      * @param startPosition starting position in source
      */
@@ -411,10 +409,9 @@ public class SourceCopier {
     }
 
     /**
-     * Skips all spaces and tabs from the source starting at startPosition and continuing backwards
-     * until the beginning of the spaces/tabs. The returned position points to the beginning of the
-     * whitespace or the original position if there wasn't any whitespace before the current
-     * position.
+     * Skips all spaces and tabs from the source starting at startPosition and continuing backwards until the beginning
+     * of the spaces/tabs. The returned position points to the beginning of the whitespace or the original position if
+     * there wasn't any whitespace before the current position.
      *
      * @param startPosition starting position in source
      * @return position of first character in sequence of spaces/tabs
@@ -434,8 +431,8 @@ public class SourceCopier {
     }
 
     /**
-     * If position is at the end of the line, the first position on the following line is returned.
-     * Else, the current position is returned.
+     * If position is at the end of the line, the first position on the following line is returned. Else, the current
+     * position is returned.
      *
      * @param startPosition starting position in source
      * @return position just past the end of line, if there is one at that position
@@ -453,8 +450,8 @@ public class SourceCopier {
     }
 
     /**
-     * Skips contiguous spaces, tabs, and newlines from the source starting at startPosition and
-     * continuing until the end of the spaces/tabs.
+     * Skips contiguous spaces, tabs, and newlines from the source starting at startPosition and continuing until the
+     * end of the spaces/tabs.
      *
      * @param startPosition starting position in source
      */
@@ -470,8 +467,7 @@ public class SourceCopier {
     }
 
     /**
-     * Get the character from the source at the specified position or -1 if past the end of the
-     * source.
+     * Get the character from the source at the specified position or -1 if past the end of the source.
      *
      * @param position source position in question
      * @return character at that position or -1 if past end
@@ -493,8 +489,7 @@ public class SourceCopier {
     }
 
     /**
-     * Get the character from the source at the specified position or -1 if before the beginning of
-     * the source.
+     * Get the character from the source at the specified position or -1 if before the beginning of the source.
      *
      * @param position source position in question
      * @return character at that position or -1 if past beginning
@@ -506,8 +501,8 @@ public class SourceCopier {
     }
 
     /**
-     * Gets the logical column in the source corresponding to the specified position. "Logical"
-     * means with tabs expanded according to the specified source tab stop.
+     * Gets the logical column in the source corresponding to the specified position. "Logical" means with tabs expanded
+     * according to the specified source tab stop.
      *
      * @param position source position in question
      * @return logical column
@@ -530,12 +525,11 @@ public class SourceCopier {
     }
 
     /**
-     * Returns a description of the specified position, including line number, column number, and
-     * the contents of the entire line with the position marked. Normally this description is put in
-     * error messages. The description should normally be output starting on a new line; the
-     * description doesn't include a line break at the beginning though it does include a line break
-     * in the middle. If more text will be output following the description, the caller should
-     * normally add a line break before appending additional text.
+     * Returns a description of the specified position, including line number, column number, and the contents of the
+     * entire line with the position marked. Normally this description is put in error messages. The description should
+     * normally be output starting on a new line; the description doesn't include a line break at the beginning though
+     * it does include a line break in the middle. If more text will be output following the description, the caller
+     * should normally add a line break before appending additional text.
      *
      * @param position position in source file
      * @return description string for position, with one line break in the middle
@@ -555,7 +549,9 @@ public class SourceCopier {
         int columnNumber = getSourceLogicalColumn(position);
 
         int startPosition = compilationUnit.getPosition(lineNumber, 0);
-        int endPosition = compilationUnit.getPosition(lineNumber + 1, 0) - 1;
+        int startOfNextLine = compilationUnit.getPosition(lineNumber + 1, 0);
+        // If on last line, set endPosition to end of source else set it to end of line
+        int endPosition = (startOfNextLine == -1) ? source.length() - 1 : startOfNextLine - 1;
 
         // Chop off newlines / carriage returns on the end of the line
         while (endPosition >= 0 && (source.charAt(endPosition) == '\n' || source.charAt(endPosition) == '\r'))
@@ -590,7 +586,6 @@ public class SourceCopier {
             if (position == source.length())
                 throw new JUniversalException("Position " + position + " is at end of source file; can't get line number");
             else throw new JUniversalException("Position " + position + " isn't valid");
-        }
-        else return lineNumber;
+        } else return lineNumber;
     }
 }

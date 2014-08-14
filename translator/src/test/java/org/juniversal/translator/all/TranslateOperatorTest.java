@@ -28,20 +28,20 @@ import org.juniversal.translator.TranslateNodeTest;
 public class TranslateOperatorTest extends TranslateNodeTest {
     @Test
     public void testTranslatePrefixOperators() {
-        testTranslateIntExpression("-3", null);
-        testTranslateIntExpression("- 3", "-3");
-        testTranslateIntExpression("- /* foo */\n 3", "-3");
+        testTranslateIntExpression("-3", null, null);
+        testTranslateIntExpression("- 3", null, "-3");
+        testTranslateIntExpression("- /* foo */\n 3", null, "-3");
 
-        testTranslateIntExpression("+ /* foo */\n 3", "+3");
+        testTranslateIntExpression("+ /* foo */\n 3", null, "+3");
 
-        testTranslateBooleanExpression("! true", "!true");
-        testTranslateBooleanExpression("~ 12", "~12");
+        testTranslateBooleanExpression("! true", null, "!true");
+        testTranslateBooleanExpression("~ 12", null, "~12");
     }
 
     @Test
     public void testTranslateInfixOperators() {
-        testTranslateIntExpression("-3 * 4", null);
-        testTranslateIntExpression("4 /*x*/ / /*y*/ 2", null);
+        testTranslateIntExpression("-3 * 4", null, null);
+        testTranslateIntExpression("4 /*x*/ / /*y*/ 2", null, null);
 
         /*
         equivalentOperators.put(InfixExpression.Operator.TIMES, "*");
@@ -78,6 +78,6 @@ public class TranslateOperatorTest extends TranslateNodeTest {
 
     @Test
     public void testTranslateConditionalOperator() {
-        testTranslateIntExpression("true   ? /*foo*/  1 :  0", null);
+        testTranslateIntExpression("true   ? /*foo*/  1 :  0", null, null);
     }
 }

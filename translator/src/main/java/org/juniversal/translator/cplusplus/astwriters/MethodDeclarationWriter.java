@@ -25,6 +25,7 @@ package org.juniversal.translator.cplusplus.astwriters;
 import java.util.List;
 
 import org.juniversal.translator.core.ASTUtil;
+import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -41,11 +42,13 @@ import org.eclipse.jdt.core.dom.TypeParameter;
 
 
 public class MethodDeclarationWriter extends ASTWriter {
-	public MethodDeclarationWriter(ASTWriters astWriters) {
-		super(astWriters);
-	}
+    private CPlusPlusASTWriters cPlusPlusASTWriters;
 
-	@Override
+    public MethodDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+    }
+
+    @Override
 	public void write(ASTNode node, Context context) {
 		MethodDeclaration methodDeclaration = (MethodDeclaration) node;
 
@@ -85,7 +88,7 @@ public class MethodDeclarationWriter extends ASTWriter {
 			Type returnType = methodDeclaration.getReturnType2();
 			if (returnType == null)
 				context.matchAndWrite("void");
-			else getASTWriters().writeType(returnType, context, false);
+			else cPlusPlusASTWriters.writeType(returnType, context, false);
 
 			context.copySpaceAndComments();
 		}
@@ -109,7 +112,7 @@ public class MethodDeclarationWriter extends ASTWriter {
 
 		if (context.isWritingMethodImplementation()) {
 			context.copySpaceAndComments();
-			getASTWriters().writeNode(methodDeclaration.getBody(), context);
+			cPlusPlusASTWriters.writeNode(methodDeclaration.getBody(), context);
 		}
 		else {
 			if (methodDeclaration.getBody() == null) {
@@ -140,7 +143,7 @@ public class MethodDeclarationWriter extends ASTWriter {
 				context.copySpaceAndComments();
 			}
 
-			getASTWriters().writeNode(singleVariableDeclaration, context);
+			cPlusPlusASTWriters.writeNode(singleVariableDeclaration, context);
 			context.copySpaceAndComments();
 
 			first = false;
@@ -227,8 +230,8 @@ public class MethodDeclarationWriter extends ASTWriter {
 			}
 
 			context.copySpaceAndComments();
-			getASTWriters().writeNode(argument, context);
-	
+			cPlusPlusASTWriters.writeNode(argument, context);
+
 			first = false;
 		}
 

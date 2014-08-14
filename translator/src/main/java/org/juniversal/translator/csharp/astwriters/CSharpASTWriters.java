@@ -20,28 +20,27 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.swift.astwriters;
+package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
+import org.juniversal.translator.core.ASTWriter;
+import org.juniversal.translator.core.ASTWriters;
 import org.juniversal.translator.core.Context;
 import org.juniversal.translator.core.JUniversalException;
-import org.juniversal.translator.core.SourceCopier;
+import org.juniversal.translator.swift.astwriters.ASTWriterUtil;
 
-import java.util.HashMap;
 import java.util.List;
 
 
-public class ASTWriters {
-    // Data
-    HashMap<Class<? extends ASTNode>, ASTWriter> m_visitors = new HashMap<>();
-
-    public ASTWriters() {
+public class CSharpASTWriters extends ASTWriters {
+    public CSharpASTWriters() {
         addDeclarationWriters();
 
         addStatementWriters();
 
         addExpressionWriters();
 
+        // TODO: Implement this
         // Simple name
         addWriter(SimpleName.class, new ASTWriter() {
             @Override
@@ -71,7 +70,7 @@ public class ASTWriters {
 
         // TODO: Implement this
         // Field declaration
-        addWriter(FieldDeclaration.class, new FieldDeclarationWriter(this));
+        //addWriter(FieldDeclaration.class, new FieldDeclarationWriter(this));
 
         // TODO: Implement this
         // Variable declaration fragment
@@ -222,8 +221,8 @@ public class ASTWriters {
                     context.matchAndWrite("short", "Int16");
                 else if (code == PrimitiveType.CHAR)
                     context.matchAndWrite("char", "Character");
-                // TODO: For now, map 32 bit Java int to Int type in Swift, which can be 32 or 64 bits.
-                // Later probably add @PreserveJavaIntSemantics annotation to force 32 bit + no overflow checking
+                    // TODO: For now, map 32 bit Java int to Int type in Swift, which can be 32 or 64 bits.
+                    // Later probably add @PreserveJavaIntSemantics annotation to force 32 bit + no overflow checking
                 else if (code == PrimitiveType.INT)
                     context.matchAndWrite("int", "Int");
                 else if (code == PrimitiveType.LONG) {
@@ -300,6 +299,7 @@ public class ASTWriters {
             }
         });
 
+        // TODO: Implement this
         // If statement
         addWriter(IfStatement.class, new ASTWriter() {
             @Override
@@ -325,6 +325,7 @@ public class ASTWriters {
             }
         });
 
+        // TODO: Implement this
         // While statement
         addWriter(WhileStatement.class, new ASTWriter() {
             @Override
@@ -342,6 +343,7 @@ public class ASTWriters {
             }
         });
 
+        // TODO: Implement this
         // Do while statement
         addWriter(DoStatement.class, new ASTWriter() {
             @Override
@@ -400,7 +402,9 @@ public class ASTWriters {
 
         // TODO: Implement this
         // For statement
+/*
         addWriter(ForStatement.class, new ForStatementWriter(this));
+*/
 
         // TODO: Implement this
         // Return statement
@@ -424,7 +428,9 @@ public class ASTWriters {
 
         // TODO: Implement this
         // Local variable declaration statement
+/*
         addWriter(VariableDeclarationStatement.class, new VariableDeclarationWriter(this));
+*/
 
         // TODO: Implement this
         // Throw statement
@@ -460,30 +466,45 @@ public class ASTWriters {
 
         // TODO: Implement this
         // Assignment expression
+/*
         addWriter(Assignment.class, new AssignmentWriter(this));
+*/
 
         // TODO: Implement this
         // Method invocation
+/*
         addWriter(MethodInvocation.class, new MethodInvocationWriter(this));
+*/
 
         // TODO: Implement this
         // Super Method invocation
+/*
         addWriter(SuperMethodInvocation.class, new MethodInvocationWriter(this));
+*/
 
         // TODO: Implement this
         // Class instance creation
+/*
         addWriter(ClassInstanceCreation.class, new ClassInstanceCreationWriter(this));
+*/
 
         // TODO: Implement this
         // Array creation
+/*
         addWriter(ArrayCreation.class, new ArrayCreationWriter(this));
+*/
 
         // TODO: Implement this
         // Variable declaration expression (used in a for statement)
+/*
         addWriter(VariableDeclarationExpression.class, new VariableDeclarationWriter(this));
+*/
 
+        // TODO: Implement this
         // Infix expression
+/*
         addWriter(InfixExpression.class, new InfixExpressionWriter(this));
+*/
 
         // Prefix expression
         addWriter(PrefixExpression.class, new ASTWriter() {
@@ -710,24 +731,26 @@ public class ASTWriters {
                 NumberLiteral numberLiteral = (NumberLiteral) node;
                 String token = numberLiteral.getToken();
 
-                boolean isOctal = false;
+                // Strip out any _ separators in the number, as those aren't supported in C# (at least not until the
+                // new C# 6 comes out)
+                String convertedToken = token.replace("_", "");
+
+                // TODO: Support binary (and octal) literals by converting to hex
                 if (token.length() >= 2 && token.startsWith("0")) {
                     char secondChar = token.charAt(1);
                     if (secondChar >= '0' && secondChar <= '7') {
-                        isOctal = true;
+                        context.throwSourceNotSupported("Octal literals aren't currently supported; change the source to use hex instead");
+                    } else if ((secondChar == 'b') || (secondChar == 'B')) {
+                        context.throwSourceNotSupported("Binary literals aren't currently supported; change the source to use hex instead");
                     }
                 }
 
-                // Swift prefixes octal with 0o whereas Java just uses a leading 0
-                if (isOctal) {
-                    context.write("0o");
-                    context.write(token.substring(1));
-                } else context.write(token);
-
+                context.write(convertedToken);
                 context.match(token);
             }
         });
 
+        // TODO: Implement this
         // Boolean literal
         addWriter(BooleanLiteral.class, new ASTWriter() {
             @Override
@@ -737,6 +760,7 @@ public class ASTWriters {
             }
         });
 
+        // TODO: Implement this
         // Character literal
         addWriter(CharacterLiteral.class, new ASTWriter() {
             @Override
@@ -751,11 +775,12 @@ public class ASTWriters {
             }
         });
 
+        // TODO: Implement this
         // Null literal
         addWriter(NullLiteral.class, new ASTWriter() {
             @Override
             public void write(ASTNode node, Context context) {
-                context.matchAndWrite("null", "nil");
+                context.matchAndWrite("null");
             }
         });
 
@@ -770,59 +795,6 @@ public class ASTWriters {
                 context.match(stringLiteral.getEscapedValue());
             }
         });
-    }
-
-    private static final boolean VALIDATE_CONTEXT_POSITION = true;
-
-    public void writeNode(ASTNode node, Context context) {
-        int nodeStartPosition;
-        if (VALIDATE_CONTEXT_POSITION) {
-            nodeStartPosition = node.getStartPosition();
-
-            // If the node starts with Javadoc (true for method declarations with Javadoc before
-            // them), then skip past it; the caller is always expected to handle any comments,
-            // Javadoc or not, coming before the start of code proper for the node. The exception to
-            // that rule is the CompilationUnit; as outermost node it handles any comments at the
-            // beginning itself.
-            SourceCopier sourceCopier = context.getSourceCopier();
-            if (sourceCopier.getSourceCharAt(nodeStartPosition) == '/'
-                && sourceCopier.getSourceCharAt(nodeStartPosition + 1) == '*'
-                && sourceCopier.getSourceCharAt(nodeStartPosition + 2) == '*'
-                && !(node instanceof CompilationUnit))
-                context.assertPositionIs(sourceCopier.skipSpaceAndComments(nodeStartPosition, false));
-            else context.assertPositionIs(nodeStartPosition);
-        }
-
-        getVisitor(node.getClass()).write(node, context);
-
-        if (VALIDATE_CONTEXT_POSITION) {
-            if (context.getKnowinglyProcessedTrailingSpaceAndComments())
-                context.assertPositionIsAtLeast(nodeStartPosition + node.getLength());
-            else context.assertPositionIs(nodeStartPosition + node.getLength());
-        }
-
-        context.setKnowinglyProcessedTrailingSpaceAndComments(false);
-    }
-
-    /**
-     * Write a node that's not at the current context position. The context position is unchanged by this method--the
-     * position is restored to the original position when done. No comments before/after the node are written. This
-     * method can be used to write a node multiple times.
-     *
-     * @param node    node to write
-     * @param context the context
-     */
-    public void writeNodeAtDifferentPosition(ASTNode node, Context context) {
-        int originalPosition = context.getPosition();
-        context.setPosition(node.getStartPosition());
-        writeNode(node, context);
-        context.setPosition(originalPosition);
-    }
-
-    private void addWriter(Class<? extends ASTNode> clazz, ASTWriter visitor) {
-        if (m_visitors.get(clazz) != null)
-            throw new JUniversalException("Writer for class " + clazz + " already added to ASTWriters");
-        m_visitors.put(clazz, visitor);
     }
 
     private void writeConditionNoParens(Expression expression, Context context) {
@@ -904,12 +876,5 @@ public class ASTWriters {
                 context.write(" >");
             }
         }
-    }
-
-    public ASTWriter getVisitor(Class<? extends ASTNode> clazz) {
-        ASTWriter visitor = m_visitors.get(clazz);
-        if (visitor == null)
-            throw new JUniversalException("No visitor found for class " + clazz.getName());
-        return visitor;
     }
 }

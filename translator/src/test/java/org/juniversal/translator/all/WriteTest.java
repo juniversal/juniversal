@@ -30,6 +30,7 @@ import org.juniversal.translator.core.TargetWriter;
 import org.juniversal.translator.cplusplus.CPPProfile;
 import org.juniversal.translator.core.Context;
 import org.juniversal.translator.cplusplus.OutputType;
+import org.juniversal.translator.swift.astwriters.SwiftASTWriters;
 
 import java.io.StringWriter;
 
@@ -166,7 +167,7 @@ public class WriteTest {
                     "\r\nACUAL:\r\n" + cppOutput);
     }
 
-    private org.juniversal.translator.swift.astwriters.ASTWriters writeSwift = new org.juniversal.translator.swift.astwriters.ASTWriters();
+    private SwiftASTWriters writeSwift = new SwiftASTWriters();
 
     // Data
     private int sourceTabStop = 4;

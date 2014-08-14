@@ -4,8 +4,6 @@
       <root url="jar://$PROJECT_DIR$/translator/libs/org.eclipse.jdt.core_3.10.0.v20140604-1726.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES>
-      <root url="jar://$PROJECT_DIR$/translator/libs-source/org.eclipse.jdt.core.source_3.10.0.v20140604-1726.jar!/" />
-    </SOURCES>
+    <SOURCES />
   </library>
 </component>

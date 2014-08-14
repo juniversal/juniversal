@@ -31,7 +31,7 @@ import org.juniversal.translator.core.SourceFile;
 import org.juniversal.translator.core.SourceNotSupportedException;
 import org.juniversal.translator.core.TargetWriter;
 import org.juniversal.translator.core.Context;
-import org.juniversal.translator.cplusplus.astwriters.ASTWriters;
+import org.juniversal.translator.cplusplus.astwriters.CPlusPlusASTWriters;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -152,10 +152,10 @@ public class WriteTypeVisitorTest {
 					"\r\nACUAL:\r\n" + cppOutput);
 	}
 
-	static ASTWriters m_writeCPP = null; 
-	ASTWriters getWriteCPP() {
+	static CPlusPlusASTWriters m_writeCPP = null;
+	CPlusPlusASTWriters getWriteCPP() {
 		if (m_writeCPP == null)
-			m_writeCPP = new ASTWriters();
+			m_writeCPP = new CPlusPlusASTWriters();
 		return m_writeCPP;
 	}
 

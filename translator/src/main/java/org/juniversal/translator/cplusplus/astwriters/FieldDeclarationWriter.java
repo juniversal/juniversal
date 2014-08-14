@@ -23,6 +23,7 @@
 package org.juniversal.translator.cplusplus.astwriters;
 
 import org.juniversal.translator.core.ASTUtil;
+import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 import org.juniversal.translator.cplusplus.OutputType;
 
@@ -33,11 +34,13 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 
 public class FieldDeclarationWriter extends ASTWriter {
-	public FieldDeclarationWriter(ASTWriters astWriters) {
-		super(astWriters);
-	}
+    private CPlusPlusASTWriters cPlusPlusASTWriters;
 
-	@Override
+    public FieldDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+    }
+
+    @Override
 	public void write(ASTNode node, Context context) {
 		FieldDeclaration fieldDeclaration = (FieldDeclaration) node;
 
@@ -51,7 +54,7 @@ public class FieldDeclarationWriter extends ASTWriter {
 
 		// Write the type
 		context.skipSpaceAndComments();
-		getASTWriters().writeType(fieldDeclaration.getType(), context, false);
+        cPlusPlusASTWriters.writeType(fieldDeclaration.getType(), context, false);
 
 		boolean first = true;
 		for (Object fragment : fieldDeclaration.fragments()) {
@@ -85,7 +88,7 @@ public class FieldDeclarationWriter extends ASTWriter {
 
 		if (writingSourceFile)
 			context.write(context.getTypeDeclaration().getName().getIdentifier() + "::");
-		getASTWriters().writeNode(variableDeclarationFragment.getName(), context);
+        cPlusPlusASTWriters.writeNode(variableDeclarationFragment.getName(), context);
 
 		// Only write out the initializer when writing to the source file; in that case the field
 		// must be static
@@ -98,7 +101,7 @@ public class FieldDeclarationWriter extends ASTWriter {
 				context.matchAndWrite("=");
 
 				context.copySpaceAndComments();
-				getASTWriters().writeNode(initializer, context);
+                cPlusPlusASTWriters.writeNode(initializer, context);
 			}
 		}
 	}

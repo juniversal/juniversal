@@ -22,6 +22,7 @@
 
 package org.juniversal.translator.cplusplus.astwriters;
 
+import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -29,31 +30,33 @@ import org.eclipse.jdt.core.dom.Assignment;
 
 
 public class AssignmentWriter extends ASTWriter {
-	public AssignmentWriter(ASTWriters astWriters) {
-		super(astWriters);
-	}
+    private CPlusPlusASTWriters cPlusPlusASTWriters;
 
-	@Override
+    public AssignmentWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+    }
+
+    @Override
 	public void write(ASTNode node, Context context) {
 		Assignment assignment = (Assignment) node;
 		
 		Assignment.Operator operator = assignment.getOperator();
 		
 		if (operator == Assignment.Operator.RIGHT_SHIFT_UNSIGNED_ASSIGN) {
-			getASTWriters().writeNode(assignment.getLeftHandSide(), context);
+            cPlusPlusASTWriters.writeNode(assignment.getLeftHandSide(), context);
 
 			context.copySpaceAndComments();
 			context.matchAndWrite(">>>=", "=");
 
 			context.copySpaceAndComments();
 			context.write("rightShiftUnsigned(");
-			getASTWriters().writeNodeAtDifferentPosition(assignment.getLeftHandSide(), context);
+            cPlusPlusASTWriters.writeNodeAtDifferentPosition(assignment.getLeftHandSide(), context);
 			context.write(", ");
-			getASTWriters().writeNode(assignment.getRightHandSide(), context);
+            cPlusPlusASTWriters.writeNode(assignment.getRightHandSide(), context);
 			context.write(")");
 		}
 		else {
-			getASTWriters().writeNode(assignment.getLeftHandSide(), context);
+            cPlusPlusASTWriters.writeNode(assignment.getLeftHandSide(), context);
 
 			context.copySpaceAndComments();
 			if (operator == Assignment.Operator.ASSIGN)
@@ -82,7 +85,7 @@ public class AssignmentWriter extends ASTWriter {
 				context.matchAndWrite(">>>=");
 	
 			context.copySpaceAndComments();
-			getASTWriters().writeNode(assignment.getRightHandSide(), context);
+            cPlusPlusASTWriters.writeNode(assignment.getRightHandSide(), context);
 		}
 	}
 }

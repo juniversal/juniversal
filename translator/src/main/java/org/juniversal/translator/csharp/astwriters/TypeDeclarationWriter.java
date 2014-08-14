@@ -20,27 +20,30 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus.astwriters;
+package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.juniversal.translator.core.ASTWriter;
+import org.juniversal.translator.core.ASTWriters;
 import org.juniversal.translator.core.Context;
-import org.juniversal.translator.cplusplus.astwriters.ASTWriters;
 
 
-public abstract class ASTWriter {
-    private ASTWriters astWriters;
+class TypeDeclarationWriter extends ASTWriter {
+    private CSharpASTWriters cSharpASTWriters;
 
-
-    public ASTWriter() {
+    TypeDeclarationWriter(CSharpASTWriters cSharpASTWriters) {
+        this.cSharpASTWriters = cSharpASTWriters;
     }
 
-    public ASTWriter(ASTWriters writeCPP) {
-        this.astWriters = writeCPP;
-    }
+    public void write(ASTNode node, Context context) {
+        TypeDeclaration typeDeclaration = (TypeDeclaration) node;
 
-    public ASTWriters getASTWriters() {
-        return this.astWriters;
-    }
+        TypeDeclaration oldTypeDeclaration = context.getTypeDeclaration();
+        context.setTypeDeclaration(typeDeclaration);
 
-    abstract public void write(ASTNode node, Context context);
+        new WriteTypeDeclaration(typeDeclaration, context, cSharpASTWriters);
+
+        context.setTypeDeclaration(oldTypeDeclaration);
+    }
 }

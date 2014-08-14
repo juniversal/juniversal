@@ -22,6 +22,7 @@
 
 package org.juniversal.translator.cplusplus.astwriters;
 import org.juniversal.translator.core.ASTUtil;
+import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 import org.juniversal.translator.cplusplus.OutputType;
 
@@ -35,11 +36,13 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
 public class CompilationUnitWriter extends ASTWriter {
-	public CompilationUnitWriter(ASTWriters astWriters) {
-		super(astWriters);
-	}
+    private CPlusPlusASTWriters cPlusPlusASTWriters;
 
-	public void write(ASTNode node, Context context) {
+    public CompilationUnitWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+    }
+
+    public void write(ASTNode node, Context context) {
 		CompilationUnit compilationUnit = (CompilationUnit) node;
 
 		TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
@@ -77,7 +80,7 @@ public class CompilationUnitWriter extends ASTWriter {
 		// Copy class Javadoc or other comments before the class starts
 		context.copySpaceAndComments();
 
-		getASTWriters().writeNode(mainTypeDeclaration, context);
+		cPlusPlusASTWriters.writeNode(mainTypeDeclaration, context);
 
 		context.copySpaceAndComments();
 
@@ -98,7 +101,7 @@ public class CompilationUnitWriter extends ASTWriter {
 		context.setPosition(mainTypeDeclaration.getStartPosition());
 		context.skipSpaceAndComments();   // Skip any Javadoc included in the node
 
-		getASTWriters().writeNode(mainTypeDeclaration, context);
+        cPlusPlusASTWriters.writeNode(mainTypeDeclaration, context);
 
 		context.skipSpaceAndComments();
 	}

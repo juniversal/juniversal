@@ -27,11 +27,14 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
+import org.juniversal.translator.core.ASTWriters;
 import org.juniversal.translator.core.Context;
 import org.juniversal.translator.core.SourceFile;
 import org.juniversal.translator.core.TargetWriter;
 import org.juniversal.translator.cplusplus.CPPProfile;
 import org.juniversal.translator.cplusplus.OutputType;
+import org.juniversal.translator.csharp.astwriters.CSharpASTWriters;
+import org.juniversal.translator.swift.astwriters.SwiftASTWriters;
 
 import java.io.StringWriter;
 import java.util.Map;
@@ -47,17 +50,17 @@ public class TranslateNodeTest {
     public void returnTest() {
         sourceTabStop = 4;
         destTabStop = -1;
-        testWriteStatement("return 3;");
-        testWriteStatement("return\r\n\t3;", "return\r\n    3;");
-        testWriteStatement("return\t3\t\t;", "return  3       ;");
+        testWriteStatement("return 3;", null, null);
+        testWriteStatement("return\r\n\t3;", "return\r\n    3;", "return\r\n    3;");
+        testWriteStatement("return\t3\t\t;", "return  3       ;", "return  3       ;");
 
         sourceTabStop = 4;
         destTabStop = 4;  // Return to default settings
-        testWriteStatement("return 3;");
-        testWriteStatement("return\r\n\t3;");
-        testWriteStatement("return\r\n   \t3;", "return\r\n\t3;");
-        testWriteStatement("return\r\n  \t  \t 3;", "return\r\n\t\t 3;");
-        testWriteStatement("return\t3\t\t;", "return  3       ;");
+        testWriteStatement("return 3;", null, null);
+        testWriteStatement("return\r\n\t3;", null, null);
+        testWriteStatement("return\r\n   \t3;", "return\r\n\t3;", "return\r\n\t3;");
+        testWriteStatement("return\r\n  \t  \t 3;", "return\r\n\t\t 3;", "return\r\n\t\t 3;");
+        testWriteStatement("return\t3\t\t;", "return  3       ;", "return  3       ;");
     }
 
 /*
@@ -106,7 +109,8 @@ public class TranslateNodeTest {
                         "}\r\n");
     }*/
 
-    public void testWriteStatement(String javaStatement, @Nullable String expectedSwift) {
+    public void testWriteStatement(String javaStatement, @Nullable String expectedCSharp,
+                                   @Nullable String expectedSwift) {
         String javaFullSource = "class TestClass{ void testMethod() {\n" + javaStatement + "\n} }";
 
         CompilationUnit compilationUnit = parseCompilationUnit(javaFullSource);
@@ -114,26 +118,8 @@ public class TranslateNodeTest {
         Block block = getFirstMethodBlock(compilationUnit);
         ASTNode firstStatement = (ASTNode) block.statements().get(0);
 
-        testTranslateNode(firstStatement, javaFullSource, javaStatement, compilationUnit, expectedSwift);
-    }
-
-    public void testWriteClass(String java, String expectedCPPClassHeader) {
-        CompilationUnit compilationUnit = parseCompilationUnit(java);
-
-        Block block = getFirstMethodBlock(compilationUnit);
-        ASTNode firstStatement = (ASTNode) block.statements().get(0);
-
-        testTranslateNode(firstStatement, java, java, compilationUnit, expectedCPPClassHeader);
-    }
-
-    public void testWriteStatement(String javaExpressionAndCpp) {
-        testWriteStatement(javaExpressionAndCpp, javaExpressionAndCpp);
-    }
-
-    public void testWriteCompilationUnit(String java, String cpp) {
-        CompilationUnit compilationUnit = parseCompilationUnit(java);
-        Block block = getFirstMethodBlock(compilationUnit);
-        testTranslateNode(block, java, java, compilationUnit, cpp);
+        testTranslateNode(firstStatement, javaFullSource, javaStatement, compilationUnit, expectedCSharp,
+                expectedSwift);
     }
 
     public CompilationUnit parseCompilationUnit(String java) {
@@ -173,27 +159,33 @@ public class TranslateNodeTest {
         return getFirstMethod(compilationUnit).getBody();
     }
 
-    protected void testTranslateIntExpression(String javaExpression, @Nullable String expectedSwiftExpression) {
-        testTranslateExpression("int", javaExpression, expectedSwiftExpression);
+    protected void testTranslateIntExpression(String javaExpression, @Nullable String expectedCSharpExpression,
+                                              @Nullable String expectedSwiftExpression) {
+        testTranslateExpression("int", javaExpression, expectedCSharpExpression, expectedSwiftExpression);
     }
 
-    protected void testTranslateLongExpression(String javaExpression, @Nullable String expectedSwiftExpression) {
-        testTranslateExpression("long", javaExpression, expectedSwiftExpression);
+    protected void testTranslateLongExpression(String javaExpression, @Nullable String expectedCSharpExpression,
+                                               @Nullable String expectedSwiftExpression) {
+        testTranslateExpression("long", javaExpression, expectedCSharpExpression, expectedSwiftExpression);
     }
 
-    protected void testTranslateBooleanExpression(String javaExpression, @Nullable String expectedSwiftExpression) {
-        testTranslateExpression("boolean", javaExpression, expectedSwiftExpression);
+    protected void testTranslateBooleanExpression(String javaExpression, @Nullable String expectedCSharpExpression,
+                                                  @Nullable String expectedSwiftExpression) {
+        testTranslateExpression("boolean", javaExpression, expectedCSharpExpression, expectedSwiftExpression);
     }
 
-    protected void testTranslateCharExpression(String javaExpression, @Nullable String expectedSwiftExpression) {
-        testTranslateExpression("char", javaExpression, expectedSwiftExpression);
+    protected void testTranslateCharExpression(String javaExpression, @Nullable String expectedCSharpExpression,
+                                               @Nullable String expectedSwiftExpression) {
+        testTranslateExpression("char", javaExpression, expectedCSharpExpression, expectedSwiftExpression);
     }
 
-    protected void testTranslateStringExpression(String javaExpression, @Nullable String expectedSwiftExpression) {
-        testTranslateExpression("String", javaExpression, expectedSwiftExpression);
+    protected void testTranslateStringExpression(String javaExpression, @Nullable String expectedCSharpExpression,
+                                                 @Nullable String expectedSwiftExpression) {
+        testTranslateExpression("String", javaExpression, expectedCSharpExpression, expectedSwiftExpression);
     }
 
     protected void testTranslateExpression(String javaType, String javaExpression,
+                                           @Nullable String expectedCSharpExpression,
                                            @Nullable String expectedSwiftExpression) {
         String javaClass = "class TestClass{ void testMethod() {" + javaType + " foo = " + javaExpression + "; } }";
 
@@ -203,10 +195,12 @@ public class TranslateNodeTest {
         VariableDeclarationStatement variableDeclarationStatement = (VariableDeclarationStatement) block.statements().get(0);
         VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) variableDeclarationStatement.fragments().get(0);
 
-        testTranslateNode(variableDeclarationFragment.getInitializer(), javaClass, javaExpression, compilationUnit, expectedSwiftExpression);
+        testTranslateNode(variableDeclarationFragment.getInitializer(), javaClass, javaExpression, compilationUnit,
+                expectedCSharpExpression, expectedSwiftExpression);
     }
 
-    protected void testTranslateStatement(String javaStatement, @Nullable String expectedSwiftStatement) {
+    protected void testTranslateStatement(String javaStatement, @Nullable String expectedCSharpStatement,
+                                          @Nullable String expectedSwiftStatement) {
         String javaClass = "class TestClass{ void testMethod() {" + javaStatement + "} }";
 
         CompilationUnit compilationUnit = parseCompilationUnit(javaClass);
@@ -214,36 +208,30 @@ public class TranslateNodeTest {
         Block block = getFirstMethodBlock(compilationUnit);
         Statement statement = (Statement) block.statements().get(0);
 
-        testTranslateNode(statement, javaClass, javaStatement, compilationUnit, expectedSwiftStatement);
+        testTranslateNode(statement, javaClass, javaStatement, compilationUnit, expectedCSharpStatement,
+                expectedSwiftStatement);
     }
 
-    protected void testTranslateMethod(String javaMethod, @Nullable String expectedSwiftMethod) {
+    protected void testTranslateMethod(String javaMethod, @Nullable String expectedCSharpMethod,
+                                       @Nullable String expectedSwiftMethod) {
         String javaClass = "class TestClass{ " + javaMethod + " }";
 
         CompilationUnit compilationUnit = parseCompilationUnit(javaClass);
 
         MethodDeclaration methodDeclaration = getFirstMethod(compilationUnit);
 
-        testTranslateNode(methodDeclaration, javaClass, javaMethod, compilationUnit, expectedSwiftMethod);
+        testTranslateNode(methodDeclaration, javaClass, javaMethod, compilationUnit, expectedCSharpMethod,
+                expectedSwiftMethod);
     }
 
-    protected void testTranslateNode(ASTNode node, String javaFullSource, String javaNodeSource, CompilationUnit compilationUnit,
-                                     @Nullable String expectedSwift) {
-        StringWriter writer = new StringWriter();
+    protected void testTranslateNode(ASTNode node, String javaFullSource, String javaNodeSource,
+                                     CompilationUnit compilationUnit,
+                                     @Nullable String expectedCSharp, @Nullable String expectedSwift) {
         CPPProfile profile = new CPPProfile();
         profile.setTabStop(destTabStop);
 
-        TargetWriter targetWriter = new TargetWriter(writer, profile);
-
-        Context context = new Context(new SourceFile(compilationUnit, null, javaFullSource), this.sourceTabStop, profile,
-                targetWriter, OutputType.SOURCE);
-
-        context.setPosition(node.getStartPosition());
-        writeSwift.writeNode(node, context);
-
-        String actualSwift = writer.getBuffer().toString();
-
-        assertEqualsNormalizeNewlines(expectedSwift == null ? javaNodeSource : expectedSwift, actualSwift);
+        testTranslate(node, javaFullSource, javaNodeSource, compilationUnit, profile, writeCSharp, expectedCSharp);
+        testTranslate(node, javaFullSource, javaNodeSource, compilationUnit, profile, writeSwift, expectedSwift);
 
 /*
         if (!actualSwift.equals(expectedSwift == null ? java : expectedSwift))
@@ -252,9 +240,27 @@ public class TranslateNodeTest {
 */
     }
 
+    private void testTranslate(ASTNode node, String javaFullSource, String javaNodeSource,
+                               CompilationUnit compilationUnit, CPPProfile profile, ASTWriters astWriters,
+                               @Nullable String expectedOutput) {
+        StringWriter writer = new StringWriter();
+        TargetWriter targetWriter = new TargetWriter(writer, profile);
+
+        Context context = new Context(new SourceFile(compilationUnit, null, javaFullSource), this.sourceTabStop, profile,
+                targetWriter, OutputType.SOURCE);
+
+        context.setPosition(node.getStartPosition());
+        astWriters.writeNode(node, context);
+
+        String actualOutput = writer.getBuffer().toString();
+
+        assertEqualsNormalizeNewlines(expectedOutput == null ? javaNodeSource : expectedOutput, actualOutput);
+    }
+
     private void assertEqualsNormalizeNewlines(String expected, String actual) {
         assertEquals(expected.replace("\r", ""), actual.replace("\r", ""));
     }
 
-    private org.juniversal.translator.swift.astwriters.ASTWriters writeSwift = new org.juniversal.translator.swift.astwriters.ASTWriters();
+    private CSharpASTWriters writeCSharp = new CSharpASTWriters();
+    private SwiftASTWriters writeSwift = new SwiftASTWriters();
 }

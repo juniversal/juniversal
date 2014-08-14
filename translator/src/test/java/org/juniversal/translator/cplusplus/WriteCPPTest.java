@@ -28,7 +28,7 @@ import org.juniversal.translator.core.Context;
 import org.juniversal.translator.core.SourceFile;
 import org.juniversal.translator.core.SourceNotSupportedException;
 import org.juniversal.translator.core.TargetWriter;
-import org.juniversal.translator.cplusplus.astwriters.ASTWriters;
+import org.juniversal.translator.cplusplus.astwriters.CPlusPlusASTWriters;
 
 import java.io.StringWriter;
 
@@ -165,11 +165,11 @@ public class WriteCPPTest {
                     "\r\nACUAL:\r\n" + cppOutput);
     }
 
-    static ASTWriters m_writeCPP = null;
+    static CPlusPlusASTWriters m_writeCPP = null;
 
-    ASTWriters getWriteCPP() {
+    CPlusPlusASTWriters getWriteCPP() {
         if (m_writeCPP == null)
-            m_writeCPP = new ASTWriters();
+            m_writeCPP = new CPlusPlusASTWriters();
         return m_writeCPP;
     }
 

@@ -20,25 +20,24 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.swift.astwriters;
+package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.AccessLevel;
-import org.juniversal.translator.core.Context;
-import org.juniversal.translator.core.JUniversalException;
+import org.juniversal.translator.core.*;
+import org.juniversal.translator.swift.astwriters.ASTWriterUtil;
+import org.juniversal.translator.swift.astwriters.SwiftASTWriters;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class WriteTypeDeclaration {
+class WriteTypeDeclaration {
     private final TypeDeclaration typeDeclaration;
     private final Context context;
-    private final SwiftASTWriters astWriters;
+    private final ASTWriters astWriters;
     private final int typeIndent;
     private boolean outputSomethingForType;
 
-    public WriteTypeDeclaration(TypeDeclaration typeDeclaration, Context context, SwiftASTWriters astWriters) {
+    public WriteTypeDeclaration(TypeDeclaration typeDeclaration, Context context, ASTWriters astWriters) {
         this.typeDeclaration = typeDeclaration;
         this.context = context;
         this.astWriters = astWriters;

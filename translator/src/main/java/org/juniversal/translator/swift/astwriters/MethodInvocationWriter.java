@@ -23,17 +23,20 @@
 package org.juniversal.translator.swift.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
+import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 import org.juniversal.translator.core.JUniversalException;
 
 import java.util.List;
 
 public class MethodInvocationWriter extends ASTWriter {
-	public MethodInvocationWriter(ASTWriters astWriters) {
-		super(astWriters);
-	}
+    private SwiftASTWriters swiftASTWriters;
 
-	@Override
+    public MethodInvocationWriter(SwiftASTWriters swiftASTWriters) {
+        this.swiftASTWriters = swiftASTWriters;
+    }
+
+    @Override
 	public void write(ASTNode node, Context context) {
 		if (node instanceof SuperMethodInvocation) {
 			SuperMethodInvocation superMethodInvocation = (SuperMethodInvocation) node;
@@ -71,7 +74,7 @@ public class MethodInvocationWriter extends ASTWriter {
 
 			context.copySpaceAndComments();
 		} else if (expression != null) {
-			getASTWriters().writeNode(expression, context);
+            swiftASTWriters.writeNode(expression, context);
 
 			context.copySpaceAndComments();
 			context.matchAndWrite(".", isStatic ? "::" : "->");
@@ -101,7 +104,7 @@ public class MethodInvocationWriter extends ASTWriter {
 			}
 
 			context.copySpaceAndComments();
-			getASTWriters().writeNode(argument, context);
+            swiftASTWriters.writeNode(argument, context);
 
 			first = false;
 		}
