@@ -63,7 +63,10 @@ public class TranslateStatementTest extends TranslateNodeTest {
         testTranslateStatement(
                 "if (true) // trailing\n" +
                 "    /* pre */return; /*post*/",
-                null,
+
+                "if (true) // trailing\n" +
+                "    /* pre */return;",
+
                 "if true { // trailing\n" +
                 "    /* pre */return; /*post*/\n" +
                 "}");
@@ -72,7 +75,11 @@ public class TranslateStatementTest extends TranslateNodeTest {
                 "if (true)\n" +
                 "      \n" +
                 "       return;",
-                null,
+
+                "if (true)\n" +
+                "\n" +
+                "       return;",
+
                 "if true {\n" +
                 "\n" +
                 "       return;\n" +
@@ -82,7 +89,11 @@ public class TranslateStatementTest extends TranslateNodeTest {
                 "if (true) /*x*/\n" +
                 "  /*abc*/    \n" +
                 "       return;  /*def*/ return;",
-                null,
+
+                "if (true) /*x*/\n" +
+                "  /*abc*/\n" +
+                "       return;",
+
                 "if true { /*x*/\n" +
                 "  /*abc*/\n" +
                 "       return;  /*def*/ \n" +
@@ -99,21 +110,36 @@ public class TranslateStatementTest extends TranslateNodeTest {
 
         testTranslateStatement(
                 "if (true) {return;} else return;",
+
                 null,
+
                 "if true {return;} else {\n" +
                 "    return;\n" +
                 "}");
 
         testTranslateStatement(
                 "if (true) {return;} else/*abc*/return;/*def*/",
-                null,
+
+                "if (true) {return;} else/*abc*/return;",
+
                 "if true {return;} else {\n" +
                 "    /*abc*/return;/*def*/\n" +
                 "}");
 
         testTranslateStatement(
-                "if (true) {return;} else  /*abc*/       return;  /*def*/",
+                "if (true) /*abc*/return; else/*def*/ return;",
+
                 null,
+
+                "if true /*abc*/{ return; } else {\n" +
+                "    /*def*/ return;\n" +
+                "}");
+
+        testTranslateStatement(
+                "if (true) {return;} else  /*abc*/       return;  /*def*/",
+
+                "if (true) {return;} else  /*abc*/       return;",
+
                 "if true {return;} else {\n" +
                 "    /*abc*/       return;  /*def*/\n" +
                 "}");
@@ -121,7 +147,9 @@ public class TranslateStatementTest extends TranslateNodeTest {
         testTranslateStatement(
                 "if (true) {return;} else  /*abc*/       return;  /*def*/ return;\n" +
                 "/*ghi*/",
-                null,
+
+                "if (true) {return;} else  /*abc*/       return;",
+
                 "if true {return;} else {\n" +
                 "    /*abc*/       return;  /*def*/ \n" +
                 "}");
@@ -130,7 +158,11 @@ public class TranslateStatementTest extends TranslateNodeTest {
                 "if (true) {return;} else   /*foo*/\n" +
                 "    \n" +
                 "    /*abc*/       return;  /*def*/ return;",
-                null,
+
+                "if (true) {return;} else   /*foo*/\n" +
+                "\n" +
+                "    /*abc*/       return;",
+
                 "if true {return;} else {   /*foo*/\n" +
                 "\n" +
                 "    /*abc*/       return;  /*def*/ \n" +
@@ -146,7 +178,10 @@ public class TranslateStatementTest extends TranslateNodeTest {
         testTranslateStatement(
                 "while (true)\n" +
                 " /*abc*/ {return; /*def*/}  return;",
-                null,
+
+                "while (true)\n" +
+                " /*abc*/ {return; /*def*/}",
+
                 "while true\n" +
                 " /*abc*/ {return; /*def*/}");
 

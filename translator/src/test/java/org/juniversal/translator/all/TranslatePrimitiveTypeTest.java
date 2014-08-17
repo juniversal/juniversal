@@ -20,11 +20,21 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.core;
+package org.juniversal.translator.all;
 
-@SuppressWarnings("serial")
-public class SourceNotSupportedException extends UserViewableException {
-    SourceNotSupportedException(String baseMessage, String positionDescription) {
-        super(baseMessage + "\n" + positionDescription);
+import org.junit.Test;
+import org.juniversal.translator.TranslateNodeTest;
+
+public class TranslatePrimitiveTypeTest extends TranslateNodeTest {
+    @Test
+    public void testTranslateIntegerLiterals() {
+        testTranslateStatement("byte foo;", "sbyte foo;", "FILL IN");
+        testTranslateStatement("short foo;", null, "FILL IN");
+        testTranslateStatement("char foo;", null, "FILL IN");
+        testTranslateStatement("int foo;", null, "FILL IN");
+        testTranslateStatement("long foo;", null, "FILL IN");
+        testTranslateStatement("float foo;", null, "FILL IN");
+        testTranslateStatement("double foo;", null, "FILL IN");
+        testTranslateStatement("boolean foo;", "bool foo;", "FILL IN");
     }
 }

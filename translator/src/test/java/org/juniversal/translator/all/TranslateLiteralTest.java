@@ -36,12 +36,12 @@ public class TranslateLiteralTest extends TranslateNodeTest {
         testTranslateLongExpression("3_123", "3123", null);
         testTranslateLongExpression("0xA1b2", null, null);
         testTranslateLongExpression("0XA1b2", null, null);
-        testTranslateLongExpression("0b1", "NOT-SUPPORTED", null);
-        testTranslateLongExpression("0B1", "NOT-SUPPORTED", null);
+        testTranslateLongExpression("0b1", "NOT-SUPPORTED: Binary literals aren't currently supported; change the source to use hex instead", null);
+        testTranslateLongExpression("0B1", "NOT-SUPPORTED: Binary literals aren't currently supported; change the source to use hex instead", null);
         testTranslateLongExpression("0", null, null);
 
         // Octal
-        testTranslateLongExpression("0010101", "NOT-SUPPORTED", "0o010101");
+        testTranslateLongExpression("0010101", "NOT-SUPPORTED: Octal literals aren't currently supported; change the source to use hex instead", "0o010101");
 
         //testTranslateLongExpression("3L", "Int64(3)");
         //testTranslateLongExpression("3l", "Int64(3)");

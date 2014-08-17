@@ -208,6 +208,7 @@ public class CSharpASTWriters extends ASTWriters {
             }
         });
 
+        // TODO: Implement this
         // Primitive type
         addWriter(PrimitiveType.class, new ASTWriter() {
             @Override
@@ -216,23 +217,21 @@ public class CSharpASTWriters extends ASTWriters {
 
                 PrimitiveType.Code code = primitiveType.getPrimitiveTypeCode();
                 if (code == PrimitiveType.BYTE)
-                    context.matchAndWrite("byte", "Int8");
+                    context.matchAndWrite("byte", "sbyte");
                 else if (code == PrimitiveType.SHORT)
-                    context.matchAndWrite("short", "Int16");
+                    context.matchAndWrite("short");
                 else if (code == PrimitiveType.CHAR)
-                    context.matchAndWrite("char", "Character");
-                    // TODO: For now, map 32 bit Java int to Int type in Swift, which can be 32 or 64 bits.
-                    // Later probably add @PreserveJavaIntSemantics annotation to force 32 bit + no overflow checking
+                    context.matchAndWrite("char");
                 else if (code == PrimitiveType.INT)
-                    context.matchAndWrite("int", "Int");
-                else if (code == PrimitiveType.LONG) {
-                    context.matchAndWrite("long", "Int64");
-                } else if (code == PrimitiveType.FLOAT)
-                    context.matchAndWrite("float", "Float");
+                    context.matchAndWrite("int");
+                else if (code == PrimitiveType.LONG)
+                    context.matchAndWrite("long");
+                else if (code == PrimitiveType.FLOAT)
+                    context.matchAndWrite("float");
                 else if (code == PrimitiveType.DOUBLE)
-                    context.matchAndWrite("double", "Double");
+                    context.matchAndWrite("double");
                 else if (code == PrimitiveType.BOOLEAN)
-                    context.matchAndWrite("boolean", "Bool");
+                    context.matchAndWrite("boolean", "bool");
                 else if (code == PrimitiveType.VOID)
                     throw new JUniversalException("Should detect void return types before it gets here");
                 else
@@ -299,67 +298,82 @@ public class CSharpASTWriters extends ASTWriters {
             }
         });
 
-        // TODO: Implement this
         // If statement
         addWriter(IfStatement.class, new ASTWriter() {
             @Override
             public void write(ASTNode node, Context context) {
                 IfStatement ifStatement = (IfStatement) node;
 
-                int ifColumn = context.getTargetColumn();
                 context.matchAndWrite("if");
+                context.copySpaceAndComments();
 
-                context.copySpaceAndCommentsEnsuringDelimiter();
+                context.matchAndWrite("(");
+                context.copySpaceAndComments();
 
-                writeConditionNoParens(ifStatement.getExpression(), context);
+                writeNode(ifStatement.getExpression(), context);
+                context.copySpaceAndComments();
 
-                writeStatementEnsuringBraces(ifColumn, false, ifStatement.getThenStatement(), context);
+                context.matchAndWrite(")");
+                context.copySpaceAndComments();
+
+                writeNode(ifStatement.getThenStatement(), context);
 
                 Statement elseStatement = ifStatement.getElseStatement();
                 if (elseStatement != null) {
                     context.copySpaceAndComments();
 
                     context.matchAndWrite("else");
-                    writeStatementEnsuringBraces(ifColumn, true, ifStatement.getElseStatement(), context);
+                    context.copySpaceAndComments();
+
+                    writeNode(elseStatement, context);
                 }
             }
         });
 
-        // TODO: Implement this
         // While statement
         addWriter(WhileStatement.class, new ASTWriter() {
             @Override
             public void write(ASTNode node, Context context) {
                 WhileStatement whileStatement = (WhileStatement) node;
 
-                int whileColumn = context.getTargetColumn();
                 context.matchAndWrite("while");
 
-                context.copySpaceAndCommentsEnsuringDelimiter();
+                context.copySpaceAndComments();
+                context.matchAndWrite("(");
 
-                writeConditionNoParens(whileStatement.getExpression(), context);
+                context.copySpaceAndComments();
+                writeNode(whileStatement.getExpression(), context);
 
-                writeStatementEnsuringBraces(whileColumn, false, whileStatement.getBody(), context);
+                context.copySpaceAndComments();
+                context.matchAndWrite(")");
+
+                context.copySpaceAndComments();
+                writeNode(whileStatement.getBody(), context);
             }
         });
 
-        // TODO: Implement this
         // Do while statement
         addWriter(DoStatement.class, new ASTWriter() {
             @Override
             public void write(ASTNode node, Context context) {
                 DoStatement doStatement = (DoStatement) node;
 
-                int doColumn = context.getTargetColumn();
                 context.matchAndWrite("do");
 
-                writeStatementEnsuringBraces(doColumn, false, doStatement.getBody(), context);
+                context.copySpaceAndComments();
+                writeNode(doStatement.getBody(), context);
 
                 context.copySpaceAndComments();
                 context.matchAndWrite("while");
 
                 context.copySpaceAndComments();
-                writeConditionNoParens(doStatement.getExpression(), context);
+                context.matchAndWrite("(");
+
+                context.copySpaceAndComments();
+                writeNode(doStatement.getExpression(), context);
+
+                context.copySpaceAndComments();
+                context.matchAndWrite(")");
 
                 context.copySpaceAndComments();
                 context.matchAndWrite(";");
@@ -428,9 +442,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Local variable declaration statement
-/*
         addWriter(VariableDeclarationStatement.class, new VariableDeclarationWriter(this));
-*/
 
         // TODO: Implement this
         // Throw statement
@@ -750,7 +762,6 @@ public class CSharpASTWriters extends ASTWriters {
             }
         });
 
-        // TODO: Implement this
         // Boolean literal
         addWriter(BooleanLiteral.class, new ASTWriter() {
             @Override
@@ -760,22 +771,16 @@ public class CSharpASTWriters extends ASTWriters {
             }
         });
 
-        // TODO: Implement this
         // Character literal
         addWriter(CharacterLiteral.class, new ASTWriter() {
             @Override
             public void write(ASTNode node, Context context) {
                 CharacterLiteral characterLiteral = (CharacterLiteral) node;
-
                 // TODO: Map character escape sequences
-                // TODO: Handle conversion of characters to integers where that's normally implicit in Java
-
-                context.write("Character(\"" + characterLiteral.charValue() + "\")");
                 context.match(characterLiteral.getEscapedValue());
             }
         });
 
-        // TODO: Implement this
         // Null literal
         addWriter(NullLiteral.class, new ASTWriter() {
             @Override

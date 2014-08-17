@@ -27,10 +27,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
-import org.juniversal.translator.core.ASTWriters;
-import org.juniversal.translator.core.Context;
-import org.juniversal.translator.core.SourceFile;
-import org.juniversal.translator.core.TargetWriter;
+import org.juniversal.translator.core.*;
 import org.juniversal.translator.cplusplus.CPPProfile;
 import org.juniversal.translator.cplusplus.OutputType;
 import org.juniversal.translator.csharp.astwriters.CSharpASTWriters;
@@ -231,7 +228,7 @@ public class TranslateNodeTest {
         profile.setTabStop(destTabStop);
 
         testTranslate(node, javaFullSource, javaNodeSource, compilationUnit, profile, writeCSharp, expectedCSharp);
-        testTranslate(node, javaFullSource, javaNodeSource, compilationUnit, profile, writeSwift, expectedSwift);
+        //testTranslate(node, javaFullSource, javaNodeSource, compilationUnit, profile, writeSwift, expectedSwift);
 
 /*
         if (!actualSwift.equals(expectedSwift == null ? java : expectedSwift))
@@ -250,11 +247,30 @@ public class TranslateNodeTest {
                 targetWriter, OutputType.SOURCE);
 
         context.setPosition(node.getStartPosition());
-        astWriters.writeNode(node, context);
 
-        String actualOutput = writer.getBuffer().toString();
+        String effectiveExpectedOutput = expectedOutput == null ? javaNodeSource : expectedOutput;
 
-        assertEqualsNormalizeNewlines(expectedOutput == null ? javaNodeSource : expectedOutput, actualOutput);
+        if (effectiveExpectedOutput.startsWith(("NOT-SUPPORTED:"))) {
+            try {
+                astWriters.writeNode(node, context);
+            } catch (SourceNotSupportedException e) {
+                String expectedError = effectiveExpectedOutput.substring("NOT-SUPPORTED: ".length());
+
+                String actutalError = e.getMessage().replace("\r", "");
+                int newlineIndex = actutalError.indexOf('\n');
+                if (newlineIndex != -1)
+                    actutalError = actutalError.substring(0, newlineIndex);
+
+                assertEquals(expectedError, actutalError);
+            }
+        }
+        else {
+            astWriters.writeNode(node, context);
+
+            String actualOutput = writer.getBuffer().toString();
+            assertEqualsNormalizeNewlines(effectiveExpectedOutput, actualOutput);
+
+        }
     }
 
     private void assertEqualsNormalizeNewlines(String expected, String actual) {

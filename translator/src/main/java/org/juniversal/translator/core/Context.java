@@ -392,7 +392,7 @@ public class Context {
     }
 
     public void throwSourceNotSupported(String baseMessage) {
-        throw new UserViewableException(baseMessage + "\n" + getPositionDescription(position));
+        throw new SourceNotSupportedException(baseMessage, getPositionDescription(position));
     }
 
     public void throwInvalidAST(String baseMessage) {
