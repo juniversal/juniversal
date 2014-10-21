@@ -24,7 +24,6 @@ package org.juniversal.translator.cplusplus.astwriters;
 
 import java.util.List;
 
-import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.JUniversalException;
 import org.juniversal.translator.core.Context;
 
@@ -36,15 +35,15 @@ import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
-public class MethodInvocationWriter extends ASTWriter {
+public class MethodInvocationWriter extends CPlusPlusASTWriter {
     private CPlusPlusASTWriters cPlusPlusASTWriters;
 
     public MethodInvocationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+        super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
+	public void write(Context context, ASTNode node) {
 		if (node instanceof SuperMethodInvocation) {
 			SuperMethodInvocation superMethodInvocation = (SuperMethodInvocation) node;
 
@@ -81,7 +80,7 @@ public class MethodInvocationWriter extends ASTWriter {
 
 			context.copySpaceAndComments();
 		} else if (expression != null) {
-            cPlusPlusASTWriters.writeNode(expression, context);
+            writeNode(context, expression);
 
 			context.copySpaceAndComments();
 			context.matchAndWrite(".", isStatic ? "::" : "->");
@@ -111,7 +110,7 @@ public class MethodInvocationWriter extends ASTWriter {
 			}
 
 			context.copySpaceAndComments();
-            cPlusPlusASTWriters.writeNode(argument, context);
+            writeNode(context, argument);
 
 			first = false;
 		}

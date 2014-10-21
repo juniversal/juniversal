@@ -22,76 +22,72 @@
 
 package org.juniversal.translator.cplusplus.astwriters;
 
-import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.core.Context;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ForStatement;
+import org.juniversal.translator.core.Context;
 
 
-public class ForStatementWriter extends ASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
-
+public class ForStatementWriter extends CPlusPlusASTWriter {
     public ForStatementWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+        super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
-		ForStatement forStatement = (ForStatement) node;
+    public void write(Context context, ASTNode node) {
+        ForStatement forStatement = (ForStatement) node;
 
-		context.matchAndWrite("for");
-		context.copySpaceAndComments();
+        context.matchAndWrite("for");
+        context.copySpaceAndComments();
 
-		context.matchAndWrite("(");
-		context.copySpaceAndComments();
+        context.matchAndWrite("(");
+        context.copySpaceAndComments();
 
-		boolean first = true;
-		for (Object initializerExpressionObject : forStatement.initializers()) {
-			Expression initializerExpression = (Expression) initializerExpressionObject;
+        boolean first = true;
+        for (Object initializerExpressionObject : forStatement.initializers()) {
+            Expression initializerExpression = (Expression) initializerExpressionObject;
 
-			if (! first) {
-				context.matchAndWrite(",");
-				context.copySpaceAndComments();
-			}
+            if (!first) {
+                context.matchAndWrite(",");
+                context.copySpaceAndComments();
+            }
 
-            cPlusPlusASTWriters.writeNode(initializerExpression, context);
-			context.copySpaceAndComments();
+            writeNode(context, initializerExpression);
+            context.copySpaceAndComments();
 
-			first = false;
-		}
+            first = false;
+        }
 
-		context.matchAndWrite(";");
-		context.copySpaceAndComments();
+        context.matchAndWrite(";");
+        context.copySpaceAndComments();
 
-		Expression forExpression = forStatement.getExpression();
-		if (forExpression != null) {
-            cPlusPlusASTWriters.writeNode(forStatement.getExpression(), context);
-			context.copySpaceAndComments();
-		}
+        Expression forExpression = forStatement.getExpression();
+        if (forExpression != null) {
+            writeNode(context, forStatement.getExpression());
+            context.copySpaceAndComments();
+        }
 
-		context.matchAndWrite(";");
-		context.copySpaceAndComments();
+        context.matchAndWrite(";");
+        context.copySpaceAndComments();
 
-		first = true;
-		for (Object updaterExpressionObject : forStatement.updaters()) {
-			Expression updaterExpression = (Expression) updaterExpressionObject;
+        first = true;
+        for (Object updaterExpressionObject : forStatement.updaters()) {
+            Expression updaterExpression = (Expression) updaterExpressionObject;
 
-			if (! first) {
-				context.matchAndWrite(",");
-				context.copySpaceAndComments();
-			}
+            if (!first) {
+                context.matchAndWrite(",");
+                context.copySpaceAndComments();
+            }
 
-            cPlusPlusASTWriters.writeNode(updaterExpression, context);
-			context.copySpaceAndComments();
+            writeNode(context, updaterExpression);
+            context.copySpaceAndComments();
 
-			first = false;
-		}
+            first = false;
+        }
 
-		context.matchAndWrite(")");
-		context.copySpaceAndComments();
+        context.matchAndWrite(")");
+        context.copySpaceAndComments();
 
-        cPlusPlusASTWriters.writeNode(forStatement.getBody(), context);
-	}
+        writeNode(context, forStatement.getBody());
+    }
 }

@@ -20,29 +20,30 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.swift.astwriters;
+package org.juniversal.translator.csharp.astwriters;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.juniversal.translator.core.ASTWriter;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.juniversal.translator.core.Context;
 
-
-public class TypeDeclarationWriter extends SwiftASTWriter {
-    private SwiftASTWriters swiftASTWriters;
-
-    public TypeDeclarationWriter(SwiftASTWriters swiftASTWriters) {
-        super(swiftASTWriters);
+public class SuperMethodInvocationWriter extends MethodInvocationWriterBase<SuperMethodInvocation> {
+    public SuperMethodInvocationWriter(CSharpASTWriters cSharpASTWriters) {
+        super(cSharpASTWriters);
     }
 
-    public void write(Context context, ASTNode node) {
-		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
+    @Override
+    public void write(Context context, SuperMethodInvocation superMethodInvocation) {
+        // TODO: Support this
+        if (superMethodInvocation.getQualifier() != null)
+            context.throwSourceNotSupported("Qualified super invocations aren't currently supported");
 
-		TypeDeclaration oldTypeDeclaration = context.getTypeDeclaration();
-		context.setTypeDeclaration(typeDeclaration);
+        context.matchAndWrite("super", "base");
 
-        new WriteTypeDeclaration(typeDeclaration, context, swiftASTWriters);
+        context.copySpaceAndComments();
+        context.matchAndWrite(".");
 
-		context.setTypeDeclaration(oldTypeDeclaration);
-	}
+        context.copySpaceAndComments();
+        writeMethodInvocation(context, superMethodInvocation, superMethodInvocation.getName().getIdentifier(),
+                superMethodInvocation.typeArguments(), superMethodInvocation.arguments(),
+                superMethodInvocation.resolveMethodBinding());
+    }
 }

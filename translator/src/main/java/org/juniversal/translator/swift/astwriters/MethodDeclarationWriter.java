@@ -24,21 +24,20 @@ package org.juniversal.translator.swift.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 import java.util.List;
 
 
-public class MethodDeclarationWriter extends ASTWriter {
+public class MethodDeclarationWriter extends SwiftASTWriter {
     private SwiftASTWriters swiftASTWriters;
 
     public MethodDeclarationWriter(SwiftASTWriters swiftASTWriters) {
-        this.swiftASTWriters = swiftASTWriters;
+        super(swiftASTWriters);
     }
 
     @Override
-    public void write(ASTNode node, Context context) {
+    public void write(Context context, ASTNode node) {
         MethodDeclaration methodDeclaration = (MethodDeclaration) node;
 
         // TODO: Implement this as appropriate
@@ -111,7 +110,7 @@ public class MethodDeclarationWriter extends ASTWriter {
         // TODO: Implement this
         //writeSuperConstructorInvocation(methodDeclaration, context);
 
-        swiftASTWriters.writeNode(methodDeclaration.getBody(), context);
+        swiftASTWriters.writeNode(context, methodDeclaration.getBody());
     }
 
     private void writeParameterList(MethodDeclaration methodDeclaration, Context context) {
@@ -129,7 +128,7 @@ public class MethodDeclarationWriter extends ASTWriter {
                 context.copySpaceAndComments();
             }
 
-            swiftASTWriters.writeNode(singleVariableDeclaration, context);
+            swiftASTWriters.writeNode(context, singleVariableDeclaration);
             context.copySpaceAndComments();
 
             first = false;
@@ -215,7 +214,7 @@ public class MethodDeclarationWriter extends ASTWriter {
             }
 
             context.copySpaceAndComments();
-            swiftASTWriters.writeNode(argument, context);
+            swiftASTWriters.writeNode(context, argument);
 
             first = false;
         }

@@ -24,21 +24,18 @@ package org.juniversal.translator.swift.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 import java.util.List;
 
 
-public class VariableDeclarationWriter extends ASTWriter {
-    private SwiftASTWriters swiftASTWriters;
-
+public class VariableDeclarationWriter extends SwiftASTWriter {
     public VariableDeclarationWriter(SwiftASTWriters swiftASTWriters) {
-        this.swiftASTWriters = swiftASTWriters;
+        super(swiftASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
+	public void write(Context context, ASTNode node) {
 		// Variable declaration statements & expressions are quite similar, so we handle them both
 		// here together
 
@@ -68,7 +65,7 @@ public class VariableDeclarationWriter extends ASTWriter {
 		}
 
 		// Write the type
-        swiftASTWriters.writeType(type, context, false);
+        writeNode(context, type);
 
 		boolean needStar = false;
 		context.setWritingVariableDeclarationNeedingStar(needStar);
@@ -83,7 +80,7 @@ public class VariableDeclarationWriter extends ASTWriter {
 				context.matchAndWrite(",");
 				context.copySpaceAndComments();
 			}
-            swiftASTWriters.writeNode(variableDeclarationFragment, context);
+            writeNode(context, variableDeclarationFragment);
 
 			first = false;
 		}

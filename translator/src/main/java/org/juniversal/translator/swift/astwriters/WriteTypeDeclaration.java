@@ -122,7 +122,7 @@ public class WriteTypeDeclaration {
             context.matchAndWrite("extends", ": public");
 
             context.copySpaceAndComments();
-            astWriters.writeNode(superclassType, context);
+            astWriters.writeNode(context, superclassType);
         }
 
         // Write out the super interfaces, if any
@@ -145,7 +145,7 @@ public class WriteTypeDeclaration {
             if (context.getPosition() == originalPosition)
                 context.write(" ");
 
-            astWriters.writeNode(superInterfaceType, context);
+            astWriters.writeNode(context, superInterfaceType);
             firstInterface = false;
         }
     }
@@ -192,7 +192,7 @@ public class WriteTypeDeclaration {
             context.setPositionToStartOfNodeSpaceAndComments(nestedTypeDeclaration);
             context.copySpaceAndComments();
 
-            astWriters.writeNode(nestedTypeDeclaration, context);
+            astWriters.writeNode(context, nestedTypeDeclaration);
 
             // Copy any trailing comment associated with the class, on the same line as the closing
             // brace; rare but possible
@@ -274,7 +274,7 @@ public class WriteTypeDeclaration {
         context.setPositionToStartOfNode(methodDeclaration);
 */
 
-        astWriters.writeNode(methodDeclaration, context);
+        astWriters.writeNode(context, methodDeclaration);
 
         // Copy any trailing comment associated with the method; that's sometimes there for
         // one-liners
@@ -331,11 +331,11 @@ public class WriteTypeDeclaration {
 
         // If the member is on the same line as other members, for some unusual reason, then
         // the above code won't indent it. So indent it here since in our output every
-        // member/method is on it's own line in the class definition.
+          // member/method is on it's own line in the class definition.
         if (context.getSourceLogicalColumn() == 0)
             context.writeSpaces(context.getPreferredIndent());
 
-        astWriters.writeNode(fieldDeclaration, context);
+        astWriters.writeNode(context, fieldDeclaration);
 
         context.copySpaceAndCommentsUntilEOL();
         context.writeln();

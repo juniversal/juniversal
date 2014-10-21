@@ -32,12 +32,16 @@ import org.juniversal.translator.cplusplus.astwriters.CPlusPlusASTWriters;
 
 import java.io.StringWriter;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 public class WriteCPPTest {
-    @Test public void returnTest() {
+    private int m_sourceTabStop = 4;
+    private int m_destTabStop = 4;
+    private CPlusPlusTranslator cPlusPlusTranslator = new CPlusPlusTranslator();
+
+    @Test
+    public void returnTest() {
         m_sourceTabStop = 4;
         m_destTabStop = -1;
         testWriteStatement("return 3;");
@@ -53,14 +57,16 @@ public class WriteCPPTest {
         testWriteStatement("return\t3\t\t;", "return  3       ;");
     }
 
-    @Test public void ifTest() {
+    @Test
+    public void ifTest() {
         testWriteStatement("if (false) return 3;");
         testWriteStatement("if (true) return 3; else return 7;");
         testWriteStatement("if ( true ) { return 3 ; } else { return 7 ; }");
         testWriteStatement("if ( true )\r\n\t\t{ return 3 ; }\r\n\t\telse { return 7 ; }");
     }
 
-    @Test public void variableDeclarationTest() {
+    @Test
+    public void variableDeclarationTest() {
         testWriteStatement("int i = 3;");
         testWriteStatement("boolean /* comment 1 */ b /* comment 2 */ ;",
                 "bool /* comment 1 */ b /* comment 2 */ ;");
@@ -82,20 +88,22 @@ public class WriteCPPTest {
         testWriteStatement("boolean foo;", "bool foo;");
     }
 
-    @Test public void blockTest() {
+    @Test
+    public void blockTest() {
         testWriteStatement("{ int i = 3; boolean b = false; if ( b ) \r\n return 5; else return 6; }",
                 "{ int i = 3; bool b = false; if ( b )\r\n return 5; else return 6; }");
     }
 
-    @Test public void classTest() {
+    @Test
+    public void classTest() {
         testWriteClass(
                 "class Foo {\r\n" +
-                        "	private int abc;\r\n" +
-                        "}\r\n",
+                "	private int abc;\r\n" +
+                "}\r\n",
                 "class Foo {\r\n" +
-                        "private:\r\n" +
-                        "    int abc;\r\n" +
-                        "}\r\n");
+                "private:\r\n" +
+                "    int abc;\r\n" +
+                "}\r\n");
     }
 
     public void testWriteStatement(String javaStatement, String expectedCPPStatement) {
@@ -152,28 +160,24 @@ public class WriteCPPTest {
 
         TargetWriter targetWriter = new TargetWriter(writer, profile);
 
-        Context context = new Context(new SourceFile(compilationUnit, null, javaSource), m_sourceTabStop, profile,
-                targetWriter, OutputType.SOURCE);
+        Context context = cPlusPlusTranslator.createContext(
+                new SourceFile(compilationUnit, null, javaSource, m_sourceTabStop), writer, OutputType.SOURCE);
 
         context.setPosition(node.getStartPosition());
-        getWriteCPP().writeNode(node, context);
+        getWriteCPP().writeNode(context, node);
 
         String cppOutput = writer.getBuffer().toString();
 
         if (!cppOutput.equals(expectedCPPOutput))
             fail("Output doesn't match expected output.\r\nEXPECTED:\r\n" + expectedCPPOutput +
-                    "\r\nACUAL:\r\n" + cppOutput);
+                 "\r\nACUAL:\r\n" + cppOutput);
     }
 
     static CPlusPlusASTWriters m_writeCPP = null;
 
     CPlusPlusASTWriters getWriteCPP() {
         if (m_writeCPP == null)
-            m_writeCPP = new CPlusPlusASTWriters();
+            m_writeCPP = new CPlusPlusTranslator().getASTWriters();
         return m_writeCPP;
     }
-
-    // Data
-    private int m_sourceTabStop = 4;
-    private int m_destTabStop = 4;
 }

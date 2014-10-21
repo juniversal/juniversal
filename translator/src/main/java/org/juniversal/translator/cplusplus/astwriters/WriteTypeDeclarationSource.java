@@ -56,7 +56,7 @@ public class WriteTypeDeclarationSource {
 				// header
 				context.setPositionToStartOfNode(fieldDeclaration);
 
-				astWriters.writeNode(fieldDeclaration, context);
+				astWriters.writeNode(context, fieldDeclaration);
 				context.writeln();
 				outputSomething = true;
 			}
@@ -90,7 +90,7 @@ public class WriteTypeDeclarationSource {
 		context.writeln();
 
 		context.setPositionToStartOfNode(nestedTypeDeclaration);
-		astWriters.writeNode(nestedTypeDeclaration, context);
+		astWriters.writeNode(context, nestedTypeDeclaration);
 		outputSomething = true;
 	}
 
@@ -118,7 +118,7 @@ public class WriteTypeDeclarationSource {
 			context.skipBlankLines();
 
 		context.copySpaceAndComments();
-		astWriters.writeNode(methodDeclaration, context);
+		astWriters.writeNode(context, methodDeclaration);
 
 		context.setWritingMethodImplementation(false);
 		context.getTargetWriter().setAdditionalIndentation(previousIndent);

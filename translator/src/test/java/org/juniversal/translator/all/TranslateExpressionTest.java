@@ -20,29 +20,19 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.swift.astwriters;
+package org.juniversal.translator.all;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.core.Context;
+import org.junit.Test;
+import org.juniversal.translator.TranslateNodeTest;
 
-
-public class TypeDeclarationWriter extends SwiftASTWriter {
-    private SwiftASTWriters swiftASTWriters;
-
-    public TypeDeclarationWriter(SwiftASTWriters swiftASTWriters) {
-        super(swiftASTWriters);
+public class TranslateExpressionTest extends TranslateNodeTest {
+    @Test public void testFieldAccess() {
+        testTranslateIntExpression("this /*abc*/ . /*def*/ intField", null, null);
     }
 
-    public void write(Context context, ASTNode node) {
-		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
+    @Test public void testArrayAccess() {
+        testTranslateIntExpression("intArrayField[0]", null, null);
 
-		TypeDeclaration oldTypeDeclaration = context.getTypeDeclaration();
-		context.setTypeDeclaration(typeDeclaration);
-
-        new WriteTypeDeclaration(typeDeclaration, context, swiftASTWriters);
-
-		context.setTypeDeclaration(oldTypeDeclaration);
-	}
+        testTranslateIntExpression("intArrayField /*abc*/ [ /*def*/ 0 /*ghi*/ ]", null, null);
+    }
 }

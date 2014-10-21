@@ -25,7 +25,6 @@ package org.juniversal.translator.cplusplus.astwriters;
 import java.util.List;
 
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.JUniversalException;
 import org.juniversal.translator.core.Context;
 
@@ -35,17 +34,13 @@ import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.Expression;
 
 
-public class ArrayCreationWriter extends ASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
-
+public class ArrayCreationWriter extends CPlusPlusASTWriter<ArrayCreation> {
     public ArrayCreationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+        super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
-		ArrayCreation arrayCreation = (ArrayCreation) node;
-
+	public void write(Context context, ArrayCreation arrayCreation) {
 		context.matchAndWrite("new");
 
 		List<?> dimensions = arrayCreation.dimensions();
@@ -62,7 +57,7 @@ public class ArrayCreationWriter extends ASTWriter {
 		context.setPosition(dimensionSizeExpression.getStartPosition());
 
 		context.write("(");
-        cPlusPlusASTWriters.writeNode(dimensionSizeExpression, context);
+        writeNode(context, dimensionSizeExpression);
 		context.copySpaceAndComments();
 		context.write(") ");
 
@@ -70,7 +65,7 @@ public class ArrayCreationWriter extends ASTWriter {
 		context.setPosition(arrayType.getStartPosition());
 
 		context.write("Array<");
-        cPlusPlusASTWriters.writeNode(arrayType.getElementType(), context);
+        writeNode(context, arrayType.getElementType());
 		context.skipSpaceAndComments();
 		context.write(">");
 

@@ -20,96 +20,82 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.csharp.astwriters;
+package
+        org /*abc*/.juniversal.
+                translator.csharp.
+                astwriters;
 
 import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.ASTWriter;
+import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.Context;
-import org.juniversal.translator.cplusplus.OutputType;
 
 
-class CompilationUnitWriter extends ASTWriter {
-    private CSharpASTWriters cSharpASTWriters;
+// TODO: FInish this
 
+class CompilationUnitWriter extends CSharpASTWriter<CompilationUnit> {
     CompilationUnitWriter(CSharpASTWriters cSharpASTWriters) {
-        this.cSharpASTWriters = cSharpASTWriters;
+        super(cSharpASTWriters);
     }
 
-    public void write(ASTNode node, Context context) {
-        CompilationUnit compilationUnit = (CompilationUnit) node;
-
-        TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
-
-        context.setPosition(mainTypeDeclaration.getStartPosition());
-
-        if (context.getOutputType() == OutputType.HEADER)
-            writeHeader(compilationUnit, mainTypeDeclaration, context);
-        else writeSource(compilationUnit, mainTypeDeclaration, context);
-    }
-
-    private void writeHeader(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration, Context context) {
-        String name = mainTypeDeclaration.getName().getIdentifier();
-        String multiIncludeDefine = name.toUpperCase() + "_H";
-        Type superclassType = mainTypeDeclaration.getSuperclassType();
-
-        context.writeln("#ifndef " + multiIncludeDefine);
-        context.writeln("#define " + multiIncludeDefine);
-        context.writeln();
-
-/*
-        context.writeln("#include \"juniversal.h\"");
-		if (superclassType != null) {
-			if (superclassType instanceof SimpleType)
-				ASTWriterUtil.writeIncludeForTypeName(((SimpleType) superclassType).getName(), context);
-			else if (superclassType instanceof ParameterizedType) {
-				// TODO: Finish this; make check for dependencies everywhere in all code via visitor
-			}
-		}
-		context.writeln();
-*/
-
-        context.writeln("namespace " + getPackageNamespaceName(compilationUnit) + " {");
-        context.writeln("JU_USING_STD_NAMESPACES");
-        context.writeln();
-
-        // Copy class Javadoc or other comments before the class starts
+    public void write(Context context, CompilationUnit compilationUnit) {
         context.copySpaceAndComments();
 
-        cSharpASTWriters.writeNode(mainTypeDeclaration, context);
+        // TODO: This results in an extra newline normally; distinguish between case where package is only think on line & multiple things on the line
+        @Nullable PackageDeclaration packageDeclaration = compilationUnit.getPackage();
+        if (packageDeclaration != null) {
+            context.setPositionToEndOfNodeSpaceAndComments(packageDeclaration);
+        }
+
+        for (Object importDeclarationObject : compilationUnit.imports()) {
+            ImportDeclaration importDeclaration = (ImportDeclaration) importDeclarationObject;
+
+            context.copySpaceAndComments();
+            //TODO: Process import statements; but for now just skip
+            context.setPositionToEndOfNodeSpaceAndComments(importDeclaration);
+        }
+
+        int previousIndent = 0;
+        if (packageDeclaration != null) {
+            int previousPosition = context.getPosition();
+            context.setPositionToStartOfNode(packageDeclaration);
+            context.matchAndWrite("package", "namespace");
+
+            context.copySpaceAndComments();
+            writeNode(context, packageDeclaration.getName());
+
+            context.write(" {");
+            previousIndent = context.getTargetWriter().incrementAdditionalIndentation(context.getPreferredIndent());
+            context.writeln();
+
+            context.setPosition(previousPosition);
+        }
+
+/*
+
+        if (packageDeclaration != null)
+        return getNamespaceNameForPackageName(packageDeclaration == null ? null : packageDeclaration
+                .getName());
+*/
+
+        AbstractTypeDeclaration firstTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
 
         context.copySpaceAndComments();
+        writeNode(context, firstTypeDeclaration);
+        context.copySpaceAndComments();
 
-        context.writeln();
-        context.writeln("}");   // Close namespace definition
+        if (packageDeclaration != null) {
+            previousIndent = context.getTargetWriter().setAdditionalIndentation(previousIndent);
+            context.writeln();
+            context.writeln("}");
+        }
 
-        context.writeln("#endif // " + multiIncludeDefine);
-    }
-
-    private void writeSource(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration, Context context) {
 /*
-		ASTWriterUtil.writeIncludeForTypeName(mainTypeDeclaration.getName(), context);
-*/
         context.writeln();
 
-        context.writeln("JU_USING_STD_NAMESPACES");
-        context.writeln("using namespace " + getPackageNamespaceName(compilationUnit) + ";");
-        context.writeln();
+        context.setPosition(firstTypeDeclaration.getStartPosition());
+        context.copySpaceAndComments();   // Skip any Javadoc included in the node
 
-        context.setPosition(mainTypeDeclaration.getStartPosition());
-        context.skipSpaceAndComments();   // Skip any Javadoc included in the node
-
-        cSharpASTWriters.writeNode(mainTypeDeclaration, context);
-
-        context.skipSpaceAndComments();
-    }
-
-    private String getPackageNamespaceName(CompilationUnit compilationUnit) {
-        PackageDeclaration packageDeclaration = compilationUnit.getPackage();
-/*
-		return ASTWriterUtil.getNamespaceNameForPackageName(packageDeclaration == null ? null : packageDeclaration
-				.getName());
+        writeNode(context, firstTypeDeclaration);
 */
-        return null;
     }
 }

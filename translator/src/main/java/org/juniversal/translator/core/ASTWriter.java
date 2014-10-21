@@ -23,14 +23,80 @@
 package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.juniversal.translator.cplusplus.astwriters.CPlusPlusASTWriters;
+
+import java.util.List;
 
 
-public abstract class ASTWriter {
-    abstract public void write(ASTNode node, Context context);
+public abstract class ASTWriter<T extends ASTNode> {
+    private ASTWriters astWrtiers;
+
+    protected ASTWriter(ASTWriters astWrtiers) {
+        this.astWrtiers = astWrtiers;
+    }
+
+    abstract public void write(Context context, T node);
 
     public boolean canProcessTrailingWhitespaceOrComments() {
         return false;
     }
+    
+    protected abstract ASTWriters getASTWriters();
 
+    protected void writeNode(Context context, ASTNode node) {
+        getASTWriters().writeNode(context, node);
+    }
+
+    protected void writeNodeFromOtherPosition(Context context, ASTNode node) {
+        int savedPosition = context.getPosition();
+
+        context.setPositionToStartOfNode(node);
+        getASTWriters().writeNode(context, node);
+
+        context.setPosition(savedPosition);
+    }
+
+    protected void writeNodeAtDifferentPosition(ASTNode node, Context context) {
+        getASTWriters().writeNodeAtDifferentPosition(node, context);
+    }
+
+    public <TElmt> void writeCommaDelimitedNodes(Context context, List list, ASTUtil.IProcessListElmt<TElmt> processList) {
+        boolean first = true;
+        for (Object elmtObject : list) {
+            if (!first) {
+                context.copySpaceAndComments();
+                context.matchAndWrite(",");
+            }
+
+            TElmt elmt = (TElmt) elmtObject;
+            processList.process(elmt);
+
+            first = false;
+        }
+    }
+
+    public void writeCommaDelimitedNodes(Context context, List list) {
+        boolean first = true;
+        for (Object astNodeObject : list) {
+            if (!first) {
+                context.copySpaceAndComments();
+                context.matchAndWrite(",");
+            }
+
+            ASTNode astNode = (ASTNode) astNodeObject;
+
+            context.copySpaceAndComments();
+            writeNode(context, astNode);
+
+            first = false;
+        }
+    }
+
+    public void writeNodes(Context context, List list) {
+        for (Object astNodeObject : list) {
+            ASTNode astNode = (ASTNode) astNodeObject;
+
+            context.copySpaceAndComments();
+            writeNode(context, astNode);
+        }
+    }
 }

@@ -20,29 +20,46 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.swift.astwriters;
+package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.juniversal.translator.core.ASTWriter;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ForStatement;
 import org.juniversal.translator.core.Context;
 
 
-public class TypeDeclarationWriter extends SwiftASTWriter {
-    private SwiftASTWriters swiftASTWriters;
-
-    public TypeDeclarationWriter(SwiftASTWriters swiftASTWriters) {
-        super(swiftASTWriters);
+public class ForStatementWriter extends CSharpASTWriter<ForStatement> {
+    public ForStatementWriter(CSharpASTWriters cSharpASTWriters) {
+        super(cSharpASTWriters);
     }
 
-    public void write(Context context, ASTNode node) {
-		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
+    @Override
+    public void write(Context context, ForStatement forStatement) {
+        context.matchAndWrite("for");
 
-		TypeDeclaration oldTypeDeclaration = context.getTypeDeclaration();
-		context.setTypeDeclaration(typeDeclaration);
+        context.copySpaceAndComments();
+        context.matchAndWrite("(");
 
-        new WriteTypeDeclaration(typeDeclaration, context, swiftASTWriters);
+        writeCommaDelimitedNodes(context, forStatement.initializers());
 
-		context.setTypeDeclaration(oldTypeDeclaration);
-	}
+        context.copySpaceAndComments();
+        context.matchAndWrite(";");
+
+        Expression forExpression = forStatement.getExpression();
+        if (forExpression != null) {
+            context.copySpaceAndComments();
+            writeNode(context, forStatement.getExpression());
+        }
+
+        context.copySpaceAndComments();
+        context.matchAndWrite(";");
+
+        writeCommaDelimitedNodes(context, forStatement.updaters());
+
+        context.copySpaceAndComments();
+        context.matchAndWrite(")");
+
+        context.copySpaceAndComments();
+        writeNode(context, forStatement.getBody());
+    }
 }

@@ -22,28 +22,123 @@
 
 package org.juniversal.translator.csharp.astwriters;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.core.ASTWriters;
+import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.Nullable;
+import org.juniversal.translator.core.ASTUtil;
 import org.juniversal.translator.core.Context;
 
+import java.util.List;
 
-class TypeDeclarationWriter extends ASTWriter {
-    private CSharpASTWriters cSharpASTWriters;
+import static org.juniversal.translator.core.ASTUtil.*;
 
-    TypeDeclarationWriter(CSharpASTWriters cSharpASTWriters) {
-        this.cSharpASTWriters = cSharpASTWriters;
+public class TypeDeclarationWriter extends CSharpASTWriter<TypeDeclaration> {
+    public TypeDeclarationWriter(CSharpASTWriters cSharpASTWriters) {
+        super(cSharpASTWriters);
     }
 
-    public void write(ASTNode node, Context context) {
-        TypeDeclaration typeDeclaration = (TypeDeclaration) node;
-
-        TypeDeclaration oldTypeDeclaration = context.getTypeDeclaration();
+    @Override
+    public void write(Context context, TypeDeclaration typeDeclaration) {
+        @Nullable TypeDeclaration outerTypeDeclaration = context.getTypeDeclaration();
         context.setTypeDeclaration(typeDeclaration);
 
-        new WriteTypeDeclaration(typeDeclaration, context, cSharpASTWriters);
+        try {
+            List<?> modifiers = typeDeclaration.modifiers();
+            if (outerTypeDeclaration != null && ! containsStatic(modifiers))
+                context.throwSourceNotSupported("Only static nested classes are supported, as C# and Swift don't support inner (non static) classes.  Make the nested class static and pass in the outer instance to the constructor, to simulate an inner class.");
 
-        context.setTypeDeclaration(oldTypeDeclaration);
+            boolean isInterface = typeDeclaration.isInterface();
+
+            List typeParameters = typeDeclaration.typeParameters();
+
+            boolean isGeneric = !typeParameters.isEmpty();
+
+            writeAccessModifier(context, modifiers);
+
+            if (ASTUtil.containsFinal(modifiers))
+                writeSealedModifier(context);
+
+            // Skip the modifiers
+            context.skipModifiers(modifiers);
+
+            if (isInterface)
+                context.matchAndWrite("interface");
+            else
+                context.matchAndWrite("class");
+
+            context.copySpaceAndComments();
+            writeNode(context, typeDeclaration.getName());
+
+            if (isGeneric) {
+                context.copySpaceAndComments();
+                context.matchAndWrite("<");
+
+                writeCommaDelimitedNodes(context, typeParameters, (TypeParameter typeParameter) -> {
+                    context.copySpaceAndComments();
+                    writeNode(context, typeParameter.getName());
+
+                    // Skip any constraints; they'll be written out at the end of the declaration line
+                    context.setPositionToEndOfNode(typeParameter);
+                });
+
+                context.copySpaceAndComments();
+                context.matchAndWrite(">");
+            }
+
+            // TODO: Implement this
+            writeSuperClassAndInterfaces(context, typeDeclaration);
+
+            if (isGeneric)
+                writeTypeParameterConstraints(context, typeParameters);
+
+            context.copySpaceAndComments();
+            context.matchAndWrite("{");
+
+            writeNodes(context, typeDeclaration.bodyDeclarations());
+
+            context.copySpaceAndComments();
+            context.matchAndWrite("}");
+        } finally {
+            context.setTypeDeclaration(outerTypeDeclaration);
+        }
+    }
+
+    private void writeSuperClassAndInterfaces(Context context, TypeDeclaration typeDeclaration) {
+        Type superclassType = typeDeclaration.getSuperclassType();
+        boolean isInterface = typeDeclaration.isInterface();
+
+        if (superclassType != null) {
+            context.copySpaceAndComments();
+            context.matchAndWrite("extends", ":");
+
+            context.copySpaceAndComments();
+            writeNode(context, superclassType);
+        }
+
+        // Write out the super interfaces, if any
+        forEach(typeDeclaration.superInterfaceTypes(), (Type superInterfaceType, boolean first) -> {
+            if (first) {
+                if (superclassType == null) {
+                    context.copySpaceAndComments();
+
+                    // An interface extends another interface whereas a class implements interfaces
+                    context.matchAndWrite(isInterface ? "extends" : "implements", ":");
+                } else {
+                    context.skipSpaceAndComments();
+                    context.matchAndWrite("implements", ", ");
+                }
+            } else {
+                context.copySpaceAndComments();
+                context.matchAndWrite(",");
+            }
+
+            // Ensure there's at least a space after the "public" keyword (not required in Java which just has the
+            // comma there)
+            int originalPosition = context.getPosition();
+            context.copySpaceAndComments();
+            if (context.getPosition() == originalPosition)
+                context.write(" ");
+
+            writeNode(context, superInterfaceType);
+        });
     }
 }

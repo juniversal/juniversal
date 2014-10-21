@@ -27,16 +27,17 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
-import org.juniversal.translator.core.*;
+import org.juniversal.translator.core.ASTWriters;
+import org.juniversal.translator.core.Context;
+import org.juniversal.translator.core.SourceFile;
+import org.juniversal.translator.core.SourceNotSupportedException;
 import org.juniversal.translator.cplusplus.CPPProfile;
-import org.juniversal.translator.cplusplus.OutputType;
-import org.juniversal.translator.csharp.astwriters.CSharpASTWriters;
-import org.juniversal.translator.swift.astwriters.SwiftASTWriters;
+import org.juniversal.translator.csharp.CSharpTranslator;
 
 import java.io.StringWriter;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 
 public class TranslateNodeTest {
@@ -184,7 +185,12 @@ public class TranslateNodeTest {
     protected void testTranslateExpression(String javaType, String javaExpression,
                                            @Nullable String expectedCSharpExpression,
                                            @Nullable String expectedSwiftExpression) {
-        String javaClass = "class TestClass{ void testMethod() {" + javaType + " foo = " + javaExpression + "; } }";
+        String javaClass =
+                "class TestClass{\n" +
+                "    private int intField;\n" +
+                "    private int[] intArrayField;\n" +
+                "    void testMethod() {" + javaType + " foo = " + javaExpression + "; }\n" +
+                "}";
 
         CompilationUnit compilationUnit = parseCompilationUnit(javaClass);
 
@@ -227,8 +233,12 @@ public class TranslateNodeTest {
         CPPProfile profile = new CPPProfile();
         profile.setTabStop(destTabStop);
 
-        testTranslate(node, javaFullSource, javaNodeSource, compilationUnit, profile, writeCSharp, expectedCSharp);
-        //testTranslate(node, javaFullSource, javaNodeSource, compilationUnit, profile, writeSwift, expectedSwift);
+        StringWriter cSharpStringWriter = new StringWriter();
+        Context cSharpContext = cSharpTranslator.createContext(new SourceFile(compilationUnit, null, javaFullSource,
+                        sourceTabStop), cSharpStringWriter);
+        testTranslate(cSharpTranslator.getASTWriters(), node, javaNodeSource, cSharpStringWriter, expectedCSharp);
+
+        //testTranslate(swiftTranslator, node, javaFullSource, javaNodeSource, compilationUnit, expectedSwift);
 
 /*
         if (!actualSwift.equals(expectedSwift == null ? java : expectedSwift))
@@ -237,22 +247,15 @@ public class TranslateNodeTest {
 */
     }
 
-    private void testTranslate(ASTNode node, String javaFullSource, String javaNodeSource,
-                               CompilationUnit compilationUnit, CPPProfile profile, ASTWriters astWriters,
+    private void testTranslate(ASTWriters astWriters, ASTNode node, String javaNodeSource, StringWriter stringWriter,
                                @Nullable String expectedOutput) {
-        StringWriter writer = new StringWriter();
-        TargetWriter targetWriter = new TargetWriter(writer, profile);
-
-        Context context = new Context(new SourceFile(compilationUnit, null, javaFullSource), this.sourceTabStop, profile,
-                targetWriter, OutputType.SOURCE);
-
-        context.setPosition(node.getStartPosition());
+        astWriters.getContext().setPosition(node.getStartPosition());
 
         String effectiveExpectedOutput = expectedOutput == null ? javaNodeSource : expectedOutput;
 
         if (effectiveExpectedOutput.startsWith(("NOT-SUPPORTED:"))) {
             try {
-                astWriters.writeNode(node, context);
+                astWriters.writeNode(astWriters.getContext(), node);
             } catch (SourceNotSupportedException e) {
                 String expectedError = effectiveExpectedOutput.substring("NOT-SUPPORTED: ".length());
 
@@ -263,13 +266,11 @@ public class TranslateNodeTest {
 
                 assertEquals(expectedError, actutalError);
             }
-        }
-        else {
-            astWriters.writeNode(node, context);
+        } else {
+            astWriters.writeNode(astWriters.getContext(), node);
 
-            String actualOutput = writer.getBuffer().toString();
+            String actualOutput = stringWriter.getBuffer().toString();
             assertEqualsNormalizeNewlines(effectiveExpectedOutput, actualOutput);
-
         }
     }
 
@@ -277,6 +278,6 @@ public class TranslateNodeTest {
         assertEquals(expected.replace("\r", ""), actual.replace("\r", ""));
     }
 
-    private CSharpASTWriters writeCSharp = new CSharpASTWriters();
-    private SwiftASTWriters writeSwift = new SwiftASTWriters();
+    private CSharpTranslator cSharpTranslator = new CSharpTranslator();
+    //private SwiftTranslator swiftTranslator = new SwiftTranslator();
 }

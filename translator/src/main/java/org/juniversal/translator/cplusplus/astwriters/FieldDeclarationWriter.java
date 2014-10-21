@@ -23,7 +23,6 @@
 package org.juniversal.translator.cplusplus.astwriters;
 
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 import org.juniversal.translator.cplusplus.OutputType;
 
@@ -33,15 +32,13 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 
-public class FieldDeclarationWriter extends ASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
-
+public class FieldDeclarationWriter extends CPlusPlusASTWriter {
     public FieldDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+        super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
+	public void write(Context context, ASTNode node) {
 		FieldDeclaration fieldDeclaration = (FieldDeclaration) node;
 
 		// TODO: Handle final/const
@@ -54,7 +51,7 @@ public class FieldDeclarationWriter extends ASTWriter {
 
 		// Write the type
 		context.skipSpaceAndComments();
-        cPlusPlusASTWriters.writeType(fieldDeclaration.getType(), context, false);
+        writeType(fieldDeclaration.getType(), context, false);
 
 		boolean first = true;
 		for (Object fragment : fieldDeclaration.fragments()) {
@@ -88,7 +85,7 @@ public class FieldDeclarationWriter extends ASTWriter {
 
 		if (writingSourceFile)
 			context.write(context.getTypeDeclaration().getName().getIdentifier() + "::");
-        cPlusPlusASTWriters.writeNode(variableDeclarationFragment.getName(), context);
+        writeNode(context, variableDeclarationFragment.getName());
 
 		// Only write out the initializer when writing to the source file; in that case the field
 		// must be static
@@ -101,7 +98,7 @@ public class FieldDeclarationWriter extends ASTWriter {
 				context.matchAndWrite("=");
 
 				context.copySpaceAndComments();
-                cPlusPlusASTWriters.writeNode(initializer, context);
+                writeNode(context, initializer);
 			}
 		}
 	}

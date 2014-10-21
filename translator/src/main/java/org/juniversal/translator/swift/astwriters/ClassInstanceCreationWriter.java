@@ -25,21 +25,20 @@ package org.juniversal.translator.swift.astwriters;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
-import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 import java.util.List;
 
 
-public class ClassInstanceCreationWriter extends ASTWriter {
+public class ClassInstanceCreationWriter extends SwiftASTWriter {
     private SwiftASTWriters swiftASTWriters;
 
     public ClassInstanceCreationWriter(SwiftASTWriters swiftASTWriters) {
-        this.swiftASTWriters = swiftASTWriters;
+        super(swiftASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
+	public void write(Context context, ASTNode node) {
 		ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) node;
 
 		//TODO: Handle type arguments
@@ -52,7 +51,7 @@ public class ClassInstanceCreationWriter extends ASTWriter {
 		context.matchAndWrite("new");
 		context.copySpaceAndComments();
 
-        swiftASTWriters.writeNode(classInstanceCreation.getType(), context);
+        swiftASTWriters.writeNode(context, classInstanceCreation.getType());
 		context.copySpaceAndComments();
 
 		context.matchAndWrite("(");
@@ -69,7 +68,7 @@ public class ClassInstanceCreationWriter extends ASTWriter {
 				context.copySpaceAndComments();
 			}
 
-            swiftASTWriters.writeNode(argument, context);
+            swiftASTWriters.writeNode(context, argument);
 			context.copySpaceAndComments();
 
 			first = false;

@@ -22,7 +22,6 @@
 
 package org.juniversal.translator.cplusplus.astwriters;
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 import org.juniversal.translator.cplusplus.OutputType;
 
@@ -35,14 +34,12 @@ import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
-public class CompilationUnitWriter extends ASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
-
+public class CompilationUnitWriter extends CPlusPlusASTWriter {
     public CompilationUnitWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+        super(cPlusPlusASTWriters);
     }
 
-    public void write(ASTNode node, Context context) {
+    public void write(Context context, ASTNode node) {
 		CompilationUnit compilationUnit = (CompilationUnit) node;
 
 		TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
@@ -66,7 +63,7 @@ public class CompilationUnitWriter extends ASTWriter {
 		context.writeln("#include \"juniversal.h\"");
 		if (superclassType != null) {
 			if (superclassType instanceof SimpleType)
-				ASTWriterUtil.writeIncludeForTypeName(((SimpleType) superclassType).getName(), context);
+				writeIncludeForTypeName(((SimpleType) superclassType).getName(), context);
 			else if (superclassType instanceof ParameterizedType) {
 				// TODO: Finish this; make check for dependencies everywhere in all code via visitor
 			}
@@ -80,7 +77,7 @@ public class CompilationUnitWriter extends ASTWriter {
 		// Copy class Javadoc or other comments before the class starts
 		context.copySpaceAndComments();
 
-		cPlusPlusASTWriters.writeNode(mainTypeDeclaration, context);
+		writeNode(context, mainTypeDeclaration);
 
 		context.copySpaceAndComments();
 
@@ -91,7 +88,7 @@ public class CompilationUnitWriter extends ASTWriter {
 	}
 
 	private void writeSource(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration, Context context) {
-		ASTWriterUtil.writeIncludeForTypeName(mainTypeDeclaration.getName(), context);
+		writeIncludeForTypeName(mainTypeDeclaration.getName(), context);
 		context.writeln();
 		
 		context.writeln("JU_USING_STD_NAMESPACES");
@@ -101,14 +98,13 @@ public class CompilationUnitWriter extends ASTWriter {
 		context.setPosition(mainTypeDeclaration.getStartPosition());
 		context.skipSpaceAndComments();   // Skip any Javadoc included in the node
 
-        cPlusPlusASTWriters.writeNode(mainTypeDeclaration, context);
+        writeNode(context, mainTypeDeclaration);
 
 		context.skipSpaceAndComments();
 	}
 
 	private String getPackageNamespaceName(CompilationUnit compilationUnit) {
 		PackageDeclaration packageDeclaration = compilationUnit.getPackage();
-		return ASTWriterUtil.getNamespaceNameForPackageName(packageDeclaration == null ? null : packageDeclaration
-				.getName());
+		return getNamespaceNameForPackageName(packageDeclaration == null ? null : packageDeclaration .getName());
 	}
 }

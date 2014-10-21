@@ -25,7 +25,6 @@ package org.juniversal.translator.cplusplus.astwriters;
 import java.util.List;
 
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -35,15 +34,13 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 
-public class VariableDeclarationWriter extends ASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
-
+public class VariableDeclarationWriter extends CPlusPlusASTWriter {
     public VariableDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+        super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
+	public void write(Context context, ASTNode node) {
 		// Variable declaration statements & expressions are quite similar, so we handle them both
 		// here together
 
@@ -73,7 +70,7 @@ public class VariableDeclarationWriter extends ASTWriter {
 		}
 
 		// Write the type
-        this.cPlusPlusASTWriters.writeType(type, context, false);
+        writeType(type, context, false);
 
 		boolean needStar = false;
 		context.setWritingVariableDeclarationNeedingStar(needStar);
@@ -88,7 +85,7 @@ public class VariableDeclarationWriter extends ASTWriter {
 				context.matchAndWrite(",");
 				context.copySpaceAndComments();
 			}
-            this.cPlusPlusASTWriters.writeNode(variableDeclarationFragment, context);
+            writeNode(context, variableDeclarationFragment);
 
 			first = false;
 		}

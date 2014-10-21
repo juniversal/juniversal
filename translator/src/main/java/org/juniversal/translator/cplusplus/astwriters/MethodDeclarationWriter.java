@@ -25,7 +25,6 @@ package org.juniversal.translator.cplusplus.astwriters;
 import java.util.List;
 
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -41,15 +40,15 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeParameter;
 
 
-public class MethodDeclarationWriter extends ASTWriter {
+public class MethodDeclarationWriter extends CPlusPlusASTWriter {
     private CPlusPlusASTWriters cPlusPlusASTWriters;
 
     public MethodDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+        super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
+	public void write(Context context, ASTNode node) {
 		MethodDeclaration methodDeclaration = (MethodDeclaration) node;
 
 		TypeDeclaration typeDeclaration = context.getTypeDeclaration();
@@ -61,7 +60,7 @@ public class MethodDeclarationWriter extends ASTWriter {
 		boolean isGeneric = !typeParameters.isEmpty();
 		if (isGeneric && context.isWritingMethodImplementation()) {
 			context.write("template ");
-			ASTWriterUtil.writeTypeParameters(typeParameters, true, context);
+			writeTypeParameters(typeParameters, true, context);
 			context.writeln();
 		}
 
@@ -88,7 +87,7 @@ public class MethodDeclarationWriter extends ASTWriter {
 			Type returnType = methodDeclaration.getReturnType2();
 			if (returnType == null)
 				context.matchAndWrite("void");
-			else cPlusPlusASTWriters.writeType(returnType, context, false);
+			else writeType(returnType, context, false);
 
 			context.copySpaceAndComments();
 		}
@@ -112,7 +111,7 @@ public class MethodDeclarationWriter extends ASTWriter {
 
 		if (context.isWritingMethodImplementation()) {
 			context.copySpaceAndComments();
-			cPlusPlusASTWriters.writeNode(methodDeclaration.getBody(), context);
+			writeNode(context, methodDeclaration.getBody());
 		}
 		else {
 			if (methodDeclaration.getBody() == null) {
@@ -143,7 +142,7 @@ public class MethodDeclarationWriter extends ASTWriter {
 				context.copySpaceAndComments();
 			}
 
-			cPlusPlusASTWriters.writeNode(singleVariableDeclaration, context);
+			writeNode(context, singleVariableDeclaration);
 			context.copySpaceAndComments();
 
 			first = false;
@@ -230,7 +229,7 @@ public class MethodDeclarationWriter extends ASTWriter {
 			}
 
 			context.copySpaceAndComments();
-			cPlusPlusASTWriters.writeNode(argument, context);
+			writeNode(context, argument);
 
 			first = false;
 		}

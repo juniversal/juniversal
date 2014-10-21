@@ -25,7 +25,6 @@ package org.juniversal.translator.cplusplus.astwriters;
 import java.util.HashMap;
 import java.util.List;
 
-import org.juniversal.translator.core.ASTWriter;
 import org.juniversal.translator.core.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -33,13 +32,13 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
 
 
-public class InfixExpressionWriter extends ASTWriter {
+public class InfixExpressionWriter extends CPlusPlusASTWriter {
     private CPlusPlusASTWriters cPlusPlusASTWriters;
 	private HashMap<InfixExpression.Operator, String> equivalentOperators;  // Operators that have the same token in both Java & C++
 
 
 	public InfixExpressionWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-		this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+		super(cPlusPlusASTWriters);
 
 		equivalentOperators = new HashMap<>();
 		equivalentOperators.put(InfixExpression.Operator.TIMES, "*");
@@ -70,14 +69,14 @@ public class InfixExpressionWriter extends ASTWriter {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public void write(ASTNode node, Context context) {
+	public void write(Context context, ASTNode node) {
 		InfixExpression infixExpression = (InfixExpression) node;
 		
 		InfixExpression.Operator operator = infixExpression.getOperator();
 
 		if (operator == InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED) {
 			context.write("rightShiftUnsigned(");
-            cPlusPlusASTWriters.writeNode(infixExpression.getLeftOperand(), context);
+            writeNode(context, infixExpression.getLeftOperand());
 
 			// Skip spaces before the >>> but if there's a newline (or comments) there, copy them
 			context.skipSpacesAndTabs();
@@ -85,19 +84,19 @@ public class InfixExpressionWriter extends ASTWriter {
 			context.matchAndWrite(">>>", ",");
 
 			context.copySpaceAndComments();
-            cPlusPlusASTWriters.writeNode(infixExpression.getRightOperand(), context);
+            writeNode(context, infixExpression.getRightOperand());
 			context.write(")");
 		}
 		else {
-            cPlusPlusASTWriters.writeNode(infixExpression.getLeftOperand(), context);
-	
+            writeNode(context, infixExpression.getLeftOperand());
+
 			context.copySpaceAndComments();
 			String operatorToken = this.equivalentOperators.get(infixExpression.getOperator());
 			context.matchAndWrite(operatorToken);
 	
 			context.copySpaceAndComments();
-            cPlusPlusASTWriters.writeNode(infixExpression.getRightOperand(), context);
-	
+            writeNode(context, infixExpression.getRightOperand());
+
 			if (infixExpression.hasExtendedOperands()) {
 				for (Expression extendedOperand : (List<Expression>) infixExpression.extendedOperands()) {
 					
@@ -105,7 +104,7 @@ public class InfixExpressionWriter extends ASTWriter {
 					context.matchAndWrite(operatorToken);
 	
 					context.copySpaceAndComments();
-                    cPlusPlusASTWriters.writeNode(extendedOperand, context);
+                    writeNode(context, extendedOperand);
 				}
 			}
 		}

@@ -23,30 +23,33 @@
 package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.core.ASTWriter;
+import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.ASTWriters;
 import org.juniversal.translator.core.Context;
 import org.juniversal.translator.core.JUniversalException;
-import org.juniversal.translator.swift.astwriters.ASTWriterUtil;
+import org.juniversal.translator.csharp.CSharpTranslator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class CSharpASTWriters extends ASTWriters {
-    public CSharpASTWriters() {
+    private CSharpTranslator cSharpTranslator;
+
+    public CSharpASTWriters(Context context, CSharpTranslator cSharpTranslator) {
+        super(context);
+
+        this.cSharpTranslator = cSharpTranslator;
+
         addDeclarationWriters();
-
         addStatementWriters();
-
         addExpressionWriters();
 
         // TODO: Implement this
         // Simple name
-        addWriter(SimpleName.class, new ASTWriter() {
+        addWriter(SimpleName.class, new CSharpASTWriter<SimpleName>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                SimpleName simpleName = (SimpleName) node;
-
+            public void write(Context context, SimpleName simpleName) {
                 context.matchAndWrite(simpleName.getIdentifier());
             }
         });
@@ -65,28 +68,26 @@ public class CSharpASTWriters extends ASTWriters {
         addWriter(TypeDeclaration.class, new TypeDeclarationWriter(this));
 
         // TODO: Implement this
+        // Type (class/interface) declaration
+        addWriter(EnumDeclaration.class, new EnumDeclarationWriter(this));
+
+        // TODO: Implement this
         // Method declaration (which includes implementation)
         addWriter(MethodDeclaration.class, new MethodDeclarationWriter(this));
 
-        // TODO: Implement this
         // Field declaration
-        //addWriter(FieldDeclaration.class, new FieldDeclarationWriter(this));
+        addWriter(FieldDeclaration.class, new FieldDeclarationWriter(this));
 
         // TODO: Implement this
         // Variable declaration fragment
-        addWriter(VariableDeclarationFragment.class, new ASTWriter() {
+        addWriter(VariableDeclarationFragment.class, new CSharpASTWriter<VariableDeclarationFragment>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) node;
-
+            public void write(Context context, VariableDeclarationFragment variableDeclarationFragment) {
                 // TODO: Handle syntax with extra dimensions on array
                 if (variableDeclarationFragment.getExtraDimensions() > 0)
-                    context.throwSourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
+                    context.throwSourceNotSupported("\"int foo[]\" array type syntax not currently supported; use \"int[] foo\" instead");
 
-                if (context.isWritingVariableDeclarationNeedingStar())
-                    context.write("*");
-
-                writeNode(variableDeclarationFragment.getName(), context);
+                writeNode(context, variableDeclarationFragment.getName());
 
                 Expression initializer = variableDeclarationFragment.getInitializer();
                 if (initializer != null) {
@@ -94,36 +95,38 @@ public class CSharpASTWriters extends ASTWriters {
                     context.matchAndWrite("=");
 
                     context.copySpaceAndComments();
-                    writeNode(initializer, context);
+                    writeNode(context, initializer);
                 }
             }
         });
 
         // TODO: Implement this
-        // Single variable declaration (used in parameter list & catch clauses)
-        addWriter(SingleVariableDeclaration.class, new ASTWriter() {
+        // Single variable declaration (used in parameter list, catch clauses, and enhanced for statements)
+        addWriter(SingleVariableDeclaration.class, new CSharpASTWriter<SingleVariableDeclaration>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) node;
-
+            public void write(Context context, SingleVariableDeclaration singleVariableDeclaration) {
                 // TODO: Handle syntax with extra dimensions on array
                 if (singleVariableDeclaration.getExtraDimensions() > 0)
-                    context.throwSourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
+                    context.throwSourceNotSupported("\"int foo[]\" array type syntax not currently supported; use \"int[] foo\" instead");
 
-                // TODO: Handle final & varargs
-
-                SimpleName name = singleVariableDeclaration.getName();
-                context.setPositionToStartOfNode(name);
-                writeNode(name, context);
-                context.write(": ");
-
-                int endOfNamePosition = context.getPosition();
+                List<?> modifiers = singleVariableDeclaration.modifiers();
+                context.ensureModifiersJustFinalOrAnnotations(modifiers);
+                context.skipModifiers(modifiers);
 
                 Type type = singleVariableDeclaration.getType();
-                context.setPositionToStartOfNode(type);
-                writeNode(type, context);
 
-                context.setPosition(endOfNamePosition);
+                if (singleVariableDeclaration.isVarargs()) {
+                    context.write("params ");
+                    writeNode(context, type);
+
+                    context.copySpaceAndComments();
+                    // TODO: Think through & handle all cases where a regular type is converted to an array here
+                    context.matchAndWrite("...", "[]");
+                } else writeNode(context, type);
+
+                context.copySpaceAndComments();
+                SimpleName name = singleVariableDeclaration.getName();
+                writeNode(context, name);
 
                 // TODO: Handle initializer
                 Expression initializer = singleVariableDeclaration.getInitializer();
@@ -134,16 +137,14 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Simple type
-        addWriter(SimpleType.class, new ASTWriter() {
+        addWriter(SimpleType.class, new CSharpASTWriter<SimpleType>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                SimpleType simpleType = (SimpleType) node;
-
+            public void write(Context context, SimpleType simpleType) {
                 Name name = simpleType.getName();
                 if (name instanceof QualifiedName) {
                     QualifiedName qualifiedName = (QualifiedName) name;
 
-                    context.write(ASTWriterUtil.getNamespaceNameForPackageName(qualifiedName.getQualifier()));
+                    context.write(getNamespaceNameForPackageName(qualifiedName.getQualifier()));
                     context.setPositionToEndOfNode(qualifiedName.getQualifier());
 
                     context.copySpaceAndComments();
@@ -159,62 +160,60 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Parameterized type
-        addWriter(ParameterizedType.class, new ASTWriter() {
+        addWriter(ParameterizedType.class, new CSharpASTWriter<ParameterizedType>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                ParameterizedType parameterizedType = (ParameterizedType) node;
-
-                writeNode(parameterizedType.getType(), context);
+            public void write(Context context, ParameterizedType parameterizedType) {
+                writeNode(context, parameterizedType.getType());
 
                 context.copySpaceAndComments();
                 context.matchAndWrite("<");
 
-                boolean first = true;
-                List<?> typeArguments = parameterizedType.typeArguments();
-                for (Object typeArgumentObject : typeArguments) {
-                    Type typeArgument = (Type) typeArgumentObject;
+                writeCommaDelimitedNodes(context, parameterizedType.typeArguments());
 
-                    if (!first) {
-                        context.copySpaceAndComments();
-                        context.matchAndWrite(",");
-                    }
-
-                    context.copySpaceAndComments();
-                    writeNode(typeArgument, context);
-
-                    first = false;
-                }
-
+                context.copySpaceAndComments();
                 context.matchAndWrite(">");
             }
         });
 
-        // TODO: Implement this
-        // Array type
-        addWriter(ArrayType.class, new ASTWriter() {
+        addWriter(WildcardType.class, new CSharpASTWriter<WildcardType>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                ArrayType arrayType = (ArrayType) node;
+            public void write(Context context, WildcardType wildcardType) {
+                ArrayList<WildcardType> wildcardTypes = context.getMethodWildcardTypes();
+                if (wildcardTypes == null)
+                    context.throwSourceNotSupported("Wildcard types (that is, ?) only supported in method parameters and return types.  You may want to change the Java source to use an explicitly named generic type instead of a wildcard here.");
 
-                context.write("Array<");
-                writeNode(arrayType.getElementType(), context);
-                context.skipSpaceAndComments();
-                context.write(">");
+                int index = wildcardTypes.indexOf(wildcardType);
+                if (index == -1)
+                    throw new JUniversalException("Wildcard type not found in list");
 
-                context.match("[");
-                context.skipSpaceAndComments();
+                context.write("TWildCard" + (index + 1));
+                context.setPositionToEndOfNode(wildcardType);
+            }
+        });
 
-                context.match("]");
+        // Array type
+        addWriter(ArrayType.class, new CSharpASTWriter<ArrayType>(this) {
+            @Override
+            public void write(Context context, ArrayType arrayType) {
+                writeNode(context, arrayType.getElementType());
+
+                for (Object dimensionObject : arrayType.dimensions()) {
+                    Dimension dimension = (Dimension) dimensionObject;
+
+                    context.copySpaceAndComments();
+                    context.match("[");
+
+                    context.copySpaceAndComments();
+                    context.match("]");
+                }
             }
         });
 
         // TODO: Implement this
         // Primitive type
-        addWriter(PrimitiveType.class, new ASTWriter() {
+        addWriter(PrimitiveType.class, new CSharpASTWriter<PrimitiveType>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                PrimitiveType primitiveType = (PrimitiveType) node;
-
+            public void write(Context context, PrimitiveType primitiveType) {
                 PrimitiveType.Code code = primitiveType.getPrimitiveTypeCode();
                 if (code == PrimitiveType.BYTE)
                     context.matchAndWrite("byte", "sbyte");
@@ -233,9 +232,24 @@ public class CSharpASTWriters extends ASTWriters {
                 else if (code == PrimitiveType.BOOLEAN)
                     context.matchAndWrite("boolean", "bool");
                 else if (code == PrimitiveType.VOID)
-                    throw new JUniversalException("Should detect void return types before it gets here");
+                    context.matchAndWrite("void", "void");
                 else
                     context.throwInvalidAST("Unknown primitive type: " + code);
+            }
+        });
+
+        // Array initializer
+        addWriter(ArrayInitializer.class, new CSharpASTWriter<ArrayInitializer>(this) {
+            @Override
+            public void write(Context context, ArrayInitializer arrayInitializer) {
+                context.matchAndWrite("{");
+
+                // TODO: Check that number of expressions matches array size (I think, as I think C# requires exact number and Java allows less)
+                writeCommaDelimitedNodes(context, arrayInitializer.expressions());
+                // TODO: Skip extra trailing commas here
+
+                context.copySpaceAndComments();
+                context.matchAndWrite("}");
             }
         });
     }
@@ -246,29 +260,12 @@ public class CSharpASTWriters extends ASTWriters {
     private void addStatementWriters() {
         // TODO: Implement this
         // Block
-        addWriter(Block.class, new ASTWriter() {
-            @SuppressWarnings("unchecked")
+        addWriter(Block.class, new CSharpASTWriter<Block>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                Block block = (Block) node;
-
+            public void write(Context context, Block block) {
                 context.matchAndWrite("{");
 
-                boolean firstStatement = true;
-                for (Statement statement : (List<Statement>) block.statements()) {
-                    // If the first statement is a super constructor invocation, we skip it since
-                    // it's included as part of the method declaration in C++. If a super
-                    // constructor invocation is a statement other than the first, which it should
-                    // never be, we let that error out since writeNode won't find a match for it.
-                    if (firstStatement && statement instanceof SuperConstructorInvocation)
-                        context.setPositionToEndOfNodeSpaceAndComments(statement);
-                    else {
-                        context.copySpaceAndComments();
-                        writeNode(statement, context);
-                    }
-
-                    firstStatement = false;
-                }
+                writeNodes(context, block.statements());
 
                 context.copySpaceAndComments();
                 context.matchAndWrite("}");
@@ -277,21 +274,19 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Empty statement (";")
-        addWriter(EmptyStatement.class, new ASTWriter() {
+        addWriter(EmptyStatement.class, new CSharpASTWriter<EmptyStatement>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
+            public void write(Context context, EmptyStatement emptyStatement) {
                 context.matchAndWrite(";");
             }
         });
 
         // TODO: Implement this
         // Expression statement
-        addWriter(ExpressionStatement.class, new ASTWriter() {
+        addWriter(ExpressionStatement.class, new CSharpASTWriter<ExpressionStatement>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                ExpressionStatement expressionStatement = (ExpressionStatement) node;
-
-                writeNode(expressionStatement.getExpression(), context);
+            public void write(Context context, ExpressionStatement expressionStatement) {
+                writeNode(context, expressionStatement.getExpression());
 
                 context.copySpaceAndComments();
                 context.matchAndWrite(";");
@@ -299,24 +294,22 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // If statement
-        addWriter(IfStatement.class, new ASTWriter() {
+        addWriter(IfStatement.class, new CSharpASTWriter<IfStatement>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                IfStatement ifStatement = (IfStatement) node;
-
+            public void write(Context context, IfStatement ifStatement) {
                 context.matchAndWrite("if");
                 context.copySpaceAndComments();
 
                 context.matchAndWrite("(");
                 context.copySpaceAndComments();
 
-                writeNode(ifStatement.getExpression(), context);
+                writeNode(context, ifStatement.getExpression());
                 context.copySpaceAndComments();
 
                 context.matchAndWrite(")");
                 context.copySpaceAndComments();
 
-                writeNode(ifStatement.getThenStatement(), context);
+                writeNode(context, ifStatement.getThenStatement());
 
                 Statement elseStatement = ifStatement.getElseStatement();
                 if (elseStatement != null) {
@@ -325,43 +318,39 @@ public class CSharpASTWriters extends ASTWriters {
                     context.matchAndWrite("else");
                     context.copySpaceAndComments();
 
-                    writeNode(elseStatement, context);
+                    writeNode(context, elseStatement);
                 }
             }
         });
 
         // While statement
-        addWriter(WhileStatement.class, new ASTWriter() {
+        addWriter(WhileStatement.class, new CSharpASTWriter<WhileStatement>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                WhileStatement whileStatement = (WhileStatement) node;
-
+            public void write(Context context, WhileStatement whileStatement) {
                 context.matchAndWrite("while");
 
                 context.copySpaceAndComments();
                 context.matchAndWrite("(");
 
                 context.copySpaceAndComments();
-                writeNode(whileStatement.getExpression(), context);
+                writeNode(context, whileStatement.getExpression());
 
                 context.copySpaceAndComments();
                 context.matchAndWrite(")");
 
                 context.copySpaceAndComments();
-                writeNode(whileStatement.getBody(), context);
+                writeNode(context, whileStatement.getBody());
             }
         });
 
         // Do while statement
-        addWriter(DoStatement.class, new ASTWriter() {
+        addWriter(DoStatement.class, new CSharpASTWriter<DoStatement>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                DoStatement doStatement = (DoStatement) node;
-
+            public void write(Context context, DoStatement doStatement) {
                 context.matchAndWrite("do");
 
                 context.copySpaceAndComments();
-                writeNode(doStatement.getBody(), context);
+                writeNode(context, doStatement.getBody());
 
                 context.copySpaceAndComments();
                 context.matchAndWrite("while");
@@ -370,7 +359,7 @@ public class CSharpASTWriters extends ASTWriters {
                 context.matchAndWrite("(");
 
                 context.copySpaceAndComments();
-                writeNode(doStatement.getExpression(), context);
+                writeNode(context, doStatement.getExpression());
 
                 context.copySpaceAndComments();
                 context.matchAndWrite(")");
@@ -382,11 +371,9 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Continue statement
-        addWriter(ContinueStatement.class, new ASTWriter() {
+        addWriter(ContinueStatement.class, new CSharpASTWriter<ContinueStatement>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                ContinueStatement continueStatement = (ContinueStatement) node;
-
+            public void write(Context context, ContinueStatement continueStatement) {
                 if (continueStatement.getLabel() != null)
                     context.throwSourceNotSupported("continue statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
 
@@ -399,11 +386,9 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Break statement
-        addWriter(BreakStatement.class, new ASTWriter() {
+        addWriter(BreakStatement.class, new CSharpASTWriter<BreakStatement>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                BreakStatement breakStatement = (BreakStatement) node;
-
+            public void write(Context context, BreakStatement breakStatement) {
                 if (breakStatement.getLabel() != null)
                     context.throwSourceNotSupported("break statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
 
@@ -416,23 +401,48 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // For statement
-/*
         addWriter(ForStatement.class, new ForStatementWriter(this));
-*/
+
+        addWriter(EnhancedForStatement.class, new CSharpASTWriter<EnhancedForStatement>(this) {
+            @Override
+            public void write(Context context, EnhancedForStatement enhancedForStatement) {
+                context.matchAndWrite("for", "foreach");
+
+                context.copySpaceAndComments();
+                context.matchAndWrite("(");
+
+                context.copySpaceAndComments();
+                writeNode(context, enhancedForStatement.getParameter());
+
+                context.copySpaceAndComments();
+                context.matchAndWrite(":");
+
+                context.copySpaceAndComments();
+                writeNode(context, enhancedForStatement.getExpression());
+
+                context.copySpaceAndComments();
+                context.matchAndWrite(")");
+
+                context.copySpaceAndComments();
+                writeNode(context, enhancedForStatement.getBody());
+            }
+        });
+
+        // TODO: Implement this
+        // Switch statement
+        addWriter(SwitchStatement.class, new SwitchStatementWriter(this));
 
         // TODO: Implement this
         // Return statement
-        addWriter(ReturnStatement.class, new ASTWriter() {
+        addWriter(ReturnStatement.class, new CSharpASTWriter<ReturnStatement>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                ReturnStatement returnStatement = (ReturnStatement) node;
-
+            public void write(Context context, ReturnStatement returnStatement) {
                 context.matchAndWrite("return");
 
                 Expression expression = returnStatement.getExpression();
                 if (expression != null) {
                     context.copySpaceAndComments();
-                    writeNode(returnStatement.getExpression(), context);
+                    writeNode(context, returnStatement.getExpression());
                 }
 
                 context.copySpaceAndComments();
@@ -440,21 +450,31 @@ public class CSharpASTWriters extends ASTWriters {
             }
         });
 
-        // TODO: Implement this
         // Local variable declaration statement
-        addWriter(VariableDeclarationStatement.class, new VariableDeclarationWriter(this));
+        addWriter(VariableDeclarationStatement.class, new CSharpASTWriter<VariableDeclarationStatement>(this) {
+            @Override
+            public void write(Context context, VariableDeclarationStatement variableDeclarationStatement) {
+                writeVariableDeclaration(context, variableDeclarationStatement.modifiers(),
+                        variableDeclarationStatement.getType(),
+                        variableDeclarationStatement.fragments());
+
+                context.copySpaceAndComments();
+                context.matchAndWrite(";");
+            }
+        });
+
+        // Try statement
+        addWriter(TryStatement.class, new TryStatementWRiter(this));
 
         // TODO: Implement this
         // Throw statement
-        addWriter(ThrowStatement.class, new ASTWriter() {
+        addWriter(ThrowStatement.class, new CSharpASTWriter<ThrowStatement>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                ThrowStatement throwStatement = (ThrowStatement) node;
-
+            public void write(Context context, ThrowStatement throwStatement) {
                 context.matchAndWrite("throw");
                 context.copySpaceAndComments();
 
-                writeNode(throwStatement.getExpression(), context);
+                writeNode(context, throwStatement.getExpression());
                 context.copySpaceAndComments();
 
                 context.matchAndWrite(";");
@@ -463,10 +483,32 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Delegating constructor invocation
-        addWriter(ConstructorInvocation.class, new ASTWriter() {
+        addWriter(ConstructorInvocation.class, new CSharpASTWriter(this) {
             @Override
-            public void write(ASTNode node, Context context) {
+            public void write(Context context, ASTNode node) {
                 context.throwSourceNotSupported("Delegating constructors aren't currently supported; for now you have to change the code to not use them (e.g. by adding an init method)");
+            }
+        });
+
+        addWriter(AssertStatement.class, new CSharpASTWriter<AssertStatement>(this) {
+            @Override
+            public void write(Context context, AssertStatement assertStatement) {
+                context.matchAndWrite("assert", "Debug.Assert(");
+
+                context.copySpaceAndComments();
+                writeNode(context, assertStatement.getExpression());
+
+                @Nullable Expression message = assertStatement.getMessage();
+                if (message != null) {
+                    context.skipSpaceAndComments();
+                    context.matchAndWrite(":", ",");
+
+                    context.copySpaceAndComments();
+                    writeNode(context, message);
+
+                    context.copySpaceAndComments();
+                    context.matchAndWrite(";",  ");");
+                }
             }
         });
     }
@@ -478,52 +520,43 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Assignment expression
-/*
         addWriter(Assignment.class, new AssignmentWriter(this));
-*/
 
         // TODO: Implement this
         // Method invocation
-/*
         addWriter(MethodInvocation.class, new MethodInvocationWriter(this));
-*/
 
         // TODO: Implement this
         // Super Method invocation
-/*
-        addWriter(SuperMethodInvocation.class, new MethodInvocationWriter(this));
-*/
+        addWriter(SuperMethodInvocation.class, new SuperMethodInvocationWriter(this));
 
         // TODO: Implement this
         // Class instance creation
-/*
         addWriter(ClassInstanceCreation.class, new ClassInstanceCreationWriter(this));
-*/
 
         // TODO: Implement this
         // Array creation
-/*
         addWriter(ArrayCreation.class, new ArrayCreationWriter(this));
-*/
 
         // TODO: Implement this
         // Variable declaration expression (used in a for statement)
-/*
-        addWriter(VariableDeclarationExpression.class, new VariableDeclarationWriter(this));
-*/
+        addWriter(VariableDeclarationExpression.class, new CSharpASTWriter<VariableDeclarationExpression>(this) {
+            @Override
+            public void write(Context context, VariableDeclarationExpression variableDeclarationExpression) {
+                writeVariableDeclaration(context, variableDeclarationExpression.modifiers(),
+                        variableDeclarationExpression.getType(),
+                        variableDeclarationExpression.fragments());
+            }
+        });
 
         // TODO: Implement this
         // Infix expression
-/*
         addWriter(InfixExpression.class, new InfixExpressionWriter(this));
-*/
 
         // Prefix expression
-        addWriter(PrefixExpression.class, new ASTWriter() {
+        addWriter(PrefixExpression.class, new CSharpASTWriter<PrefixExpression>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                PrefixExpression prefixExpression = (PrefixExpression) node;
-
+            public void write(Context context, PrefixExpression prefixExpression) {
                 PrefixExpression.Operator operator = prefixExpression.getOperator();
                 if (operator == PrefixExpression.Operator.INCREMENT)
                     context.matchAndWrite("++");
@@ -543,17 +576,15 @@ public class CSharpASTWriters extends ASTWriters {
                 // strip it, not copying anything here
                 context.skipSpaceAndComments();
 
-                writeNode(prefixExpression.getOperand(), context);
+                writeNode(context, prefixExpression.getOperand());
             }
         });
 
         // Postfix expression
-        addWriter(PostfixExpression.class, new ASTWriter() {
+        addWriter(PostfixExpression.class, new CSharpASTWriter<PostfixExpression>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                PostfixExpression postfixExpression = (PostfixExpression) node;
-
-                writeNode(postfixExpression.getOperand(), context);
+            public void write(Context context, PostfixExpression postfixExpression) {
+                writeNode(context, postfixExpression.getOperand());
 
                 // In Swift there can't be any whitespace or comments between a postfix operator & its operand, so
                 // strip it, not copying anything here
@@ -570,56 +601,50 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // instanceof expression
-        addWriter(InstanceofExpression.class, new ASTWriter() {
+        addWriter(InstanceofExpression.class, new CSharpASTWriter<InstanceofExpression>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                InstanceofExpression instanceofExpression = (InstanceofExpression) node;
-
+            public void write(Context context, InstanceofExpression instanceofExpression) {
                 context.write("INSTANCEOF(");
 
                 Expression expression = instanceofExpression.getLeftOperand();
-                writeNode(expression, context);
+                writeNode(context, expression);
 
                 context.skipSpaceAndComments();
                 context.match("instanceof");
 
                 context.skipSpaceAndComments();
                 Type type = instanceofExpression.getRightOperand();
-                writeNode(type, context);
+                writeNode(context, type);
 
                 context.write(")");
             }
         });
 
         // conditional expression
-        addWriter(ConditionalExpression.class, new ASTWriter() {
+        addWriter(ConditionalExpression.class, new CSharpASTWriter<ConditionalExpression>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                ConditionalExpression conditionalExpression = (ConditionalExpression) node;
-
-                writeNode(conditionalExpression.getExpression(), context);
+            public void write(Context context, ConditionalExpression conditionalExpression) {
+                writeNode(context, conditionalExpression.getExpression());
 
                 context.copySpaceAndComments();
                 context.matchAndWrite("?");
 
                 context.copySpaceAndComments();
-                writeNode(conditionalExpression.getThenExpression(), context);
+                writeNode(context, conditionalExpression.getThenExpression());
 
                 context.copySpaceAndComments();
                 context.matchAndWrite(":");
 
                 context.copySpaceAndComments();
-                writeNode(conditionalExpression.getElseExpression(), context);
+                writeNode(context, conditionalExpression.getElseExpression());
             }
         });
 
         // TODO: Implement this
         // this
-        addWriter(ThisExpression.class, new ASTWriter() {
+        addWriter(ThisExpression.class, new CSharpASTWriter<ThisExpression>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                ThisExpression thisExpression = (ThisExpression) node;
-
+            public void write(Context context, ThisExpression thisExpression) {
                 // TODO: Handle qualified this expressions; probably need to do from parent invoking
                 // node & disallow qualified this accesses if not field reference / method
                 // invocation; it's allowed otherwise in Java but I don't think it does anything
@@ -631,74 +656,62 @@ public class CSharpASTWriters extends ASTWriters {
             }
         });
 
-        // TODO: Implement this
         // Field access
-        addWriter(FieldAccess.class, new ASTWriter() {
+        addWriter(FieldAccess.class, new CSharpASTWriter<FieldAccess>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                FieldAccess fieldAccess = (FieldAccess) node;
+            public void write(Context context, FieldAccess fieldAccess) {
+                writeNode(context, fieldAccess.getExpression());
 
-                writeNode(fieldAccess.getExpression(), context);
                 context.copySpaceAndComments();
+                context.matchAndWrite(".");
 
-                context.matchAndWrite(".", "->");
-
-                writeNode(fieldAccess.getName(), context);
+                context.copySpaceAndComments();
+                writeNode(context, fieldAccess.getName());
             }
         });
 
-        // TODO: Implement this
         // Array access
-        addWriter(ArrayAccess.class, new ASTWriter() {
+        addWriter(ArrayAccess.class, new CSharpASTWriter<ArrayAccess>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                ArrayAccess arrayAccess = (ArrayAccess) node;
+            public void write(Context context, ArrayAccess arrayAccess) {
+                writeNode(context, arrayAccess.getArray());
 
-                writeNode(arrayAccess.getArray(), context);
                 context.copySpaceAndComments();
-
                 context.matchAndWrite("[");
-                context.copySpaceAndComments();
 
-                writeNode(arrayAccess.getIndex(), context);
                 context.copySpaceAndComments();
+                writeNode(context, arrayAccess.getIndex());
 
+                context.copySpaceAndComments();
                 context.matchAndWrite("]");
             }
         });
 
-        // TODO: Implement this
         // Qualified name
-        addWriter(QualifiedName.class, new ASTWriter() {
+        addWriter(QualifiedName.class, new CSharpASTWriter<QualifiedName>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                QualifiedName qualifiedName = (QualifiedName) node;
-
+            public void write(Context context, QualifiedName qualifiedName) {
                 // TODO: Figure out the other cases where this can occur & make them all correct
 
-                // Here assume that a QualifiedName refers to field access; if it refers to a type,
-                // the caller should catch that case itself and ensure it never gets here
+                writeNode(context, qualifiedName.getQualifier());
 
-                writeNode(qualifiedName.getQualifier(), context);
                 context.copySpaceAndComments();
+                context.matchAndWrite(".");
 
-                context.matchAndWrite(".", "->");
-
-                writeNode(qualifiedName.getName(), context);
+                context.copySpaceAndComments();
+                writeNode(context, qualifiedName.getName());
             }
         });
 
         // TODO: Implement this
         // Parenthesized expression
-        addWriter(ParenthesizedExpression.class, new ASTWriter() {
+        addWriter(ParenthesizedExpression.class, new CSharpASTWriter<ParenthesizedExpression>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                ParenthesizedExpression parenthesizedExpression = (ParenthesizedExpression) node;
-
+            public void write(Context context, ParenthesizedExpression parenthesizedExpression) {
                 context.matchAndWrite("(");
                 context.copySpaceAndComments();
 
-                writeNode(parenthesizedExpression.getExpression(), context);
+                writeNode(context, parenthesizedExpression.getExpression());
                 context.copySpaceAndComments();
 
                 context.matchAndWrite(")");
@@ -707,40 +720,26 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Cast expression
-        addWriter(CastExpression.class, new ASTWriter() {
+        addWriter(CastExpression.class, new CSharpASTWriter<CastExpression>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                CastExpression castExpression = (CastExpression) node;
-
-                context.matchAndWrite("(", "static_cast<");
+            public void write(Context context, CastExpression castExpression) {
+                context.matchAndWrite("(");
 
                 context.copySpaceAndComments();
-                writeNode(castExpression.getType(), context);
+                writeNode(context, castExpression.getType());
 
                 context.copySpaceAndComments();
-                context.matchAndWrite(")", ">");
+                context.matchAndWrite(")");
 
-                // Skip just whitespace as that's not normally present here in C++ unlike Java, but
-                // if there's a newline or comment, preserve that
-                context.skipSpaceAndComments();
                 context.copySpaceAndComments();
-
-                // Write out the parentheses unless by chance the casted expression already includes
-                // them
-                boolean needParentheses = !(castExpression.getExpression() instanceof ParenthesizedExpression);
-                if (needParentheses)
-                    context.write("(");
-                writeNode(castExpression.getExpression(), context);
-                if (needParentheses)
-                    context.write(")");
+                writeNode(context, castExpression.getExpression());
             }
         });
 
         // Number literal
-        addWriter(NumberLiteral.class, new ASTWriter() {
+        addWriter(NumberLiteral.class, new CSharpASTWriter<NumberLiteral>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                NumberLiteral numberLiteral = (NumberLiteral) node;
+            public void write(Context context, NumberLiteral numberLiteral) {
                 String token = numberLiteral.getToken();
 
                 // Strip out any _ separators in the number, as those aren't supported in C# (at least not until the
@@ -763,123 +762,42 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Boolean literal
-        addWriter(BooleanLiteral.class, new ASTWriter() {
+        addWriter(BooleanLiteral.class, new CSharpASTWriter<BooleanLiteral>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                BooleanLiteral booleanLiteral = (BooleanLiteral) node;
+            public void write(Context context, BooleanLiteral booleanLiteral) {
                 context.matchAndWrite(booleanLiteral.booleanValue() ? "true" : "false");
             }
         });
 
         // Character literal
-        addWriter(CharacterLiteral.class, new ASTWriter() {
+        addWriter(CharacterLiteral.class, new CSharpASTWriter<CharacterLiteral>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                CharacterLiteral characterLiteral = (CharacterLiteral) node;
+            public void write(Context context, CharacterLiteral characterLiteral) {
                 // TODO: Map character escape sequences
-                context.match(characterLiteral.getEscapedValue());
+                context.matchAndWrite(characterLiteral.getEscapedValue());
             }
         });
 
         // Null literal
-        addWriter(NullLiteral.class, new ASTWriter() {
+        addWriter(NullLiteral.class, new CSharpASTWriter(this) {
             @Override
-            public void write(ASTNode node, Context context) {
+            public void write(Context context, ASTNode node) {
                 context.matchAndWrite("null");
             }
         });
 
         // TODO: Implement this
         // String literal
-        addWriter(StringLiteral.class, new ASTWriter() {
+        addWriter(StringLiteral.class, new CSharpASTWriter<StringLiteral>(this) {
             @Override
-            public void write(ASTNode node, Context context) {
-                StringLiteral stringLiteral = (StringLiteral) node;
-
-                context.write("new String(" + stringLiteral.getEscapedValue() + "L)");
-                context.match(stringLiteral.getEscapedValue());
+            public void write(Context context, StringLiteral stringLiteral) {
+                context.matchAndWrite(stringLiteral.getEscapedValue());
             }
         });
     }
 
-    private void writeConditionNoParens(Expression expression, Context context) {
-        context.match("(");
-        context.skipSpaceAndComments();
-
-        writeNode(expression, context);
-
-        context.skipSpaceAndComments();
-        context.match(")");
-    }
-
-    private void writeStatementEnsuringBraces(int blockStartColumn, boolean forceSeparateLine,
-                                              Statement statement, Context context) {
-        if (statement instanceof Block) {
-            context.copySpaceAndComments();
-            writeNode(statement, context);
-        } else {
-            if (context.startsOnSameLine(statement)) {
-                if (forceSeparateLine) {
-                    context.write(" {\n");
-
-                    context.writeSpacesUntilColumn(blockStartColumn);
-                    context.writeSpaces(context.getPreferredIndent());
-                    context.skipSpacesAndTabs();
-
-                    context.copySpaceAndComments();
-
-                    writeNode(statement, context);
-
-                    context.copySpaceAndCommentsUntilEOL();
-                    context.setKnowinglyProcessedTrailingSpaceAndComments(true);
-                    context.writeln();
-
-                    context.writeSpacesUntilColumn(blockStartColumn);
-                    context.write("}");
-                } else {
-                    context.copySpaceAndCommentsEnsuringDelimiter();
-
-                    context.write("{ ");
-                    writeNode(statement, context);
-                    context.write(" }");
-                }
-            } else {
-                context.write(" {");
-
-                context.copySpaceAndComments();
-
-                writeNode(statement, context);
-
-                context.copySpaceAndCommentsUntilEOL();
-                context.setKnowinglyProcessedTrailingSpaceAndComments(true);
-                context.writeln();
-
-                context.writeSpacesUntilColumn(blockStartColumn);
-                context.write("}");
-            }
-        }
-    }
-
-    /**
-     * Write out a type, when it's used (as opposed to defined).
-     *
-     * @param type    type to write
-     * @param context context
-     */
-    public void writeType(Type type, Context context, boolean useRawPointer) {
-        boolean referenceType = !type.isPrimitiveType();
-
-        if (!referenceType)
-            writeNode(type, context);
-        else {
-            if (useRawPointer) {
-                writeNode(type, context);
-                context.write("*");
-            } else {
-                context.write("ptr< ");
-                writeNode(type, context);
-                context.write(" >");
-            }
-        }
+    @Override
+    public CSharpTranslator getTranslator() {
+        return cSharpTranslator;
     }
 }

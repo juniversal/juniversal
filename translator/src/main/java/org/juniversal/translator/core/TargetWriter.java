@@ -190,4 +190,8 @@ public class TargetWriter {
 
         return oldValue;
     }
+
+    public int incrementAdditionalIndentation(int increment) {
+        return setAdditionalIndentation(additionalIndentation + increment);
+    }
 }

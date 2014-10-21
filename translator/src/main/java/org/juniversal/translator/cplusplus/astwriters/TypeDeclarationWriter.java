@@ -30,14 +30,14 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
-public class TypeDeclarationWriter extends ASTWriter {
+public class TypeDeclarationWriter extends CPlusPlusASTWriter {
     private CPlusPlusASTWriters cPlusPlusASTWriters;
 
     public TypeDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+        super(cPlusPlusASTWriters);
     }
 
-    public void write(ASTNode node, Context context) {
+    public void write(Context context, ASTNode node) {
 		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
 
 		TypeDeclaration oldTypeDeclaration = context.getTypeDeclaration();

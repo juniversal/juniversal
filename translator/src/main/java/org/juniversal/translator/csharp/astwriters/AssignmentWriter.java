@@ -20,22 +20,20 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus.astwriters;
+package org.juniversal.translator.csharp.astwriters;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.juniversal.translator.core.Context;
 
 
-public class AssignmentWriter extends CPlusPlusASTWriter {
-    public AssignmentWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        super(cPlusPlusASTWriters);
+// TODO: Finish this
+public class AssignmentWriter extends CSharpASTWriter<Assignment> {
+    public AssignmentWriter(CSharpASTWriters cSharpASTWriters) {
+        super(cSharpASTWriters);
     }
 
     @Override
-    public void write(Context context, ASTNode node) {
-        Assignment assignment = (Assignment) node;
-
+    public void write(Context context, Assignment assignment) {
         Assignment.Operator operator = assignment.getOperator();
 
         if (operator == Assignment.Operator.RIGHT_SHIFT_UNSIGNED_ASSIGN) {
