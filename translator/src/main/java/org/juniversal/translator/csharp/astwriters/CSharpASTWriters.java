@@ -464,7 +464,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Try statement
-        addWriter(TryStatement.class, new TryStatementWRiter(this));
+        addWriter(TryStatement.class, new TryStatementWriterTemp(this));
 
         // TODO: Implement this
         // Throw statement
