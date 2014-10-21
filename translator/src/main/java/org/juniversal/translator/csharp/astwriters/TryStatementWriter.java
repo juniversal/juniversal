@@ -29,8 +29,8 @@ import org.juniversal.translator.core.Context;
 import java.util.List;
 
 
-public class TryStatementWriterTemp extends CSharpASTWriter<TryStatement> {
-    public TryStatementWriterTemp(CSharpASTWriters cSharpASTWriters) {
+public class TryStatementWriter extends CSharpASTWriter<TryStatement> {
+    public TryStatementWriter(CSharpASTWriters cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 
