@@ -76,7 +76,7 @@ public class ASTUtil {
 
 		try {
 			context.setPosition(typeDeclaration.getStartPosition());
-			context.skipSpaceAndComments();
+			skipSpaceAndComments();
 
 			astWriters.writeNode(typeDeclaration, context);
 		} catch (UserViewableException e) {

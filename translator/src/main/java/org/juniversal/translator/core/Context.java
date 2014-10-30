@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (c) 2011-2014, Microsoft Mobile
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,7 +33,6 @@ import static org.juniversal.translator.core.ASTUtil.*;
 
 public class Context {
     private SourceFile sourceFile;
-    private CPPProfile cppProfile;
     private TargetWriter targetWriter;
     private SourceCopier sourceCopier;
     private int position;
@@ -45,9 +44,8 @@ public class Context {
     private boolean writingMethodImplementation;
     private TypeDeclaration typeDeclaration;
 
-    public Context(SourceFile sourceFile, CPPProfile cppProfile, TargetWriter targetWriter, OutputType outputType) {
+    public Context(SourceFile sourceFile, TargetWriter targetWriter, OutputType outputType) {
         this.sourceFile = sourceFile;
-        this.cppProfile = cppProfile;
         this.targetWriter = targetWriter;
         this.outputType = outputType;
         this.position = sourceFile.getCompilationUnit().getStartPosition();
@@ -159,15 +157,6 @@ public class Context {
 
     public void setMethodWildcardTypes(ArrayList<WildcardType> methodWildcardTypes) {
         this.methodWildcardTypes = methodWildcardTypes;
-    }
-
-    /**
-     * Get the CPPProfile object, describing the target C++ compiler and how the C++ should be generated.
-     *
-     * @return CPPProfile object
-     */
-    public CPPProfile getCPPProfile() {
-        return cppProfile;
     }
 
     /**
@@ -385,7 +374,7 @@ public class Context {
      *
      * @param extendedModifiers modifiers
      */
-    public void skipModifiers(List<?> extendedModifiers) {
+    public void skipModifiers(List extendedModifiers) {
         int size = extendedModifiers.size();
         if (size == 0)
             return;
@@ -395,6 +384,10 @@ public class Context {
 
     public void throwSourceNotSupported(String baseMessage) {
         throw new SourceNotSupportedException(baseMessage, getPositionDescription(position));
+    }
+
+    public SourceNotSupportedException sourceNotSupported(String baseMessage) {
+        return new SourceNotSupportedException(baseMessage, getPositionDescription(position));
     }
 
     public ITypeBinding resolveTypeBinding(Type type) {
@@ -415,8 +408,8 @@ public class Context {
         }
     }
 
-    public void throwInvalidAST(String baseMessage) {
-        throw new JUniversalException(baseMessage + "\n" + getPositionDescription(position));
+    public JUniversalException invalidAST(String baseMessage) {
+        return new JUniversalException(baseMessage + "\n" + getPositionDescription(position));
     }
 
     public OutputType getOutputType() {

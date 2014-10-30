@@ -25,7 +25,6 @@ package org.juniversal.translator.cplusplus.astwriters;
 import java.util.List;
 
 import org.juniversal.translator.core.JUniversalException;
-import org.juniversal.translator.core.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
@@ -43,26 +42,26 @@ public class MethodInvocationWriter extends CPlusPlusASTWriter {
     }
 
     @Override
-	public void write(Context context, ASTNode node) {
+	public void write(ASTNode node) {
 		if (node instanceof SuperMethodInvocation) {
 			SuperMethodInvocation superMethodInvocation = (SuperMethodInvocation) node;
 
 			if (superMethodInvocation.getQualifier() != null)
-				context.throwSourceNotSupported("Super method invocations with qualifiers before super aren't currently supported");
+				throw sourceNotSupported("Super method invocations with qualifiers before super aren't currently supported");
 
 			writeMethodInvocation(true, null, superMethodInvocation.resolveMethodBinding(),
 					superMethodInvocation.getName(), superMethodInvocation.typeArguments(),
-					superMethodInvocation.arguments(), context);
+					superMethodInvocation.arguments());
 		} else if (node instanceof MethodInvocation) {
 			MethodInvocation methodInvocation = (MethodInvocation) node;
 
 			writeMethodInvocation(false, methodInvocation.getExpression(), methodInvocation.resolveMethodBinding(),
-					methodInvocation.getName(), methodInvocation.typeArguments(), methodInvocation.arguments(), context);
+					methodInvocation.getName(), methodInvocation.typeArguments(), methodInvocation.arguments());
 		}
 	}
 
 	private void writeMethodInvocation(boolean isSuper, Expression expression, IMethodBinding methodBinding,
-			SimpleName name, List<?> typeArguments, List<?> arguments, Context context) {
+                                       SimpleName name, List<?> typeArguments, List<?> arguments) {
 
 		// See if the method call is static or not; we need to use the bindings to see that
 		boolean isStatic;
@@ -73,49 +72,49 @@ public class MethodInvocationWriter extends CPlusPlusASTWriter {
 		isStatic = Modifier.isStatic(methodBinding.getModifiers());
 
 		if (isSuper) {
-			context.matchAndWrite("super");
+			matchAndWrite("super");
 
-			context.copySpaceAndComments();
-			context.matchAndWrite(".", isStatic ? "::" : "->");
+			copySpaceAndComments();
+			matchAndWrite(".", isStatic ? "::" : "->");
 
-			context.copySpaceAndComments();
+			copySpaceAndComments();
 		} else if (expression != null) {
-            writeNode(context, expression);
+            writeNode(expression);
 
-			context.copySpaceAndComments();
-			context.matchAndWrite(".", isStatic ? "::" : "->");
+			copySpaceAndComments();
+			matchAndWrite(".", isStatic ? "::" : "->");
 
-			context.copySpaceAndComments();
+			copySpaceAndComments();
 		}
 		// Otherwise the method is invoked on the object itself
 
-		context.matchAndWrite(name.getIdentifier());
+		matchAndWrite(name.getIdentifier());
 
 		// TODO: Handle type arguments
 		if (! typeArguments.isEmpty())
-			context.throwSourceNotSupported("Type arguments not currently supported on a method invocation");
+			throw sourceNotSupported("Type arguments not currently supported on a method invocation");
 
 		// TODO: Handle different reference operator used for stack objects
 
-		context.copySpaceAndComments();
-		context.matchAndWrite("(");
+		copySpaceAndComments();
+		matchAndWrite("(");
 
 		boolean first = true;
 		for (Object object : arguments) {
 			Expression argument = (Expression) object;
 
 			if (!first) {
-				context.copySpaceAndComments();
-				context.matchAndWrite(",");
+				copySpaceAndComments();
+				matchAndWrite(",");
 			}
 
-			context.copySpaceAndComments();
-            writeNode(context, argument);
+			copySpaceAndComments();
+            writeNode(argument);
 
 			first = false;
 		}
 
-		context.copySpaceAndComments();
-		context.matchAndWrite(")");
+		copySpaceAndComments();
+		matchAndWrite(")");
 	}
 }

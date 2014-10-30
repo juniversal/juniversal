@@ -25,7 +25,6 @@ package org.juniversal.translator.csharp.astwriters;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.juniversal.translator.core.Context;
 import org.juniversal.translator.core.JUniversalException;
 
 import java.util.ArrayList;
@@ -38,7 +37,7 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
         super(cSharpASTWriters);
     }
 
-    protected void writeMethodInvocation(Context context, T methodInvocationNode, String methodName,
+    protected void writeMethodInvocation(T methodInvocationNode, String methodName,
                                          List typeArguments, List arguments, IMethodBinding methodBinding) {
         ArrayList<Expression> args = new ArrayList<>();
         for (Object argument : arguments)
@@ -48,50 +47,50 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
         String objectClassQualifiedName = declaringClass.getQualifiedName();
 
         // If it's a standard Object method (toString, equals, etc.), handle that first
-        if (writeMappedObjectMethod(context, methodInvocationNode, methodName, args, methodBinding))
+        if (writeMappedObjectMethod(methodInvocationNode, methodName, args, methodBinding))
             return;
 
         if (implementsInterface(declaringClass, "java.lang.List"))
-            if (writeMappedListMethod(context, methodInvocationNode, methodName, args, methodBinding))
+            if (writeMappedListMethod(methodInvocationNode, methodName, args, methodBinding))
                 return;
 
         if (objectClassQualifiedName.equals("java.lang.String"))
-            writeMappedStringMethod(context, methodInvocationNode, methodName, args, methodBinding);
+            writeMappedStringMethod(methodInvocationNode, methodName, args, methodBinding);
         else if (objectClassQualifiedName.equals("java.lang.StringBuilder"))
-            writeMappedStringBuilderMethod(context, methodInvocationNode, methodName, args, methodBinding);
+            writeMappedStringBuilderMethod(methodInvocationNode, methodName, args, methodBinding);
         else {
-            context.matchAndWrite(methodName);
+            matchAndWrite(methodName);
 
-            context.copySpaceAndComments();
-            writeMethodInvocationArgumentList(context, typeArguments, arguments);
+            copySpaceAndComments();
+            writeMethodInvocationArgumentList(typeArguments, arguments);
         }
     }
 
-    private boolean writeMappedObjectMethod(Context context, T methodInvocation, String methodName,
+    private boolean writeMappedObjectMethod(T methodInvocation, String methodName,
                                             ArrayList<Expression> args, IMethodBinding methodBinding) {
         if (isStatic(methodBinding))
             return false;
 
         switch (methodName) {
             case "equals":
-                context.match(methodName);
-                verifyArgCount(context, args, 1);
-                writeMappedMethod(context, "Equals", args.get(0));
-                context.setPositionToEndOfNode(methodInvocation);
+                match(methodName);
+                verifyArgCount(args, 1);
+                writeMappedMethod("Equals", args.get(0));
+                setPositionToEndOfNode(methodInvocation);
                 return true;
 
             case "hashCode":
-                context.match(methodName);
-                verifyArgCount(context, args, 0);
-                writeMappedMethod(context, "GetHashCode");
-                context.setPositionToEndOfNode(methodInvocation);
+                match(methodName);
+                verifyArgCount(args, 0);
+                writeMappedMethod("GetHashCode");
+                setPositionToEndOfNode(methodInvocation);
                 return true;
 
             case "toString":
-                context.match(methodName);
-                verifyArgCount(context, args, 0);
-                writeMappedMethod(context, "ToString");
-                context.setPositionToEndOfNode(methodInvocation);
+                match(methodName);
+                verifyArgCount(args, 0);
+                writeMappedMethod("ToString");
+                setPositionToEndOfNode(methodInvocation);
                 return true;
 
             default:
@@ -99,17 +98,17 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
         }
     }
 
-    private boolean writeMappedListMethod(Context context, T methodInvocation, String methodName,
+    private boolean writeMappedListMethod(T methodInvocation, String methodName,
                                           ArrayList<Expression> args, IMethodBinding methodBinding) {
         if (isStatic(methodBinding))
             return false;
 
         switch (methodName) {
             case "add":
-                context.match(methodName);
+                match(methodName);
                 if (args.size() == 1)
-                    writeMappedMethod(context, "Equals", args.get(0));
-                context.setPositionToEndOfNode(methodInvocation);
+                    writeMappedMethod("Equals", args.get(0));
+                setPositionToEndOfNode(methodInvocation);
                 return true;
 
             default:
@@ -117,198 +116,209 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
         }
     }
 
-    private void writeMappedStringMethod(Context context, T methodInvocation, String methodName,
+    private void writeMappedStringMethod(T methodInvocation, String methodName,
                                          ArrayList<Expression> args, IMethodBinding methodBinding) {
         // Skip past the method name; we'll write a different name instead
-        context.match(methodName);
+        match(methodName);
 
         if (isStatic(methodBinding)) {
             switch (methodName) {
                 default:
-                    context.throwSourceNotSupported("Java static method String." + methodName + " isn't supported by the translator");
+                    throw sourceNotSupported("Java static method String." + methodName + " isn't supported by the translator");
             }
         } else {
             switch (methodName) {
                 case "charAt":
-                    verifyArgCount(context, args, 1);
-                    context.write("[");
-                    context.setPositionToStartOfNode(args.get(0));
-                    writeNode(context, args.get(0));
-                    context.write("]");
+                    verifyArgCount(args, 1);
+                    write("[");
+                    setPositionToStartOfNode(args.get(0));
+                    writeNode(args.get(0));
+                    write("]");
                     break;
 
                 case "compareTo":
-                    verifyArgCount(context, args, 1);
-                    writeMappedMethod(context, "CompareTo", args.get(0));
+                    verifyArgCount(args, 1);
+                    writeMappedMethod("CompareTo", args.get(0));
                     break;
 
                 case "contains":
-                    verifyArgCount(context, args, 1);
-                    writeMappedMethod(context, "Contains", args.get(0));
+                    verifyArgCount(args, 1);
+                    writeMappedMethod("Contains", args.get(0));
                     break;
 
                 case "endsWith":
-                    verifyArgCount(context, args, 1);
-                    writeMappedMethod(context, "EndsWith", args.get(0), "StringComparison.Ordinal");
+                    verifyArgCount(args, 1);
+                    writeMappedMethod("EndsWith", args.get(0), "StringComparison.Ordinal");
                     break;
 
                 case "getChars":
-                    verifyArgCount(context, args, 4);
-                    writeMappedMethod(context, "GetCharsHelper", args.get(0), args.get(1), args.get(2), args.get(3));
+                    verifyArgCount(args, 4);
+                    writeMappedMethod("GetCharsHelper", args.get(0), args.get(1), args.get(2), args.get(3));
                     break;
 
                 case "indexOf":
-                    verifyArgCount(context, args, 1, 2);
+                    verifyArgCount(args, 1, 2);
                     if (args.size() == 1)
-                        writeMappedMethod(context, "IndexOf", args.get(0));
-                    else writeMappedMethod(context, "IndexOf", args.get(0), args.get(1));
+                        writeMappedMethod("IndexOf", args.get(0));
+                    else writeMappedMethod("IndexOf", args.get(0), args.get(1));
                     break;
 
                 case "lastIndexOf":
-                    verifyArgCount(context, args, 1, 2);
+                    verifyArgCount(args, 1, 2);
                     if (args.size() == 1)
-                        writeMappedMethod(context, "LastIndexOf", args.get(0));
-                    else writeMappedMethod(context, "LastIndexOf", args.get(0), args.get(1));
+                        writeMappedMethod("LastIndexOf", args.get(0));
+                    else writeMappedMethod("LastIndexOf", args.get(0), args.get(1));
                     break;
 
                 // TODO: Handle adding parens when needed
                 case "isEmpty":
-                    verifyArgCount(context, args, 0);
-                    context.write("Length == 0");
+                    verifyArgCount(args, 0);
+                    write("Length == 0");
                     break;
 
                 case "length":
-                    verifyArgCount(context, args, 0);
-                    context.write("Length");
+                    verifyArgCount(args, 0);
+                    write("Length");
                     break;
 
                 case "replace":
-                    verifyArgCount(context, args, 2);
-                    writeMappedMethod(context, "Replace", args.get(0), args.get(1));
+                    verifyArgCount(args, 2);
+                    writeMappedMethod("Replace", args.get(0), args.get(1));
                     break;
 
                 case "startsWith":
-                    verifyArgCount(context, args, 1);
-                    writeMappedMethod(context, "StartsWith", args.get(0), "StringComparison.Ordinal");
+                    verifyArgCount(args, 1);
+                    writeMappedMethod("StartsWith", args.get(0), "StringComparison.Ordinal");
                     break;
 
                 case "substring":
-                    verifyArgCount(context, args, 1, 2);
+                    verifyArgCount(args, 1, 2);
                     if (args.size() == 1)
-                        writeMappedMethod(context, "Substring", args.get(0));
+                        writeMappedMethod("Substring", args.get(0));
                     else {
                         Expression arg0 = args.get(0);
                         Expression arg1 = args.get(1);
 
                         // TODO: Verify that arg0 and arg1 and just identifiers or constants, to keep things simple
 
-                        context.write("Substring");
-                        context.write("(");
+                        write("Substring");
+                        write("(");
 
-                        context.setPositionToStartOfNode(arg0);
-                        writeNode(context, arg0);
+                        setPositionToStartOfNode(arg0);
+                        writeNode(arg0);
 
-                        context.write(", ");
+                        write(", ");
 
-                        context.setPositionToStartOfNode(arg1);
-                        writeNode(context, arg1);
-                        context.write(" - ");
-                        context.setPositionToStartOfNode(arg0);
-                        writeNode(context, arg0);
+                        setPositionToStartOfNode(arg1);
+                        writeNode(arg1);
+                        write(" - ");
+                        setPositionToStartOfNode(arg0);
+                        writeNode(arg0);
 
-                        context.write(")");
+                        write(")");
                     }
                     break;
 
                 case "toCharArray":
-                    verifyArgCount(context, args, 0);
-                    writeMappedMethod(context, "ToCharArray");
+                    verifyArgCount(args, 0);
+                    writeMappedMethod("ToCharArray");
+                    break;
+
+                // TODO: Remove this--temporary
+                case "split":
+                    verifyArgCount(args, 1);
+                    writeMappedMethod("XXXXX");
+                    break;
+
+                case "trim":
+                    verifyArgCount(args, 0);
+                    writeMappedMethod("Trim");
                     break;
 
                 default:
-                    context.throwSourceNotSupported("Java method String." + methodName + " isn't supported by the translator");
+                    throw sourceNotSupported("Java method String." + methodName + " isn't supported by the translator");
             }
         }
 
-        context.setPositionToEndOfNode(methodInvocation);
+        setPositionToEndOfNode(methodInvocation);
     }
 
-    private void writeMappedStringBuilderMethod(Context context, T methodInvocation, String methodName,
+    private void writeMappedStringBuilderMethod(T methodInvocation, String methodName,
                                                 ArrayList<Expression> args, IMethodBinding methodBinding) {
         if (isStatic(methodBinding))
-            context.throwSourceNotSupported("Java static method StringBuilder." + methodName + " isn't supported by the translator");
+            throw sourceNotSupported("Java static method StringBuilder." + methodName + " isn't supported by the translator");
 
         // Skip past the method name; we'll write a different name instead
-        context.match(methodName);
+        match(methodName);
 
         switch (methodName) {
             case "charAt":
-                verifyArgCount(context, args, 1);
-                context.write("[");
-                context.setPositionToStartOfNode(args.get(0));
-                writeNode(context, args.get(0));
-                context.write("]");
+                verifyArgCount(args, 1);
+                write("[");
+                setPositionToStartOfNode(args.get(0));
+                writeNode(args.get(0));
+                write("]");
                 break;
 
             case "append":
-                verifyArgCount(context, args, 1, 3);
+                verifyArgCount(args, 1, 3);
                 if (args.size() == 1)
-                    writeMappedMethod(context, "Append", args.get(0));
-                else writeMappedMethod(context, "Append", args.get(0), args.get(1), args.get(2));
+                    writeMappedMethod("Append", args.get(0));
+                else writeMappedMethod("Append", args.get(0), args.get(1), args.get(2));
                 break;
 
             case "length":
-                verifyArgCount(context, args, 0);
-                context.write("Length");
+                verifyArgCount(args, 0);
+                write("Length");
                 break;
 
             case "toString":
-                verifyArgCount(context, args, 0);
-                writeMappedMethod(context, "ToString");
+                verifyArgCount(args, 0);
+                writeMappedMethod("ToString");
                 break;
 
             default:
-                context.throwSourceNotSupported("Java method StringBuilder." + methodName + " isn't supported by the translator");
+                throw sourceNotSupported("Java method StringBuilder." + methodName + " isn't supported by the translator");
         }
 
-        context.setPositionToEndOfNode(methodInvocation);
+        setPositionToEndOfNode(methodInvocation);
     }
 
-    private void verifyArgCount(Context context, ArrayList<Expression> args, int expectedArgCount) {
+    private void verifyArgCount(ArrayList<Expression> args, int expectedArgCount) {
         if (args.size() != expectedArgCount)
-            context.throwSourceNotSupported("Method call has " + args.size() +
-                                            " argument(s); the translator only supports this method with " +
-                                            expectedArgCount + " argument(s)");
+            throw sourceNotSupported("Method call has " + args.size() +
+                                     " argument(s); the translator only supports this method with " +
+                                     expectedArgCount + " argument(s)");
     }
 
-    private void verifyArgCount(Context context, ArrayList<Expression> args, int expectedArgCount1, int expectedArgCount2) {
+    private void verifyArgCount(ArrayList<Expression> args, int expectedArgCount1, int expectedArgCount2) {
         if (args.size() != expectedArgCount1 && args.size() != expectedArgCount2)
-            context.throwSourceNotSupported("Method call has " + args.size() +
-                                            " argument(s); the translator only supports this method with " +
-                                            expectedArgCount1 + " or " + expectedArgCount2 + " argument(s)");
+            throw sourceNotSupported("Method call has " + args.size() +
+                                     " argument(s); the translator only supports this method with " +
+                                     expectedArgCount1 + " or " + expectedArgCount2 + " argument(s)");
     }
 
-    private void writeMappedMethod(Context context, String mappedMethodName, Object... args) {
-        context.write(mappedMethodName);
-        context.write("(");
+    private void writeMappedMethod(String mappedMethodName, Object... args) {
+        write(mappedMethodName);
+        write("(");
 
         boolean first = true;
         for (Object arg : args) {
             if (!first)
-                context.write(", ");
+                write(", ");
 
             if (arg instanceof Expression) {
                 Expression expressionArg = (Expression) arg;
-                context.setPositionToStartOfNode(expressionArg);
+                setPositionToStartOfNode(expressionArg);
 
-                writeNode(context, expressionArg);
+                writeNode(expressionArg);
             } else if (arg instanceof String)
-                context.write((String) arg);
+                write((String) arg);
             else throw new JUniversalException("Unexpected arg object type in writeMappedMethod");
 
             first = false;
         }
 
-        context.write(")");
+        write(")");
     }
 }

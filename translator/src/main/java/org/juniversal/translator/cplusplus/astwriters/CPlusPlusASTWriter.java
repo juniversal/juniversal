@@ -27,7 +27,7 @@ import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeParameter;
 import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.core.Context;
+import org.juniversal.translator.cplusplus.CPPProfile;
 
 import java.util.List;
 
@@ -39,6 +39,10 @@ public abstract class CPlusPlusASTWriter<T extends ASTNode> extends ASTWriter<T>
         this.cPlusPlusASTWriters = cPlusPlusASTWriters;
     }
 
+    public CPPProfile getCPPProfile() {
+        return cPlusPlusASTWriters.getTranslator().getTargetProfile();
+    }
+
     @Override
     protected CPlusPlusASTWriters getASTWriters() {
         return cPlusPlusASTWriters;
@@ -47,22 +51,21 @@ public abstract class CPlusPlusASTWriter<T extends ASTNode> extends ASTWriter<T>
     /**
      * Write out a type, when it's used (as opposed to defined).
      *
-     * @param type    type to write
-     * @param context context
+     * @param type type to write
      */
-    public void writeType(Type type, Context context, boolean useRawPointer) {
+    public void writeType(Type type, boolean useRawPointer) {
         boolean referenceType = !type.isPrimitiveType();
 
         if (!referenceType)
-            writeNode(context, type);
+            writeNode(type);
         else {
             if (useRawPointer) {
-                writeNode(context, type);
-                context.write("*");
+                writeNode(type);
+                write("*");
             } else {
-                context.write("ptr< ");
-                writeNode(context, type);
-                context.write(" >");
+                write("ptr< ");
+                writeNode(type);
+                write(" >");
             }
         }
     }
@@ -79,37 +82,45 @@ public abstract class CPlusPlusASTWriter<T extends ASTNode> extends ASTWriter<T>
         else return packageName.replace('.', '_');
     }
 
-    public static void writeIncludeForTypeName(Name typeName, Context context) {
+    public void writeIncludeForTypeName(Name typeName) {
         String typeNameString = typeName.getFullyQualifiedName();
         String includePath = typeNameString.replace('.', '/');
 
-        context.writeln("#include \"" + includePath + ".h\"");
+        writeln("#include \"" + includePath + ".h\"");
     }
 
     /**
      * Write out the type parameters in the specified list, surrounded by "<" and ">".
      *
-     * @param typeParameters list of TypeParameter objects
+     * @param typeParameters      list of TypeParameter objects
      * @param includeClassKeyword if true, each parameter is prefixed with "class "
-     * @param context context to output to
      */
-    public static void writeTypeParameters(List<TypeParameter> typeParameters, boolean includeClassKeyword, Context context) {
+    public void writeTypeParameters(List<TypeParameter> typeParameters, boolean includeClassKeyword) {
         // If we're writing the implementation of a generic method, include the "template<...>" prefix
 
         boolean first = true;
 
-        context.write("<");
+        write("<");
         for (TypeParameter typeParameter : typeParameters) {
-            if (! first)
-                context.write(", ");
+            if (!first)
+                write(", ");
 
             if (includeClassKeyword)
-                context.write("class ");
-            context.write(typeParameter.getName().getIdentifier());
+                write("class ");
+            write(typeParameter.getName().getIdentifier());
 
             first = false;
         }
 
-        context.write(">");
+        write(">");
     }
+
+/*
+    public void writeIncludeForTypeName(Name typeName) {
+        String typeNameString = typeName.getFullyQualifiedName();
+        String includePath = typeNameString.replace('.', '/');
+
+        writeln("#include \"" + includePath + ".h\"");
+    }
+*/
 }

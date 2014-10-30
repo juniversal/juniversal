@@ -55,7 +55,7 @@ public abstract class ASTWriters {
     }
 
     private static final boolean VALIDATE_CONTEXT_POSITION = true;
-    public void writeNode(Context context, ASTNode node) {
+    public void writeNode(ASTNode node) {
         int nodeStartPosition;
         if (VALIDATE_CONTEXT_POSITION) {
             nodeStartPosition = node.getStartPosition();
@@ -74,7 +74,7 @@ public abstract class ASTWriters {
             else context.assertPositionIs(nodeStartPosition);
         }
 
-        getVisitor(node.getClass()).write(context, node);
+        getVisitor(node.getClass()).write(node);
 
         if (VALIDATE_CONTEXT_POSITION) {
             if (context.getKnowinglyProcessedTrailingSpaceAndComments())
@@ -83,6 +83,19 @@ public abstract class ASTWriters {
         }
 
         context.setKnowinglyProcessedTrailingSpaceAndComments(false);
+    }
+
+    public void writeRootNode(ASTNode node) {
+        try {
+            writeNode(node);
+        }
+        catch (RuntimeException e) {
+            if (e instanceof ContextPositionMismatchException)
+                throw e;
+            else
+                throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
+                                              + context.getPositionDescription(context.getPosition()), e);
+        }
     }
 
     /**
@@ -96,7 +109,7 @@ public abstract class ASTWriters {
     public void writeNodeAtDifferentPosition(ASTNode node, Context context) {
         int originalPosition = context.getPosition();
         context.setPosition(node.getStartPosition());
-        writeNode(context, node);
+        writeNode(node);
         context.setPosition(originalPosition);
     }
 }

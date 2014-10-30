@@ -36,79 +36,77 @@ public abstract class CSharpASTWriter<T extends ASTNode> extends ASTWriter<T> {
     private CSharpASTWriters cSharpASTWriters;
 
     protected CSharpASTWriter(CSharpASTWriters cSharpASTWriters) {
-        super(cSharpASTWriters);
         this.cSharpASTWriters = cSharpASTWriters;
     }
 
-    @Override
-    protected CSharpASTWriters getASTWriters() {
+    @Override protected CSharpASTWriters getASTWriters() {
         return cSharpASTWriters;
     }
 
-    public static void writeAccessModifier(Context context, List<?> modifiers) {
+    public void writeAccessModifier(List<?> modifiers) {
         AccessLevel accessLevel = getAccessModifier(modifiers);
         
         switch (accessLevel) {
             case PRIVATE:
-                writeModifier(context, "private");
+                writeModifier("private");
                 break;
             case PACKAGE:
-                writeModifier(context, "internal");
+                writeModifier("internal");
                 break;
             case PROTECTED:
-                writeModifier(context, "protected internal");
+                writeModifier("protected internal");
                 break;
             case PUBLIC:
-                writeModifier(context, "public");
+                writeModifier("public");
                 break;
         }
     }
 
-    public static void writeSealedModifier(Context context) {
-        writeModifier(context, "sealed");
+    public void writeSealedModifier() {
+        writeModifier("sealed");
     }
 
-    public static void writeOverrideModifier(Context context) {
-        writeModifier(context, "override");
+    public void writeOverrideModifier() {
+        writeModifier("override");
     }
 
-    public final void writeStaticModifier(Context context, List<?> modifiers) {
+    public final void writeStaticModifier(List<?> modifiers) {
         if (containsStatic(modifiers))
-            writeModifier(context, "static");
+            writeModifier("static");
     }
 
-    public static void writeModifier(Context context, String modifier) {
-        context.write(modifier);
-        context.write(" ");
+    public void writeModifier(String modifier) {
+        write(modifier);
+        write(" ");
     }
 
-    public void writeVariableDeclaration(Context context, List<?> modifiers, Type type, List<?> fragments) {
-        context.ensureModifiersJustFinalOrAnnotations(modifiers);
-        context.skipModifiers(modifiers);
+    public void writeVariableDeclaration(List<?> modifiers, Type type, List<?> fragments) {
+        getContext().ensureModifiersJustFinalOrAnnotations(modifiers);
+        getContext().skipModifiers(modifiers);
 
         // Write the type
-        writeNode(context, type);
+        writeNode(type);
 
         // Write the variable declaration(s)
-        writeCommaDelimitedNodes(context, fragments, (VariableDeclarationFragment variableDeclarationFragment) -> {
-            context.copySpaceAndComments();
-            writeNode(context, variableDeclarationFragment);
+        writeCommaDelimitedNodes(fragments, (VariableDeclarationFragment variableDeclarationFragment) -> {
+            copySpaceAndComments();
+            writeNode(variableDeclarationFragment);
         });
     }
 
-    public void writeMethodInvocationArgumentList(Context context, List<?> typeArguments, List<?> arguments) {
+    public void writeMethodInvocationArgumentList(List<?> typeArguments, List<?> arguments) {
         // TODO: Handle type arguments
         if (!typeArguments.isEmpty())
-            context.throwSourceNotSupported("Type arguments not currently supported on a method invocation");
+            throw sourceNotSupported("Type arguments not currently supported on a method invocation");
 
-        context.matchAndWrite("(");
-        writeCommaDelimitedNodes(context, arguments);
+        matchAndWrite("(");
+        writeCommaDelimitedNodes(arguments);
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(")");
+        copySpaceAndComments();
+        matchAndWrite(")");
     }
 
-    public void writeTypeParameterConstraints(Context context, List typeParameters) {
+    public void writeTypeParameterConstraints(List typeParameters) {
         for (Object typeParameterObject : typeParameters) {
             TypeParameter typeParameter = (TypeParameter) typeParameterObject;
 
@@ -117,12 +115,12 @@ public abstract class CSharpASTWriter<T extends ASTNode> extends ASTWriter<T> {
                 Type typeBound = (Type) typeBoundObject;
 
                 if (firstBound) {
-                    context.write(" where ");
-                    context.write(typeParameter.getName().getIdentifier());
-                    context.write(" : ");
-                } else context.write(", ");
+                    write(" where ");
+                    write(typeParameter.getName().getIdentifier());
+                    write(" : ");
+                } else write(", ");
 
-                writeNodeFromOtherPosition(context, typeBound);
+                writeNodeFromOtherPosition(typeBound);
 
                 firstBound = false;
             }
@@ -135,25 +133,25 @@ public abstract class CSharpASTWriter<T extends ASTNode> extends ASTWriter<T> {
             Modifier modifier = (Modifier) node;
 
             if (modifier.isPublic()) {
-                context.matchAndWrite("public");
+                matchAndWrite("public");
             } else if (modifier.isProtected()) {
-                context.matchAndWrite("protected", "protected internal");
+                matchAndWrite("protected", "protected internal");
             } else if (modifier.isPrivate()) {
-                context.matchAndWrite("private");
+                matchAndWrite("private");
             } else if (modifier.isStatic()) {
-                context.matchAndWrite("static");
+                matchAndWrite("static");
             } else if (modifier.isAbstract()) {
-                context.matchAndWrite("abstract");
+                matchAndWrite("abstract");
             } else if (modifier.isFinal()) {   // TODO: Work thru different kinds of final here
-                context.matchAndWrite("final");
+                matchAndWrite("final");
             } else if (modifier.isNative()) {
                 context.throwSourceNotSupported("native methods aren't supported");
             } else if (modifier.isSynchronized()) {  // TODO: Handle this
-                context.matchAndWrite("synchronized");
+                matchAndWrite("synchronized");
             } else if (modifier.isTransient()) {  // TODO: Handle this
-                context.matchAndWrite("transient");
+                matchAndWrite("transient");
             } else if (modifier.isVolatile()) {  // TODO: Handle this
-                context.matchAndWrite("volatile");
+                matchAndWrite("volatile");
             } else if (modifier.isStrictfp()) {  // TODO: Handle this
                 context.throwSourceNotSupported("strictfp isn't supported");
             } else context.throwInvalidAST("Unknown modifier type: " + modifier);
@@ -172,6 +170,4 @@ public abstract class CSharpASTWriter<T extends ASTNode> extends ASTWriter<T> {
             return "unnamed";
         else return packageName.replace('.', '_');
     }
-
-
 }

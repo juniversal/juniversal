@@ -22,9 +22,9 @@
 
 package org.juniversal.translator.csharp;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.juniversal.translator.core.*;
 import org.juniversal.translator.cplusplus.CPPProfile;
 import org.juniversal.translator.cplusplus.OutputType;
@@ -33,62 +33,44 @@ import org.juniversal.translator.csharp.astwriters.CSharpASTWriters;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
+import java.io.StringWriter;
 
 public class CSharpTranslator extends Translator {
-    private CSharpASTWriters cSharpASTWriters;
     private CPPProfile cppProfile = new CPPProfile();
 
-    public CSharpTranslator() {
-        this.cSharpASTWriters = new CSharpASTWriters(this);
-    }
-
-    @Override public CSharpASTWriters getASTWriters() {
-        return cSharpASTWriters;
-    }
-
-    @Override protected void translateAST(SourceFile sourceFile) {
-        writeCSharpFile(sourceFile);
-    }
-
-    public Context createContext(SourceFile sourceFile, Writer outputWriter) {
-        TargetWriter targetWriter = new TargetWriter(outputWriter, cppProfile);
-        return new Context(cSharpASTWriters, sourceFile, cppProfile, targetWriter, OutputType.SOURCE);
-    }
-
-    private void writeCSharpFile(SourceFile sourceFile) {
+    @Override public void translateFile(SourceFile sourceFile) {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         AbstractTypeDeclaration mainTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
 
+        String packageName = mainTypeDeclaration.getName().getFullyQualifiedName();
         String typeName = mainTypeDeclaration.getName().getIdentifier();
+
 
         String fileName = typeName + ".cs";
         File file = new File(getOutputDirectory(), fileName);
 
-        FileWriter writer;
-        try {
-            writer = new FileWriter(file);
+        try (FileWriter writer = new FileWriter(file)) {
+            TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
+            Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
+            CSharpASTWriters cSharpASTWriters = new CSharpASTWriters(context, this);
+
+            cSharpASTWriters.writeRootNode(compilationUnit);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
-        Context context = createContext(sourceFile, writer);
+    @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
+        try (StringWriter writer = new StringWriter()) {
+            TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
+            Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
 
-        try {
-            cSharpASTWriters.writeNode(context, compilationUnit);
-        } catch (UserViewableException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
-        } catch (RuntimeException e) {
-            if (e instanceof ContextPositionMismatchException)
-                throw e;
-            else
-                throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
-                                              + context.getPositionDescription(context.getPosition()), e);
-        }
+            context.setPosition(astNode.getStartPosition());
+            CSharpASTWriters cSharpASTWriters = new CSharpASTWriters(context, this);
 
-        try {
-            writer.close();
+            cSharpASTWriters.writeRootNode(astNode);
+
+            return writer.getBuffer().toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

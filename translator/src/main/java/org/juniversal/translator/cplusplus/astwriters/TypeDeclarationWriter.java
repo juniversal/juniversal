@@ -22,8 +22,6 @@
 
 package org.juniversal.translator.cplusplus.astwriters;
 
-import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.core.Context;
 import org.juniversal.translator.cplusplus.OutputType;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -37,16 +35,16 @@ public class TypeDeclarationWriter extends CPlusPlusASTWriter {
         super(cPlusPlusASTWriters);
     }
 
-    public void write(Context context, ASTNode node) {
+    public void write(ASTNode node) {
 		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
 
-		TypeDeclaration oldTypeDeclaration = context.getTypeDeclaration();
-		context.setTypeDeclaration(typeDeclaration);
+		TypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
+		getContext().setTypeDeclaration(typeDeclaration);
 
-		if (context.getOutputType() == OutputType.HEADER)
-			new WriteTypeDeclarationHeader(typeDeclaration, context, cPlusPlusASTWriters);
-		else new WriteTypeDeclarationSource(typeDeclaration, cPlusPlusASTWriters, context);
+		if (getContext().getOutputType() == OutputType.HEADER)
+			new WriteTypeDeclarationHeader(typeDeclaration, getContext(), cPlusPlusASTWriters);
+		else new WriteTypeDeclarationSource(typeDeclaration, cPlusPlusASTWriters, getContext());
 
-		context.setTypeDeclaration(oldTypeDeclaration);
+		getContext().setTypeDeclaration(oldTypeDeclaration);
 	}
 }

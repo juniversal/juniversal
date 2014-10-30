@@ -28,13 +28,7 @@ import java.util.List;
 
 
 public abstract class ASTWriter<T extends ASTNode> {
-    private ASTWriters astWrtiers;
-
-    protected ASTWriter(ASTWriters astWrtiers) {
-        this.astWrtiers = astWrtiers;
-    }
-
-    abstract public void write(Context context, T node);
+    abstract public void write(T node);
 
     public boolean canProcessTrailingWhitespaceOrComments() {
         return false;
@@ -42,29 +36,29 @@ public abstract class ASTWriter<T extends ASTNode> {
     
     protected abstract ASTWriters getASTWriters();
 
-    protected void writeNode(Context context, ASTNode node) {
-        getASTWriters().writeNode(context, node);
+    protected void writeNode(ASTNode node) {
+        getASTWriters().writeNode(node);
     }
 
-    protected void writeNodeFromOtherPosition(Context context, ASTNode node) {
-        int savedPosition = context.getPosition();
+    protected void writeNodeFromOtherPosition(ASTNode node) {
+        int savedPosition = getPosition();
 
-        context.setPositionToStartOfNode(node);
-        getASTWriters().writeNode(context, node);
+        setPositionToStartOfNode(node);
+        getASTWriters().writeNode(node);
 
-        context.setPosition(savedPosition);
+        setPosition(savedPosition);
     }
 
-    protected void writeNodeAtDifferentPosition(ASTNode node, Context context) {
-        getASTWriters().writeNodeAtDifferentPosition(node, context);
+    protected void writeNodeAtDifferentPosition(ASTNode node) {
+        getASTWriters().writeNodeAtDifferentPosition(node, getContext());
     }
 
-    public <TElmt> void writeCommaDelimitedNodes(Context context, List list, ASTUtil.IProcessListElmt<TElmt> processList) {
+    public <TElmt> void writeCommaDelimitedNodes(List list, ASTUtil.IProcessListElmt<TElmt> processList) {
         boolean first = true;
         for (Object elmtObject : list) {
             if (!first) {
-                context.copySpaceAndComments();
-                context.matchAndWrite(",");
+                copySpaceAndComments();
+                matchAndWrite(",");
             }
 
             TElmt elmt = (TElmt) elmtObject;
@@ -74,29 +68,135 @@ public abstract class ASTWriter<T extends ASTNode> {
         }
     }
 
-    public void writeCommaDelimitedNodes(Context context, List list) {
+    public void writeCommaDelimitedNodes(List list) {
         boolean first = true;
         for (Object astNodeObject : list) {
             if (!first) {
-                context.copySpaceAndComments();
-                context.matchAndWrite(",");
+                copySpaceAndComments();
+                matchAndWrite(",");
             }
 
             ASTNode astNode = (ASTNode) astNodeObject;
 
-            context.copySpaceAndComments();
-            writeNode(context, astNode);
+            copySpaceAndComments();
+            writeNode(astNode);
 
             first = false;
         }
     }
 
-    public void writeNodes(Context context, List list) {
+    public void writeNodes(List list) {
         for (Object astNodeObject : list) {
             ASTNode astNode = (ASTNode) astNodeObject;
 
-            context.copySpaceAndComments();
-            writeNode(context, astNode);
+            copySpaceAndComments();
+            writeNode(astNode);
         }
+    }
+
+    public Context getContext() { return getASTWriters().getContext(); }
+
+    public SourceNotSupportedException sourceNotSupported(String baseMessage) {
+        return getContext().sourceNotSupported(baseMessage);
+    }
+
+    public JUniversalException invalidAST(String baseMessage) {
+        return getContext().invalidAST(baseMessage);
+    }
+
+    public int getTargetColumn() {
+        return getContext().getTargetColumn();
+    }
+
+    public TargetWriter getTargetWriter() {
+        return getContext().getTargetWriter();
+    }
+
+    public void copySpaceAndComments() {
+        getContext().copySpaceAndComments();
+    }
+
+    public void copySpaceAndCommentsEnsuringDelimiter() {
+        getContext().copySpaceAndCommentsEnsuringDelimiter();
+    }
+
+    public void copySpaceAndCommentsUntilEOL() {
+        getContext().copySpaceAndCommentsUntilEOL();
+    }
+
+    public void skipSpaceAndComments() {
+        getContext().skipSpaceAndComments();
+    }
+
+    public void skipSpacesAndTabs() {
+        getContext().skipSpacesAndTabs();
+    }
+
+    public void setKnowinglyProcessedTrailingSpaceAndComments(boolean knowinglyProcessedTrailingSpaceAndComments) {
+        getContext().setKnowinglyProcessedTrailingSpaceAndComments(knowinglyProcessedTrailingSpaceAndComments);
+    }
+
+    public void matchAndWrite(String matchAndWrite) {
+        getContext().matchAndWrite(matchAndWrite);
+    }
+
+    public void matchAndWrite(String match, String write) {
+        getContext().matchAndWrite(match, write);
+    }
+
+    public void match(String match) {
+        getContext().match(match);
+    }
+
+    public void write(String string) {
+        getContext().write(string);
+    }
+
+    public void writeSpaces(int count) {
+        getContext().writeSpaces(count);
+    }
+
+    public void writeSpacesUntilColumn(int column) {
+        getContext().writeSpacesUntilColumn(column);
+    }
+
+    public void writeln(String string) {
+        getContext().writeln(string);
+    }
+
+    public void writeln() {
+        getContext().writeln();
+    }
+
+    public void setPosition(int position) {
+        getContext().setPosition(position);
+    }
+
+    public int getPosition() {
+        return getContext().getPosition();
+    }
+
+    public void setPositionToStartOfNode(ASTNode node) {
+        getContext().setPositionToStartOfNode(node);
+    }
+
+    public void setPositionToEndOfNode(ASTNode node) {
+        getContext().setPositionToEndOfNode(node);
+    }
+
+    public void setPositionToEndOfNodeSpaceAndComments(ASTNode node) {
+        getContext().setPositionToEndOfNodeSpaceAndComments(node);
+    }
+
+    public void ensureModifiersJustFinalOrAnnotations(List<?> modifiers) {
+        getContext().ensureModifiersJustFinalOrAnnotations(modifiers);
+    }
+
+    public void skipModifiers(List extendedModifiers) {
+        getContext().skipModifiers(extendedModifiers);
+    }
+
+    public int getPreferredIndent() {
+        return getContext().getPreferredIndent();
     }
 }

@@ -24,7 +24,6 @@ package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.Context;
 
 import java.util.List;
 
@@ -37,51 +36,51 @@ public class TryStatementWriter extends CSharpASTWriter<TryStatement> {
     // TODO: Possibly check that catch statements are ordered from more specific to more general, as that's enforced in C#
     // TODO: Possibly change catch(Throwable t) where t is unused to just catch in c#
     @Override
-    public void write(Context context, TryStatement tryStatement) {
+    public void write(TryStatement tryStatement) {
         if (tryStatement.resources().size() > 0)
-                writeTryWithResources(context, tryStatement);
+                writeTryWithResources(tryStatement);
         else {
-            context.matchAndWrite("try");
+            matchAndWrite("try");
 
-            context.copySpaceAndComments();
-            writeNode(context, tryStatement.getBody());
+            copySpaceAndComments();
+            writeNode(tryStatement.getBody());
 
             List<?> catchClauses = tryStatement.catchClauses();
             for (Object catchClauseObject : catchClauses) {
                 CatchClause catchClause = (CatchClause) catchClauseObject;
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("catch");
+                copySpaceAndComments();
+                matchAndWrite("catch");
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("(");
+                copySpaceAndComments();
+                matchAndWrite("(");
 
-                context.copySpaceAndComments();
-                writeNode(context, catchClause.getException());
+                copySpaceAndComments();
+                writeNode(catchClause.getException());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(")");
+                copySpaceAndComments();
+                matchAndWrite(")");
 
-                context.copySpaceAndComments();
-                writeNode(context, catchClause.getBody());
+                copySpaceAndComments();
+                writeNode(catchClause.getBody());
             }
 
             @Nullable Block finallyBlock = tryStatement.getFinally();
             if (finallyBlock != null) {
-                context.copySpaceAndComments();
-                context.matchAndWrite("finally");
+                copySpaceAndComments();
+                matchAndWrite("finally");
 
-                context.copySpaceAndComments();
-                writeNode(context, finallyBlock);
+                copySpaceAndComments();
+                writeNode(finallyBlock);
             }
         }
     }
 
-    private void writeTryWithResources(Context context, TryStatement tryStatement) {
-        context.matchAndWrite("try", "using");
+    private void writeTryWithResources(TryStatement tryStatement) {
+        matchAndWrite("try", "using");
 
-        context.copySpaceAndComments();
-        context.matchAndWrite("(");
+        copySpaceAndComments();
+        matchAndWrite("(");
 
         boolean first = true;
         for (Object resourceDeclarationObject : tryStatement.resources()) {
@@ -89,25 +88,25 @@ public class TryStatementWriter extends CSharpASTWriter<TryStatement> {
             VariableDeclarationExpression resourceDeclaration = (VariableDeclarationExpression) resourceDeclarationObject;
 
             if (! first) {
-                context.copySpaceAndComments();
-                context.matchAndWrite(";", ",");
+                copySpaceAndComments();
+                matchAndWrite(";", ",");
             }
 
-            writeNode(context, resourceDeclaration);
+            writeNode(resourceDeclaration);
 
             first = false;
         }
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(")");
+        copySpaceAndComments();
+        matchAndWrite(")");
 
-        context.copySpaceAndComments();
-        writeNode(context, tryStatement.getBody());
+        copySpaceAndComments();
+        writeNode(tryStatement.getBody());
 
         if (tryStatement.catchClauses().size() > 0)
-            context.throwSourceNotSupported("try-with-resources with a catch clause isn't supported; use nested try statements instead");
+            throw sourceNotSupported("try-with-resources with a catch clause isn't supported; use nested try statements instead");
 
         if (tryStatement.getFinally() != null)
-            context.throwSourceNotSupported("try-with-resources with a finally clause isn't supported; use nested try statements instead");
+            throw sourceNotSupported("try-with-resources with a finally clause isn't supported; use nested try statements instead");
     }
 }

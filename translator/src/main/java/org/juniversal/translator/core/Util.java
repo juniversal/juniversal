@@ -79,14 +79,11 @@ public class Util {
 		}
 	}
 
-	public static String readFile(String filePath) {
-		File file = new File(filePath);
-
-		FileReader fileReader = null;
+	public static String readFile(File file) {
 		try {
 			StringBuilder stringBuilder = new StringBuilder();
 
-			fileReader = new FileReader(file);
+			FileReader fileReader = new FileReader(file);
 
 			char[] contentsBuffer = new char[1024];
 			int charsRead = 0;

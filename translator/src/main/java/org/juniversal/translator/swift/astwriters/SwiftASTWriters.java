@@ -32,7 +32,9 @@ import java.util.List;
 public class SwiftASTWriters extends ASTWriters {
     private SwiftTranslator swiftTranslator;
 
-    public SwiftASTWriters(SwiftTranslator swiftTranslator) {
+    public SwiftASTWriters(Context context, SwiftTranslator swiftTranslator) {
+        super(context);
+
         this.swiftTranslator = swiftTranslator;
 
         addDeclarationWriters();
@@ -44,10 +46,10 @@ public class SwiftASTWriters extends ASTWriters {
         // Simple name
         addWriter(SimpleName.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 SimpleName simpleName = (SimpleName) node;
 
-                context.matchAndWrite(simpleName.getIdentifier());
+                matchAndWrite(simpleName.getIdentifier());
             }
         });
     }
@@ -78,25 +80,22 @@ public class SwiftASTWriters extends ASTWriters {
         // Variable declaration fragment
         addWriter(VariableDeclarationFragment.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) node;
 
                 // TODO: Handle syntax with extra dimensions on array
                 if (variableDeclarationFragment.getExtraDimensions() > 0)
-                    context.throwSourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
+                    throw sourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
 
-                if (context.isWritingVariableDeclarationNeedingStar())
-                    context.write("*");
-
-                writeNode(context, variableDeclarationFragment.getName());
+                writeNode(variableDeclarationFragment.getName());
 
                 Expression initializer = variableDeclarationFragment.getInitializer();
                 if (initializer != null) {
-                    context.copySpaceAndComments();
-                    context.matchAndWrite("=");
+                    copySpaceAndComments();
+                    matchAndWrite("=");
 
-                    context.copySpaceAndComments();
-                    writeNode(context, initializer);
+                    copySpaceAndComments();
+                    writeNode(initializer);
                 }
             }
         });
@@ -105,27 +104,27 @@ public class SwiftASTWriters extends ASTWriters {
         // Single variable declaration (used in parameter list & catch clauses)
         addWriter(SingleVariableDeclaration.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) node;
 
                 // TODO: Handle syntax with extra dimensions on array
                 if (singleVariableDeclaration.getExtraDimensions() > 0)
-                    context.throwSourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
+                    throw sourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
 
                 // TODO: Handle final & varargs
 
                 SimpleName name = singleVariableDeclaration.getName();
-                context.setPositionToStartOfNode(name);
-                writeNode(context, name);
-                context.write(": ");
+                setPositionToStartOfNode(name);
+                writeNode(name);
+                write(": ");
 
-                int endOfNamePosition = context.getPosition();
+                int endOfNamePosition = getPosition();
 
                 Type type = singleVariableDeclaration.getType();
-                context.setPositionToStartOfNode(type);
-                writeNode(context, type);
+                setPositionToStartOfNode(type);
+                writeNode(type);
 
-                context.setPosition(endOfNamePosition);
+                setPosition(endOfNamePosition);
 
                 // TODO: Handle initializer
                 Expression initializer = singleVariableDeclaration.getInitializer();
@@ -138,23 +137,23 @@ public class SwiftASTWriters extends ASTWriters {
         // Simple type
         addWriter(SimpleType.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 SimpleType simpleType = (SimpleType) node;
 
                 Name name = simpleType.getName();
                 if (name instanceof QualifiedName) {
                     QualifiedName qualifiedName = (QualifiedName) name;
 
-                    context.write(ASTWriterUtil.getNamespaceNameForPackageName(qualifiedName.getQualifier()));
-                    context.setPositionToEndOfNode(qualifiedName.getQualifier());
+                    write(ASTWriterUtil.getNamespaceNameForPackageName(qualifiedName.getQualifier()));
+                    setPositionToEndOfNode(qualifiedName.getQualifier());
 
-                    context.copySpaceAndComments();
-                    context.matchAndWrite(".", "::");
-                    context.matchAndWrite(qualifiedName.getName().getIdentifier());
+                    copySpaceAndComments();
+                    matchAndWrite(".", "::");
+                    matchAndWrite(qualifiedName.getName().getIdentifier());
                 } else {
                     SimpleName simpleName = (SimpleName) name;
 
-                    context.matchAndWrite(simpleName.getIdentifier());
+                    matchAndWrite(simpleName.getIdentifier());
                 }
             }
         });
@@ -163,13 +162,13 @@ public class SwiftASTWriters extends ASTWriters {
         // Parameterized type
         addWriter(ParameterizedType.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ParameterizedType parameterizedType = (ParameterizedType) node;
 
-                writeNode(context, parameterizedType.getType());
+                writeNode(parameterizedType.getType());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("<");
+                copySpaceAndComments();
+                matchAndWrite("<");
 
                 boolean first = true;
                 List<?> typeArguments = parameterizedType.typeArguments();
@@ -177,17 +176,17 @@ public class SwiftASTWriters extends ASTWriters {
                     Type typeArgument = (Type) typeArgumentObject;
 
                     if (!first) {
-                        context.copySpaceAndComments();
-                        context.matchAndWrite(",");
+                        copySpaceAndComments();
+                        matchAndWrite(",");
                     }
 
-                    context.copySpaceAndComments();
-                    writeNode(context, typeArgument);
+                    copySpaceAndComments();
+                    writeNode(typeArgument);
 
                     first = false;
                 }
 
-                context.matchAndWrite(">");
+                matchAndWrite(">");
             }
         });
 
@@ -195,50 +194,50 @@ public class SwiftASTWriters extends ASTWriters {
         // Array type
         addWriter(ArrayType.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ArrayType arrayType = (ArrayType) node;
 
-                context.write("Array<");
-                writeNode(context, arrayType.getElementType());
-                context.skipSpaceAndComments();
-                context.write(">");
+                write("Array<");
+                writeNode(arrayType.getElementType());
+                skipSpaceAndComments();
+                write(">");
 
-                context.match("[");
-                context.skipSpaceAndComments();
+                match("[");
+                skipSpaceAndComments();
 
-                context.match("]");
+                match("]");
             }
         });
 
         // Primitive type
         addWriter(PrimitiveType.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 PrimitiveType primitiveType = (PrimitiveType) node;
 
                 PrimitiveType.Code code = primitiveType.getPrimitiveTypeCode();
                 if (code == PrimitiveType.BYTE)
-                    context.matchAndWrite("byte", "Int8");
+                    matchAndWrite("byte", "Int8");
                 else if (code == PrimitiveType.SHORT)
-                    context.matchAndWrite("short", "Int16");
+                    matchAndWrite("short", "Int16");
                 else if (code == PrimitiveType.CHAR)
-                    context.matchAndWrite("char", "Character");
+                    matchAndWrite("char", "Character");
                 // TODO: For now, map 32 bit Java int to Int type in Swift, which can be 32 or 64 bits.
                 // Later probably add @PreserveJavaIntSemantics annotation to force 32 bit + no overflow checking
                 else if (code == PrimitiveType.INT)
-                    context.matchAndWrite("int", "Int");
+                    matchAndWrite("int", "Int");
                 else if (code == PrimitiveType.LONG) {
-                    context.matchAndWrite("long", "Int64");
+                    matchAndWrite("long", "Int64");
                 } else if (code == PrimitiveType.FLOAT)
-                    context.matchAndWrite("float", "Float");
+                    matchAndWrite("float", "Float");
                 else if (code == PrimitiveType.DOUBLE)
-                    context.matchAndWrite("double", "Double");
+                    matchAndWrite("double", "Double");
                 else if (code == PrimitiveType.BOOLEAN)
-                    context.matchAndWrite("boolean", "Bool");
+                    matchAndWrite("boolean", "Bool");
                 else if (code == PrimitiveType.VOID)
                     throw new JUniversalException("Should detect void return types before it gets here");
                 else
-                    context.throwInvalidAST("Unknown primitive type: " + code);
+                    throw invalidAST("Unknown primitive type: " + code);
             }
         });
     }
@@ -252,10 +251,10 @@ public class SwiftASTWriters extends ASTWriters {
         addWriter(Block.class, new SwiftASTWriter(this) {
             @SuppressWarnings("unchecked")
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 Block block = (Block) node;
 
-                context.matchAndWrite("{");
+                matchAndWrite("{");
 
                 boolean firstStatement = true;
                 for (Statement statement : (List<Statement>) block.statements()) {
@@ -264,17 +263,17 @@ public class SwiftASTWriters extends ASTWriters {
                     // constructor invocation is a statement other than the first, which it should
                     // never be, we let that error out since writeNode won't find a match for it.
                     if (firstStatement && statement instanceof SuperConstructorInvocation)
-                        context.setPositionToEndOfNodeSpaceAndComments(statement);
+                        setPositionToEndOfNodeSpaceAndComments(statement);
                     else {
-                        context.copySpaceAndComments();
-                        writeNode(context, statement);
+                        copySpaceAndComments();
+                        writeNode(statement);
                     }
 
                     firstStatement = false;
                 }
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("}");
+                copySpaceAndComments();
+                matchAndWrite("}");
             }
         });
 
@@ -282,8 +281,8 @@ public class SwiftASTWriters extends ASTWriters {
         // Empty statement (";")
         addWriter(EmptyStatement.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
-                context.matchAndWrite(";");
+            public void write(ASTNode node) {
+                matchAndWrite(";");
             }
         });
 
@@ -291,37 +290,37 @@ public class SwiftASTWriters extends ASTWriters {
         // Expression statement
         addWriter(ExpressionStatement.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ExpressionStatement expressionStatement = (ExpressionStatement) node;
 
-                writeNode(context, expressionStatement.getExpression());
+                writeNode(expressionStatement.getExpression());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                copySpaceAndComments();
+                matchAndWrite(";");
             }
         });
 
         // If statement
         addWriter(IfStatement.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 IfStatement ifStatement = (IfStatement) node;
 
-                int ifColumn = context.getTargetColumn();
-                context.matchAndWrite("if");
+                int ifColumn = getTargetColumn();
+                matchAndWrite("if");
 
-                context.copySpaceAndCommentsEnsuringDelimiter();
+                copySpaceAndCommentsEnsuringDelimiter();
 
-                writeConditionNoParens(ifStatement.getExpression(), context);
+                writeConditionNoParens(ifStatement.getExpression());
 
-                writeStatementEnsuringBraces(ifColumn, false, ifStatement.getThenStatement(), context);
+                writeStatementEnsuringBraces(ifStatement.getThenStatement(), ifColumn, false);
 
                 Statement elseStatement = ifStatement.getElseStatement();
                 if (elseStatement != null) {
-                    context.copySpaceAndComments();
+                    copySpaceAndComments();
 
-                    context.matchAndWrite("else");
-                    writeStatementEnsuringBraces(ifColumn, true, ifStatement.getElseStatement(), context);
+                    matchAndWrite("else");
+                    writeStatementEnsuringBraces(ifStatement.getElseStatement(), ifColumn, true);
                 }
             }
         });
@@ -329,39 +328,39 @@ public class SwiftASTWriters extends ASTWriters {
         // While statement
         addWriter(WhileStatement.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 WhileStatement whileStatement = (WhileStatement) node;
 
-                int whileColumn = context.getTargetColumn();
-                context.matchAndWrite("while");
+                int whileColumn = getTargetColumn();
+                matchAndWrite("while");
 
-                context.copySpaceAndCommentsEnsuringDelimiter();
+                copySpaceAndCommentsEnsuringDelimiter();
 
-                writeConditionNoParens(whileStatement.getExpression(), context);
+                writeConditionNoParens(whileStatement.getExpression());
 
-                writeStatementEnsuringBraces(whileColumn, false, whileStatement.getBody(), context);
+                writeStatementEnsuringBraces(whileStatement.getBody(), whileColumn, false);
             }
         });
 
         // Do while statement
         addWriter(DoStatement.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 DoStatement doStatement = (DoStatement) node;
 
-                int doColumn = context.getTargetColumn();
-                context.matchAndWrite("do");
+                int doColumn = getTargetColumn();
+                matchAndWrite("do");
 
-                writeStatementEnsuringBraces(doColumn, false, doStatement.getBody(), context);
+                writeStatementEnsuringBraces(doStatement.getBody(), doColumn, false);
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("while");
+                copySpaceAndComments();
+                matchAndWrite("while");
 
-                context.copySpaceAndComments();
-                writeConditionNoParens(doStatement.getExpression(), context);
+                copySpaceAndComments();
+                writeConditionNoParens(doStatement.getExpression());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                copySpaceAndComments();
+                matchAndWrite(";");
             }
         });
 
@@ -369,16 +368,16 @@ public class SwiftASTWriters extends ASTWriters {
         // Continue statement
         addWriter(ContinueStatement.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ContinueStatement continueStatement = (ContinueStatement) node;
 
                 if (continueStatement.getLabel() != null)
-                    context.throwSourceNotSupported("continue statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
+                    throw sourceNotSupported("continue statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
 
-                context.matchAndWrite("continue");
+                matchAndWrite("continue");
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                copySpaceAndComments();
+                matchAndWrite(";");
             }
         });
 
@@ -386,16 +385,16 @@ public class SwiftASTWriters extends ASTWriters {
         // Break statement
         addWriter(BreakStatement.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 BreakStatement breakStatement = (BreakStatement) node;
 
                 if (breakStatement.getLabel() != null)
-                    context.throwSourceNotSupported("break statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
+                    throw sourceNotSupported("break statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
 
-                context.matchAndWrite("break");
+                matchAndWrite("break");
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                copySpaceAndComments();
+                matchAndWrite(";");
             }
         });
 
@@ -409,19 +408,19 @@ public class SwiftASTWriters extends ASTWriters {
         // Return statement
         addWriter(ReturnStatement.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ReturnStatement returnStatement = (ReturnStatement) node;
 
-                context.matchAndWrite("return");
+                matchAndWrite("return");
 
                 Expression expression = returnStatement.getExpression();
                 if (expression != null) {
-                    context.copySpaceAndComments();
-                    writeNode(context, returnStatement.getExpression());
+                    copySpaceAndComments();
+                    writeNode(returnStatement.getExpression());
                 }
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                copySpaceAndComments();
+                matchAndWrite(";");
             }
         });
 
@@ -433,16 +432,16 @@ public class SwiftASTWriters extends ASTWriters {
         // Throw statement
         addWriter(ThrowStatement.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ThrowStatement throwStatement = (ThrowStatement) node;
 
-                context.matchAndWrite("throw");
-                context.copySpaceAndComments();
+                matchAndWrite("throw");
+                copySpaceAndComments();
 
-                writeNode(context, throwStatement.getExpression());
-                context.copySpaceAndComments();
+                writeNode(throwStatement.getExpression());
+                copySpaceAndComments();
 
-                context.matchAndWrite(";");
+                matchAndWrite(";");
             }
         });
 
@@ -450,8 +449,8 @@ public class SwiftASTWriters extends ASTWriters {
         // Delegating constructor invocation
         addWriter(ConstructorInvocation.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
-                context.throwSourceNotSupported("Delegating constructors aren't currently supported; for now you have to change the code to not use them (e.g. by adding an init method)");
+            public void write(ASTNode node) {
+                throw sourceNotSupported("Delegating constructors aren't currently supported; for now you have to change the code to not use them (e.g. by adding an init method)");
             }
         });
     }
@@ -495,50 +494,50 @@ public class SwiftASTWriters extends ASTWriters {
         // Prefix expression
         addWriter(PrefixExpression.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 PrefixExpression prefixExpression = (PrefixExpression) node;
 
                 PrefixExpression.Operator operator = prefixExpression.getOperator();
                 if (operator == PrefixExpression.Operator.INCREMENT)
-                    context.matchAndWrite("++");
+                    matchAndWrite("++");
                 else if (operator == PrefixExpression.Operator.DECREMENT)
-                    context.matchAndWrite("--");
+                    matchAndWrite("--");
                 else if (operator == PrefixExpression.Operator.PLUS)
-                    context.matchAndWrite("+");
+                    matchAndWrite("+");
                 else if (operator == PrefixExpression.Operator.MINUS)
-                    context.matchAndWrite("-");
+                    matchAndWrite("-");
                 else if (operator == PrefixExpression.Operator.COMPLEMENT)
-                    context.matchAndWrite("~");
+                    matchAndWrite("~");
                 else if (operator == PrefixExpression.Operator.NOT)
-                    context.matchAndWrite("!");
-                else context.throwInvalidAST("Unknown prefix operator type: " + operator);
+                    matchAndWrite("!");
+                else throw invalidAST("Unknown prefix operator type: " + operator);
 
                 // In Swift there can't be any whitespace or comments between a unary prefix operator & its operand, so
                 // strip it, not copying anything here
-                context.skipSpaceAndComments();
+                skipSpaceAndComments();
 
-                writeNode(context, prefixExpression.getOperand());
+                writeNode(prefixExpression.getOperand());
             }
         });
 
         // Postfix expression
         addWriter(PostfixExpression.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 PostfixExpression postfixExpression = (PostfixExpression) node;
 
-                writeNode(context, postfixExpression.getOperand());
+                writeNode(postfixExpression.getOperand());
 
                 // In Swift there can't be any whitespace or comments between a postfix operator & its operand, so
                 // strip it, not copying anything here
-                context.skipSpaceAndComments();
+                skipSpaceAndComments();
 
                 PostfixExpression.Operator operator = postfixExpression.getOperator();
                 if (operator == PostfixExpression.Operator.INCREMENT)
-                    context.matchAndWrite("++");
+                    matchAndWrite("++");
                 else if (operator == PostfixExpression.Operator.DECREMENT)
-                    context.matchAndWrite("--");
-                else context.throwInvalidAST("Unknown postfix operator type: " + operator);
+                    matchAndWrite("--");
+                else throw invalidAST("Unknown postfix operator type: " + operator);
             }
         });
 
@@ -546,44 +545,44 @@ public class SwiftASTWriters extends ASTWriters {
         // instanceof expression
         addWriter(InstanceofExpression.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 InstanceofExpression instanceofExpression = (InstanceofExpression) node;
 
-                context.write("INSTANCEOF(");
+                write("INSTANCEOF(");
 
                 Expression expression = instanceofExpression.getLeftOperand();
-                writeNode(context, expression);
+                writeNode(expression);
 
-                context.skipSpaceAndComments();
-                context.match("instanceof");
+                skipSpaceAndComments();
+                match("instanceof");
 
-                context.skipSpaceAndComments();
+                skipSpaceAndComments();
                 Type type = instanceofExpression.getRightOperand();
-                writeNode(context, type);
+                writeNode(type);
 
-                context.write(")");
+                write(")");
             }
         });
 
         // conditional expression
         addWriter(ConditionalExpression.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ConditionalExpression conditionalExpression = (ConditionalExpression) node;
 
-                writeNode(context, conditionalExpression.getExpression());
+                writeNode(conditionalExpression.getExpression());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("?");
+                copySpaceAndComments();
+                matchAndWrite("?");
 
-                context.copySpaceAndComments();
-                writeNode(context, conditionalExpression.getThenExpression());
+                copySpaceAndComments();
+                writeNode(conditionalExpression.getThenExpression());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(":");
+                copySpaceAndComments();
+                matchAndWrite(":");
 
-                context.copySpaceAndComments();
-                writeNode(context, conditionalExpression.getElseExpression());
+                copySpaceAndComments();
+                writeNode(conditionalExpression.getElseExpression());
             }
         });
 
@@ -591,7 +590,7 @@ public class SwiftASTWriters extends ASTWriters {
         // this
         addWriter(ThisExpression.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ThisExpression thisExpression = (ThisExpression) node;
 
                 // TODO: Handle qualified this expressions; probably need to do from parent invoking
@@ -601,7 +600,7 @@ public class SwiftASTWriters extends ASTWriters {
                 if (thisExpression.getQualifier() != null)
                     throw new JUniversalException("Qualified this expression isn't supported yet");
 
-                context.matchAndWrite("this");
+                matchAndWrite("this");
             }
         });
 
@@ -609,15 +608,15 @@ public class SwiftASTWriters extends ASTWriters {
         // Field access
         addWriter(FieldAccess.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 FieldAccess fieldAccess = (FieldAccess) node;
 
-                writeNode(context, fieldAccess.getExpression());
-                context.copySpaceAndComments();
+                writeNode(fieldAccess.getExpression());
+                copySpaceAndComments();
 
-                context.matchAndWrite(".", "->");
+                matchAndWrite(".", "->");
 
-                writeNode(context, fieldAccess.getName());
+                writeNode(fieldAccess.getName());
             }
         });
 
@@ -625,19 +624,19 @@ public class SwiftASTWriters extends ASTWriters {
         // Array access
         addWriter(ArrayAccess.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ArrayAccess arrayAccess = (ArrayAccess) node;
 
-                writeNode(context, arrayAccess.getArray());
-                context.copySpaceAndComments();
+                writeNode(arrayAccess.getArray());
+                copySpaceAndComments();
 
-                context.matchAndWrite("[");
-                context.copySpaceAndComments();
+                matchAndWrite("[");
+                copySpaceAndComments();
 
-                writeNode(context, arrayAccess.getIndex());
-                context.copySpaceAndComments();
+                writeNode(arrayAccess.getIndex());
+                copySpaceAndComments();
 
-                context.matchAndWrite("]");
+                matchAndWrite("]");
             }
         });
 
@@ -645,7 +644,7 @@ public class SwiftASTWriters extends ASTWriters {
         // Qualified name
         addWriter(QualifiedName.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 QualifiedName qualifiedName = (QualifiedName) node;
 
                 // TODO: Figure out the other cases where this can occur & make them all correct
@@ -653,12 +652,12 @@ public class SwiftASTWriters extends ASTWriters {
                 // Here assume that a QualifiedName refers to field access; if it refers to a type,
                 // the caller should catch that case itself and ensure it never gets here
 
-                writeNode(context, qualifiedName.getQualifier());
-                context.copySpaceAndComments();
+                writeNode(qualifiedName.getQualifier());
+                copySpaceAndComments();
 
-                context.matchAndWrite(".", "->");
+                matchAndWrite(".", "->");
 
-                writeNode(context, qualifiedName.getName());
+                writeNode(qualifiedName.getName());
             }
         });
 
@@ -666,16 +665,16 @@ public class SwiftASTWriters extends ASTWriters {
         // Parenthesized expression
         addWriter(ParenthesizedExpression.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ParenthesizedExpression parenthesizedExpression = (ParenthesizedExpression) node;
 
-                context.matchAndWrite("(");
-                context.copySpaceAndComments();
+                matchAndWrite("(");
+                copySpaceAndComments();
 
-                writeNode(context, parenthesizedExpression.getExpression());
-                context.copySpaceAndComments();
+                writeNode(parenthesizedExpression.getExpression());
+                copySpaceAndComments();
 
-                context.matchAndWrite(")");
+                matchAndWrite(")");
             }
         });
 
@@ -683,37 +682,37 @@ public class SwiftASTWriters extends ASTWriters {
         // Cast expression
         addWriter(CastExpression.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 CastExpression castExpression = (CastExpression) node;
 
-                context.matchAndWrite("(", "static_cast<");
+                matchAndWrite("(", "static_cast<");
 
-                context.copySpaceAndComments();
-                writeNode(context, castExpression.getType());
+                copySpaceAndComments();
+                writeNode(castExpression.getType());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(")", ">");
+                copySpaceAndComments();
+                matchAndWrite(")", ">");
 
                 // Skip just whitespace as that's not normally present here in C++ unlike Java, but
                 // if there's a newline or comment, preserve that
-                context.skipSpaceAndComments();
-                context.copySpaceAndComments();
+                skipSpaceAndComments();
+                copySpaceAndComments();
 
                 // Write out the parentheses unless by chance the casted expression already includes
                 // them
                 boolean needParentheses = !(castExpression.getExpression() instanceof ParenthesizedExpression);
                 if (needParentheses)
-                    context.write("(");
-                writeNode(context, castExpression.getExpression());
+                    write("(");
+                writeNode(castExpression.getExpression());
                 if (needParentheses)
-                    context.write(")");
+                    write(")");
             }
         });
 
         // Number literal
         addWriter(NumberLiteral.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 NumberLiteral numberLiteral = (NumberLiteral) node;
                 String token = numberLiteral.getToken();
 
@@ -727,42 +726,42 @@ public class SwiftASTWriters extends ASTWriters {
 
                 // Swift prefixes octal with 0o whereas Java just uses a leading 0
                 if (isOctal) {
-                    context.write("0o");
-                    context.write(token.substring(1));
-                } else context.write(token);
+                    write("0o");
+                    write(token.substring(1));
+                } else write(token);
 
-                context.match(token);
+                match(token);
             }
         });
 
         // Boolean literal
         addWriter(BooleanLiteral.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 BooleanLiteral booleanLiteral = (BooleanLiteral) node;
-                context.matchAndWrite(booleanLiteral.booleanValue() ? "true" : "false");
+                matchAndWrite(booleanLiteral.booleanValue() ? "true" : "false");
             }
         });
 
         // Character literal
         addWriter(CharacterLiteral.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 CharacterLiteral characterLiteral = (CharacterLiteral) node;
 
                 // TODO: Map character escape sequences
                 // TODO: Handle conversion of characters to integers where that's normally implicit in Java
 
-                context.write("Character(\"" + characterLiteral.charValue() + "\")");
-                context.match(characterLiteral.getEscapedValue());
+                write("Character(\"" + characterLiteral.charValue() + "\")");
+                match(characterLiteral.getEscapedValue());
             }
         });
 
         // Null literal
         addWriter(NullLiteral.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
-                context.matchAndWrite("null", "nil");
+            public void write(ASTNode node) {
+                matchAndWrite("null", "nil");
             }
         });
 
@@ -770,94 +769,13 @@ public class SwiftASTWriters extends ASTWriters {
         // String literal
         addWriter(StringLiteral.class, new SwiftASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 StringLiteral stringLiteral = (StringLiteral) node;
 
-                context.write("new String(" + stringLiteral.getEscapedValue() + "L)");
-                context.match(stringLiteral.getEscapedValue());
+                write("new String(" + stringLiteral.getEscapedValue() + "L)");
+                match(stringLiteral.getEscapedValue());
             }
         });
-    }
-
-    private void writeConditionNoParens(Expression expression, Context context) {
-        context.match("(");
-        context.skipSpaceAndComments();
-
-        writeNode(context, expression);
-
-        context.skipSpaceAndComments();
-        context.match(")");
-    }
-
-    private void writeStatementEnsuringBraces(int blockStartColumn, boolean forceSeparateLine,
-                                              Statement statement, Context context) {
-        if (statement instanceof Block) {
-            context.copySpaceAndComments();
-            writeNode(context, statement);
-        } else {
-            if (context.startsOnSameLine(statement)) {
-                if (forceSeparateLine) {
-                    context.write(" {\n");
-
-                    context.writeSpacesUntilColumn(blockStartColumn);
-                    context.writeSpaces(context.getPreferredIndent());
-                    context.skipSpacesAndTabs();
-
-                    context.copySpaceAndComments();
-
-                    writeNode(context, statement);
-
-                    context.copySpaceAndCommentsUntilEOL();
-                    context.setKnowinglyProcessedTrailingSpaceAndComments(true);
-                    context.writeln();
-
-                    context.writeSpacesUntilColumn(blockStartColumn);
-                    context.write("}");
-                } else {
-                    context.copySpaceAndCommentsEnsuringDelimiter();
-
-                    context.write("{ ");
-                    writeNode(context, statement);
-                    context.write(" }");
-                }
-            } else {
-                context.write(" {");
-
-                context.copySpaceAndComments();
-
-                writeNode(context, statement);
-
-                context.copySpaceAndCommentsUntilEOL();
-                context.setKnowinglyProcessedTrailingSpaceAndComments(true);
-                context.writeln();
-
-                context.writeSpacesUntilColumn(blockStartColumn);
-                context.write("}");
-            }
-        }
-    }
-
-    /**
-     * Write out a type, when it's used (as opposed to defined).
-     *
-     * @param type    type to write
-     * @param context context
-     */
-    public void writeType(Type type, Context context, boolean useRawPointer) {
-        boolean referenceType = !type.isPrimitiveType();
-
-        if (!referenceType)
-            writeNode(context, type);
-        else {
-            if (useRawPointer) {
-                writeNode(context, type);
-                context.write("*");
-            } else {
-                context.write("ptr< ");
-                writeNode(context, type);
-                context.write(" >");
-            }
-        }
     }
 
     @Override

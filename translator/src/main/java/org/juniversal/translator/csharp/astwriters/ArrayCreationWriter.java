@@ -24,11 +24,7 @@ package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.ArrayInitializer;
-import org.eclipse.jdt.core.dom.ArrayType;
-import org.eclipse.jdt.core.dom.Expression;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.Context;
 import org.juniversal.translator.core.JUniversalException;
 
 import java.util.List;
@@ -40,30 +36,30 @@ public class ArrayCreationWriter extends CSharpASTWriter<ArrayCreation> {
     }
 
     @Override
-    public void write(Context context, ArrayCreation arrayCreation) {
+    public void write(ArrayCreation arrayCreation) {
         List<?> dimensions = arrayCreation.dimensions();
         // TODO: Support multidimensional arrays
         if (dimensions.size() > 1)
             throw new JUniversalException("Multidimensional arrays not currently supported");
 
-        context.matchAndWrite("new");
+        matchAndWrite("new");
 
-        context.copySpaceAndComments();
-        writeNode(context, arrayCreation.getType().getElementType());
+        copySpaceAndComments();
+        writeNode(arrayCreation.getType().getElementType());
 
-        context.copySpaceAndComments();
-        context.matchAndWrite("[");
+        copySpaceAndComments();
+        matchAndWrite("[");
 
-        writeNodes(context, arrayCreation.dimensions());
+        writeNodes(arrayCreation.dimensions());
 
-        context.copySpaceAndComments();
-        context.matchAndWrite("]");
+        copySpaceAndComments();
+        matchAndWrite("]");
 
         // TODO: Check all syntax combinations here
         @Nullable ArrayInitializer arrayInitializer = arrayCreation.getInitializer();
         if (arrayInitializer != null) {
-            context.copySpaceAndComments();
-            writeNode(context, arrayInitializer);
+            copySpaceAndComments();
+            writeNode(arrayInitializer);
         }
     }
 }

@@ -35,14 +35,13 @@ public class TargetWriter {
     private Writer writer;
     // Additional amount to indent or (if negative) outdent
     private int additionalIndentation = 0;
-    private CPPProfile cppProfile;
+    private CPPProfile targetProfile;
     private int destTabStop = -1;
 
 
-    public TargetWriter(File file, CPPProfile cppProfile) {
+    public TargetWriter(File file, CPPProfile targetProfile) {
         try {
-            init(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "Cp1252")),
-                    cppProfile);
+            init(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "Cp1252")), targetProfile);
         } catch (UnsupportedEncodingException e) {
             throw new JUniversalException(e);
         } catch (FileNotFoundException e) {
@@ -51,13 +50,13 @@ public class TargetWriter {
         }
     }
 
-    public TargetWriter(Writer writer, CPPProfile cppProfile) {
-        init(writer, cppProfile);
+    public TargetWriter(Writer writer, CPPProfile targetProfile) {
+        init(writer, targetProfile);
     }
 
     private void init(Writer writer, CPPProfile cppProfile) {
         this.writer = writer;
-        this.cppProfile = cppProfile;
+        this.targetProfile = cppProfile;
         destTabStop = cppProfile.getTabStop();
 
         currLine = 1;
@@ -67,7 +66,7 @@ public class TargetWriter {
     }
 
     public CPPProfile getCPPProfile() {
-        return cppProfile;
+        return targetProfile;
     }
 
     public int getCurrLine() {

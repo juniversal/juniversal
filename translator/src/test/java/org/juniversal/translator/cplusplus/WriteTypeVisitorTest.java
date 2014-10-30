@@ -24,18 +24,15 @@ package org.juniversal.translator.cplusplus;
 
 import org.eclipse.jdt.core.dom.*;
 import org.junit.Test;
-import org.juniversal.translator.core.Context;
+import org.juniversal.translator.TranslateNodeTest;
 import org.juniversal.translator.core.SourceFile;
 import org.juniversal.translator.core.SourceNotSupportedException;
-import org.juniversal.translator.core.TargetWriter;
 import org.juniversal.translator.cplusplus.astwriters.CPlusPlusASTWriters;
-
-import java.io.StringWriter;
 
 import static org.junit.Assert.*;
 
 
-public class WriteTypeVisitorTest {
+public class WriteTypeVisitorTest extends TranslateNodeTest {
     @Test
     public void returnTest() {
         m_sourceTabStop = 4;
@@ -129,32 +126,20 @@ public class WriteTypeVisitorTest {
 
     public void testWriteNode(ASTNode node, String javaSource, CompilationUnit compilationUnit,
                               int sourceTabStop, String expectedCPPOutput) {
-        StringWriter writer = new StringWriter();
-        CPPProfile profile = new CPPProfile();
-        profile.setTabStop(m_destTabStop);
+        SourceFile sourceFile = new SourceFile(compilationUnit, javaSource, m_sourceTabStop);
 
-        TargetWriter targetWriter = new TargetWriter(writer, profile);
+        String actualOutput = getCPlusPlusTranslator().translateNode(sourceFile, node);
 
-        Context context = new Context(getWriteCPP(),
-                new SourceFile(compilationUnit, null, javaSource, m_sourceTabStop), profile,
-                targetWriter, OutputType.SOURCE);
-
-        context.setPosition(node.getStartPosition());
-        getWriteCPP().writeNode(context, node);
-
-        String cppOutput = writer.getBuffer().toString();
-
-        if (!cppOutput.equals(expectedCPPOutput))
+        if (!actualOutput.equals(expectedCPPOutput))
             fail("Output doesn't match expected output.\r\nEXPECTED:\r\n" + expectedCPPOutput +
-                 "\r\nACUAL:\r\n" + cppOutput);
+                 "\r\nACUAL:\r\n" + actualOutput);
     }
 
-    static CPlusPlusASTWriters m_writeCPP = null;
-
-    CPlusPlusASTWriters getWriteCPP() {
-        if (m_writeCPP == null)
-            m_writeCPP = new CPlusPlusTranslator().getASTWriters();
-        return m_writeCPP;
+    static CPlusPlusTranslator cPlusPlusTranslator = null;
+    CPlusPlusTranslator getCPlusPlusTranslator() {
+        if (cPlusPlusTranslator == null)
+            cPlusPlusTranslator = new CPlusPlusTranslator();
+        return cPlusPlusTranslator;
     }
 
     // Data

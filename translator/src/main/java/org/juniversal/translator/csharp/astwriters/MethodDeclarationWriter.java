@@ -24,7 +24,6 @@ package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.Context;
 import org.juniversal.translator.core.JUniversalException;
 
 import java.util.ArrayList;
@@ -40,15 +39,15 @@ public class MethodDeclarationWriter extends CSharpASTWriter<MethodDeclaration> 
     }
 
     @Override
-    public void write(Context context, MethodDeclaration methodDeclaration) {
-        TypeDeclaration typeDeclaration = context.getTypeDeclaration();
+    public void write(MethodDeclaration methodDeclaration) {
+        TypeDeclaration typeDeclaration = getContext().getTypeDeclaration();
 
 /*
         boolean isGeneric = !typeParameters.isEmpty();
         if (isGeneric && context.isWritingMethodImplementation()) {
-            context.write("template ");
+            write("template ");
             writeTypeParameters(typeParameters, true, context);
-            context.writeln();
+            writeln();
         }
 */
 
@@ -61,7 +60,7 @@ public class MethodDeclarationWriter extends CSharpASTWriter<MethodDeclaration> 
 
         List<?> modifiers = methodDeclaration.modifiers();
 
-        writeAccessModifier(context, modifiers);
+        writeAccessModifier(modifiers);
 
         boolean classIsFinal = isFinal(typeDeclaration);
         boolean methodIsFinal = isFinal(methodDeclaration);
@@ -75,22 +74,22 @@ public class MethodDeclarationWriter extends CSharpASTWriter<MethodDeclaration> 
         if (!classIsFinal && !typeDeclaration.isInterface() &&
             !methodIsFinal && !isPrivate(methodDeclaration) && !isStatic(methodDeclaration) &&
             !methodIsOverride)
-            writeModifier(context, "virtual");
+            writeModifier("virtual");
 
         if (methodIsOverride) {
-            writeOverrideModifier(context);
+            writeOverrideModifier();
             if (methodIsFinal)
-                writeSealedModifier(context);
+                writeSealedModifier();
         }
 
         // Skip any modifiers & type parameters in the source
-        context.setPositionToStartOfNode(returnType != null ? returnType : methodDeclaration.getName());
+        setPositionToStartOfNode(returnType != null ? returnType : methodDeclaration.getName());
         
         if (returnType != null)
-            writeNode(context, returnType);
+            writeNode(returnType);
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(methodDeclaration.getName().getIdentifier());
+        copySpaceAndComments();
+        matchAndWrite(methodDeclaration.getName().getIdentifier());
 
         ArrayList<WildcardType> wildcardTypes = new ArrayList<>();
         for (Object parameterObject : methodDeclaration.parameters()) {
@@ -98,68 +97,68 @@ public class MethodDeclarationWriter extends CSharpASTWriter<MethodDeclaration> 
             addWildcardTypes(parameter.getType(), wildcardTypes);
         }
 
-        writeTypeParameters(context, methodDeclaration, wildcardTypes);
+        writeTypeParameters(methodDeclaration, wildcardTypes);
 
-        context.copySpaceAndComments();
+        copySpaceAndComments();
 
-        context.setMethodWildcardTypes(wildcardTypes);
-        writeParameterList(context, methodDeclaration);
-        context.setMethodWildcardTypes(null);
+        getContext().setMethodWildcardTypes(wildcardTypes);
+        writeParameterList(methodDeclaration);
+        getContext().setMethodWildcardTypes(null);
 
-        writeTypeConstraints(context, methodDeclaration, wildcardTypes);
+        writeTypeConstraints(methodDeclaration, wildcardTypes);
 
         // TODO: Ignore thrown exceptions
-        writeThrownExceptions(methodDeclaration, context);
+        writeThrownExceptions(methodDeclaration);
 
         if (methodDeclaration.isConstructor())
-            writeOtherConstructorInvocation(context, methodDeclaration);
+            writeOtherConstructorInvocation(methodDeclaration);
 
         Block body = methodDeclaration.getBody();
         if (body != null) {
-            writeBody(context, body);
+            writeBody(body);
         } else {
             // TODO: Fix this up
             if (methodDeclaration.getBody() == null) {
-                context.write(" = 0");
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                write(" = 0");
+                copySpaceAndComments();
+                matchAndWrite(";");
             } else {
-                context.skipSpaceAndComments();
-                context.write(";");
-                context.setPositionToEndOfNode(methodDeclaration);
+                skipSpaceAndComments();
+                write(";");
+                setPositionToEndOfNode(methodDeclaration);
             }
         }
     }
 
-    private void writeTypeParameters(Context context, MethodDeclaration methodDeclaration, ArrayList<WildcardType> wildcardTypes) {
+    private void writeTypeParameters(MethodDeclaration methodDeclaration, ArrayList<WildcardType> wildcardTypes) {
         boolean outputTypeParameter = false;
         for (Object typeParameterObject : methodDeclaration.typeParameters()) {
             TypeParameter typeParameter = (TypeParameter) typeParameterObject;
 
             if (! outputTypeParameter)
-                context.write("<");
-            else context.write(", ");
+                write("<");
+            else write(", ");
 
-            context.write(typeParameter.getName().getIdentifier());
+            write(typeParameter.getName().getIdentifier());
             outputTypeParameter = true;
         }
 
         for (WildcardType wildcardType : wildcardTypes) {
             if (! outputTypeParameter)
-                context.write("<");
-            else context.write(", ");
+                write("<");
+            else write(", ");
 
             int wildcardIndex = wildcardTypes.indexOf(wildcardType) + 1;
-            context.write("TWildcard" + wildcardIndex);
+            write("TWildcard" + wildcardIndex);
             outputTypeParameter = true;
         }
 
         if (outputTypeParameter)
-            context.write(">");
+            write(">");
     }
 
-    private void writeTypeConstraints(Context context, MethodDeclaration methodDeclaration, ArrayList<WildcardType> wildcardTypes) {
-        writeTypeParameterConstraints(context, methodDeclaration.typeParameters());
+    private void writeTypeConstraints(MethodDeclaration methodDeclaration, ArrayList<WildcardType> wildcardTypes) {
+        writeTypeParameterConstraints(methodDeclaration.typeParameters());
 
         for (WildcardType wildcardType : wildcardTypes) {
             @Nullable Type bound = wildcardType.getBound();
@@ -170,19 +169,19 @@ public class MethodDeclarationWriter extends CSharpASTWriter<MethodDeclaration> 
             if (index == -1)
                 throw new JUniversalException("Wildcard type not found in wildcard list");
 
-            context.write(" where ");
-            context.write("TWildcard" + (index + 1));
-            context.write(" : ");
+            write(" where ");
+            write("TWildcard" + (index + 1));
+            write(" : ");
 
             if (! wildcardType.isUpperBound())
                 throw new JUniversalException("Wildcard lower bounds ('? super') aren't supported; only upper bounds ('? extends') are supported");
 
-            writeNodeFromOtherPosition(context, bound);
+            writeNodeFromOtherPosition(bound);
         }
     }
 
-    private void writeParameterList(Context context, MethodDeclaration methodDeclaration) {
-        context.matchAndWrite("(");
+    private void writeParameterList(MethodDeclaration methodDeclaration) {
+        matchAndWrite("(");
 
         List<?> parameters = methodDeclaration.parameters();
 
@@ -191,21 +190,21 @@ public class MethodDeclarationWriter extends CSharpASTWriter<MethodDeclaration> 
             SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) parameterObject;
 
             if (!first) {
-                context.copySpaceAndComments();
-                context.matchAndWrite(",");
+                copySpaceAndComments();
+                matchAndWrite(",");
             }
 
-            context.copySpaceAndComments();
-            writeNode(context, singleVariableDeclaration);
+            copySpaceAndComments();
+            writeNode(singleVariableDeclaration);
 
             first = false;
         }
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(")");
+        copySpaceAndComments();
+        matchAndWrite(")");
     }
 
-    private void writeThrownExceptions(MethodDeclaration methodDeclaration, Context context) {
+    private void writeThrownExceptions(MethodDeclaration methodDeclaration) {
         // If there are any checked exceptions, output them just as a comment. We don't turn them
         // into C++ checked exceptions because we don't declare runtime exceptions in the C++; since
         // we don't declare all exceptions for C++ we can't declare any since we never want
@@ -213,34 +212,34 @@ public class MethodDeclarationWriter extends CSharpASTWriter<MethodDeclaration> 
         List<?> thrownExceptions = methodDeclaration.thrownExceptionTypes();
         boolean first;
         if (thrownExceptions.size() > 0) {
-            context.copySpaceAndComments();
-            context.write("/* ");
-            context.matchAndWrite("throws");
+            copySpaceAndComments();
+            write("/* ");
+            matchAndWrite("throws");
 
             first = true;
             for (Object exceptionTypeObject : thrownExceptions) {
                 Type exceptionType = (Type) exceptionTypeObject;
 
-                context.skipSpaceAndComments();
+                skipSpaceAndComments();
                 if (first)
-                    context.write(" ");
+                    write(" ");
                 else {
-                    context.matchAndWrite(",");
+                    matchAndWrite(",");
 
-                    context.skipSpaceAndComments();
-                    context.write(" ");
+                    skipSpaceAndComments();
+                    write(" ");
                 }
 
-                writeNode(context, exceptionType);
+                writeNode(exceptionType);
 
                 first = false;
             }
-            context.write(" */");
+            write(" */");
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void writeOtherConstructorInvocation(Context context, MethodDeclaration methodDeclaration) {
+    private void writeOtherConstructorInvocation(MethodDeclaration methodDeclaration) {
         Block body = methodDeclaration.getBody();
 
         List<Object> statements = body.statements();
@@ -248,38 +247,37 @@ public class MethodDeclarationWriter extends CSharpASTWriter<MethodDeclaration> 
             Statement firstStatement = (Statement) statements.get(0);
 
             if (firstStatement instanceof SuperConstructorInvocation || firstStatement instanceof ConstructorInvocation) {
+                write(" : ");
 
-                context.write(" : ");
-
-                int savedPosition = context.getPosition();
-                context.setPositionToStartOfNode(firstStatement);
+                int savedPosition = getPosition();
+                setPositionToStartOfNode(firstStatement);
 
                 if (firstStatement instanceof SuperConstructorInvocation) {
                     SuperConstructorInvocation superConstructorInvocation = (SuperConstructorInvocation) firstStatement;
 
-                    context.matchAndWrite("super", "base");
+                    matchAndWrite("super", "base");
 
-                    context.copySpaceAndComments();
-                    writeMethodInvocationArgumentList(context, superConstructorInvocation.typeArguments(),
+                    copySpaceAndComments();
+                    writeMethodInvocationArgumentList(superConstructorInvocation.typeArguments(),
                             superConstructorInvocation.arguments());
                 } else {
                     ConstructorInvocation constructorInvocation = (ConstructorInvocation) firstStatement;
 
-                    context.matchAndWrite("this");
+                    matchAndWrite("this");
 
-                    context.copySpaceAndComments();
-                    writeMethodInvocationArgumentList(context, constructorInvocation.typeArguments(),
+                    copySpaceAndComments();
+                    writeMethodInvocationArgumentList(constructorInvocation.typeArguments(),
                             constructorInvocation.arguments());
                 }
 
-                context.setPosition(savedPosition);
+                setPosition(savedPosition);
             }
         }
     }
 
-    private void writeBody(Context context, Block body) {
-        context.copySpaceAndComments();
-        context.matchAndWrite("{");
+    private void writeBody(Block body) {
+        copySpaceAndComments();
+        matchAndWrite("{");
 
         boolean first = true;
         for (Object statementObject : (List<?>) body.statements()) {
@@ -290,16 +288,16 @@ public class MethodDeclarationWriter extends CSharpASTWriter<MethodDeclaration> 
             // constructor invocation is a statement other than the first, which it should
             // never be, we let that error out since writeNode won't find a match for it.
             if (first && (statement instanceof SuperConstructorInvocation || statement instanceof ConstructorInvocation))
-                context.setPositionToEndOfNodeSpaceAndComments(statement);
+                setPositionToEndOfNodeSpaceAndComments(statement);
             else {
-                context.copySpaceAndComments();
-                writeNode(context, statement);
+                copySpaceAndComments();
+                writeNode(statement);
             }
 
             first = false;
         }
 
-        context.copySpaceAndComments();
-        context.matchAndWrite("}");
+        copySpaceAndComments();
+        matchAndWrite("}");
     }
 }

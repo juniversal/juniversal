@@ -26,9 +26,7 @@ import java.util.List;
 
 import org.juniversal.translator.core.ASTUtil;
 import org.juniversal.translator.core.JUniversalException;
-import org.juniversal.translator.core.Context;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.Expression;
@@ -40,8 +38,8 @@ public class ArrayCreationWriter extends CPlusPlusASTWriter<ArrayCreation> {
     }
 
     @Override
-	public void write(Context context, ArrayCreation arrayCreation) {
-		context.matchAndWrite("new");
+	public void write(ArrayCreation arrayCreation) {
+		matchAndWrite("new");
 
 		List<?> dimensions = arrayCreation.dimensions();
 		// TODO: Support multidimensional arrays
@@ -54,23 +52,23 @@ public class ArrayCreationWriter extends CPlusPlusASTWriter<ArrayCreation> {
 
 		Expression dimensionSizeExpression = (Expression) dimensions.get(0);
 
-		context.setPosition(dimensionSizeExpression.getStartPosition());
+		setPosition(dimensionSizeExpression.getStartPosition());
 
-		context.write("(");
-        writeNode(context, dimensionSizeExpression);
-		context.copySpaceAndComments();
-		context.write(") ");
+		write("(");
+        writeNode(dimensionSizeExpression);
+		copySpaceAndComments();
+		write(") ");
 
 		ArrayType arrayType = arrayCreation.getType();
-		context.setPosition(arrayType.getStartPosition());
+		setPosition(arrayType.getStartPosition());
 
-		context.write("Array<");
-        writeNode(context, arrayType.getElementType());
-		context.skipSpaceAndComments();
-		context.write(">");
+		write("Array<");
+        writeNode(arrayType.getElementType());
+		skipSpaceAndComments();
+		write(">");
 
-		context.setPosition(ASTUtil.getEndPosition(dimensionSizeExpression));
-		context.skipSpaceAndComments();
-		context.match("]");
+		setPosition(ASTUtil.getEndPosition(dimensionSizeExpression));
+		skipSpaceAndComments();
+		match("]");
 	}
 }

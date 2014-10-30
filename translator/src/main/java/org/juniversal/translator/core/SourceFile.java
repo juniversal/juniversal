@@ -25,22 +25,24 @@ package org.juniversal.translator.core;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+
 public class SourceFile {
 	private final CompilationUnit compilationUnit;
-	private final @Nullable String sourceFilePath;    // Null if there is no file
+	private @Nullable File sourceFile;    // Null if there is no file
 	private final String source;
     private int sourceTabStop;
 
-	public SourceFile(CompilationUnit compilationUnit, String sourceFilePath, int sourceTabStop) {
+	public SourceFile(CompilationUnit compilationUnit, File sourceFile, int sourceTabStop) {
 		this.compilationUnit = compilationUnit;
-		this.sourceFilePath = sourceFilePath;
-		this.source = Util.readFile(sourceFilePath);
+		this.sourceFile = sourceFile;
+		this.source = Util.readFile(sourceFile);
         this.sourceTabStop = sourceTabStop;
 	}
 
-	public SourceFile(CompilationUnit compilationUnit, String sourceFilePath, String source, int sourceTabStop) {
+	public SourceFile(CompilationUnit compilationUnit, String source, int sourceTabStop) {
 		this.compilationUnit = compilationUnit;
-		this.sourceFilePath = sourceFilePath;
+		this.sourceFile = null;
 		this.source = source;
         this.sourceTabStop = sourceTabStop;
 	}
@@ -49,12 +51,12 @@ public class SourceFile {
 		return compilationUnit;
 	}
 
-	public @Nullable String getSourceFilePath() {
-		return sourceFilePath;
+	public @Nullable File getSourceFile() {
+		return sourceFile;
 	}
 
 	public boolean isDiskFile() {
-		return sourceFilePath != null;
+		return sourceFile != null;
 	}
 
 	public String getSource() {
@@ -76,7 +78,7 @@ public class SourceFile {
      * @return description string for position, with one line break in the middle
      */
     public String getPositionDescription(int position) {
-        String prefix = isDiskFile() ? "    File " + sourceFilePath + "\n" : "";
+        String prefix = isDiskFile() ? "    File " + sourceFile + "\n" : "";
 
         CompilationUnit compilationUnit = getCompilationUnit();
 

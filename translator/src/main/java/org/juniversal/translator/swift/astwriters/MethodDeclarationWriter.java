@@ -37,7 +37,7 @@ public class MethodDeclarationWriter extends SwiftASTWriter {
     }
 
     @Override
-    public void write(Context context, ASTNode node) {
+    public void write(ASTNode node) {
         MethodDeclaration methodDeclaration = (MethodDeclaration) node;
 
         // TODO: Implement this as appropriate
@@ -48,9 +48,9 @@ public class MethodDeclarationWriter extends SwiftASTWriter {
 
         boolean isGeneric = !typeParameters.isEmpty();
         if (isGeneric && context.isWritingMethodImplementation()) {
-            context.write("template ");
+            write("template ");
             ASTWriterUtil.writeTypeParameters(typeParameters, true, context);
-            context.writeln();
+            writeln();
         }
 */
 
@@ -58,19 +58,19 @@ public class MethodDeclarationWriter extends SwiftASTWriter {
         // Write static & virtual modifiers, in the class definition
 /*
         if (ASTUtil.containsStatic(methodDeclaration.modifiers()))
-            context.write("static ");
+            write("static ");
         else {
             boolean isFinal = ASTUtil.containsFinal(typeDeclaration.modifiers())
                     || ASTUtil.containsFinal(methodDeclaration.modifiers());
 
             if (! isFinal)
-                context.write("virtual ");
+                write("virtual ");
         }
 */
-        context.skipModifiers(methodDeclaration.modifiers());
-        context.copySpaceAndComments();
+        skipModifiers(methodDeclaration.modifiers());
+        copySpaceAndComments();
 
-        context.write("func ");
+        write("func ");
 
         // Get return type if present
         @Nullable Type returnType = null;
@@ -82,9 +82,9 @@ public class MethodDeclarationWriter extends SwiftASTWriter {
             returnType = null;
 
         SimpleName name = methodDeclaration.getName();
-        context.setPositionToStartOfNode(name);
-        context.matchAndWrite(name.getIdentifier());
-        context.copySpaceAndComments();
+        setPositionToStartOfNode(name);
+        matchAndWrite(name.getIdentifier());
+        copySpaceAndComments();
 
         // TODO: Implement this
 /*
@@ -92,30 +92,30 @@ public class MethodDeclarationWriter extends SwiftASTWriter {
             ASTWriterUtil.writeTypeParameters(typeParameters, false, context);
 */
 
-        writeParameterList(methodDeclaration, context);
+        writeParameterList(methodDeclaration);
         //writeThrownExceptions(methodDeclaration, context);
 
         if (returnType != null) {
-            int originalPosition = context.getPosition();
-            context.setPositionToStartOfNode(returnType);
+            int originalPosition = getPosition();
+            setPositionToStartOfNode(returnType);
 
-            context.write(" -> ");
-            swiftASTWriters.writeType(returnType, context, false);
+            write(" -> ");
+            writeType(returnType, false);
 
-            context.setPosition(originalPosition);
+            setPosition(originalPosition);
         }
 
-        context.copySpaceAndComments();
+        copySpaceAndComments();
 
         // TODO: Implement this
         //writeSuperConstructorInvocation(methodDeclaration, context);
 
-        swiftASTWriters.writeNode(context, methodDeclaration.getBody());
+        swiftASTWriters.writeNode(methodDeclaration.getBody());
     }
 
-    private void writeParameterList(MethodDeclaration methodDeclaration, Context context) {
-        context.matchAndWrite("(");
-        context.copySpaceAndComments();
+    private void writeParameterList(MethodDeclaration methodDeclaration) {
+        matchAndWrite("(");
+        copySpaceAndComments();
 
         List<?> parameters = methodDeclaration.parameters();
 
@@ -124,20 +124,20 @@ public class MethodDeclarationWriter extends SwiftASTWriter {
             SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) object;
 
             if (!first) {
-                context.matchAndWrite(",");
-                context.copySpaceAndComments();
+                matchAndWrite(",");
+                copySpaceAndComments();
             }
 
-            swiftASTWriters.writeNode(context, singleVariableDeclaration);
-            context.copySpaceAndComments();
+            swiftASTWriters.writeNode(singleVariableDeclaration);
+            copySpaceAndComments();
 
             first = false;
         }
 
-        context.matchAndWrite(")");
+        matchAndWrite(")");
     }
 
-    private void writeThrownExceptions(MethodDeclaration methodDeclaration, Context context) {
+    private void writeThrownExceptions(MethodDeclaration methodDeclaration) {
         // If there are any checked exceptions, output them just as a comment. We don't turn them
         // into C++ checked exceptions because we don't declare runtime exceptions in the C++; since
         // we don't declare all exceptions for C++ we can't declare any since we never want
@@ -145,30 +145,30 @@ public class MethodDeclarationWriter extends SwiftASTWriter {
         List<?> thrownExceptions = methodDeclaration.thrownExceptionTypes();
         boolean first;
         if (thrownExceptions.size() > 0) {
-            context.copySpaceAndComments();
+            copySpaceAndComments();
 
-            context.write("/* ");
-            context.matchAndWrite("throws");
+            write("/* ");
+            matchAndWrite("throws");
 
             first = true;
             for (Object exceptionNameObject : thrownExceptions) {
                 Name exceptionName = (Name) exceptionNameObject;
 
-                context.skipSpaceAndComments();
+                skipSpaceAndComments();
                 if (first)
-                    context.write(" ");
+                    write(" ");
                 else {
-                    context.matchAndWrite(",");
+                    matchAndWrite(",");
 
-                    context.skipSpaceAndComments();
-                    context.write(" ");
+                    skipSpaceAndComments();
+                    write(" ");
                 }
 
-                context.matchAndWrite(exceptionName.toString());
+                matchAndWrite(exceptionName.toString());
 
                 first = false;
             }
-            context.write(" */");
+            write(" */");
         }
     }
 
@@ -193,36 +193,36 @@ public class MethodDeclarationWriter extends SwiftASTWriter {
 
         // TODO: Support <expression>.super
         if (superConstructorInvocation.getExpression() != null)
-            context.throwSourceNotSupported("<expression>.super constructor invocation syntax not currently supported");
+            throw sourceNotSupported("<expression>.super constructor invocation syntax not currently supported");
 
         // TODO: Support type arguments here
         if (!superConstructorInvocation.typeArguments().isEmpty())
-            context.throwSourceNotSupported("super constructor invocation with type arguments not currently supported");
+            throw sourceNotSupported("super constructor invocation with type arguments not currently supported");
 
-        context.write(" : ");
-        context.matchAndWrite("super");
-        context.copySpaceAndComments();
-        context.matchAndWrite("(");
+        write(" : ");
+        matchAndWrite("super");
+        copySpaceAndComments();
+        matchAndWrite("(");
 
         List<?> arguments = superConstructorInvocation.arguments();
 
         boolean first = true;
         for (Expression argument : (List<Expression>) arguments) {
             if (!first) {
-                context.copySpaceAndComments();
-                context.matchAndWrite(",");
+                copySpaceAndComments();
+                matchAndWrite(",");
             }
 
-            context.copySpaceAndComments();
-            swiftASTWriters.writeNode(context, argument);
+            copySpaceAndComments();
+            swiftASTWriters.writeNode(argument);
 
             first = false;
         }
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(")");
+        copySpaceAndComments();
+        matchAndWrite(")");
 
-        context.write(" ");
+        write(" ");
 
         context.setPosition(originalPosition);
     }

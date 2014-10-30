@@ -27,47 +27,46 @@ package
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.Context;
 
 
-// TODO: FInish this
+// TODO: Finish this
 
 class CompilationUnitWriter extends CSharpASTWriter<CompilationUnit> {
     CompilationUnitWriter(CSharpASTWriters cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 
-    public void write(Context context, CompilationUnit compilationUnit) {
-        context.copySpaceAndComments();
+    public void write(CompilationUnit compilationUnit) {
+        copySpaceAndComments();
 
         // TODO: This results in an extra newline normally; distinguish between case where package is only think on line & multiple things on the line
         @Nullable PackageDeclaration packageDeclaration = compilationUnit.getPackage();
         if (packageDeclaration != null) {
-            context.setPositionToEndOfNodeSpaceAndComments(packageDeclaration);
+            setPositionToEndOfNodeSpaceAndComments(packageDeclaration);
         }
 
         for (Object importDeclarationObject : compilationUnit.imports()) {
             ImportDeclaration importDeclaration = (ImportDeclaration) importDeclarationObject;
 
-            context.copySpaceAndComments();
+            copySpaceAndComments();
             //TODO: Process import statements; but for now just skip
-            context.setPositionToEndOfNodeSpaceAndComments(importDeclaration);
+            setPositionToEndOfNodeSpaceAndComments(importDeclaration);
         }
 
         int previousIndent = 0;
         if (packageDeclaration != null) {
-            int previousPosition = context.getPosition();
-            context.setPositionToStartOfNode(packageDeclaration);
-            context.matchAndWrite("package", "namespace");
+            int previousPosition = getPosition();
+            setPositionToStartOfNode(packageDeclaration);
+            matchAndWrite("package", "namespace");
 
-            context.copySpaceAndComments();
-            writeNode(context, packageDeclaration.getName());
+            copySpaceAndComments();
+            writeNode(packageDeclaration.getName());
 
-            context.write(" {");
-            previousIndent = context.getTargetWriter().incrementAdditionalIndentation(context.getPreferredIndent());
-            context.writeln();
+            write(" {");
+            previousIndent = getTargetWriter().incrementAdditionalIndentation(getPreferredIndent());
+            writeln();
 
-            context.setPosition(previousPosition);
+            setPosition(previousPosition);
         }
 
 /*
@@ -79,21 +78,21 @@ class CompilationUnitWriter extends CSharpASTWriter<CompilationUnit> {
 
         AbstractTypeDeclaration firstTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
 
-        context.copySpaceAndComments();
-        writeNode(context, firstTypeDeclaration);
-        context.copySpaceAndComments();
+        copySpaceAndComments();
+        writeNode(firstTypeDeclaration);
+        copySpaceAndComments();
 
         if (packageDeclaration != null) {
-            previousIndent = context.getTargetWriter().setAdditionalIndentation(previousIndent);
-            context.writeln();
-            context.writeln("}");
+            getTargetWriter().setAdditionalIndentation(previousIndent);
+            writeln();
+            writeln("}");
         }
 
 /*
-        context.writeln();
+        writeln();
 
         context.setPosition(firstTypeDeclaration.getStartPosition());
-        context.copySpaceAndComments();   // Skip any Javadoc included in the node
+        copySpaceAndComments();   // Skip any Javadoc included in the node
 
         writeNode(context, firstTypeDeclaration);
 */

@@ -25,7 +25,6 @@ package org.juniversal.translator.csharp.astwriters;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SwitchCase;
 import org.eclipse.jdt.core.dom.SwitchStatement;
-import org.juniversal.translator.core.Context;
 
 
 public class SwitchStatementWriter extends CSharpASTWriter<SwitchStatement> {
@@ -34,53 +33,53 @@ public class SwitchStatementWriter extends CSharpASTWriter<SwitchStatement> {
     }
 
     @Override
-    public void write(Context context, SwitchStatement switchStatement) {
+    public void write(SwitchStatement switchStatement) {
         // TODO: Handle string swtich statements
         // TODO: Check for fall through of cases (disallowed in C#)
 
-        context.matchAndWrite("switch");
+        matchAndWrite("switch");
 
-        context.copySpaceAndComments();
-        context.matchAndWrite("(");
+        copySpaceAndComments();
+        matchAndWrite("(");
 
-        writeNode(context, switchStatement.getExpression());
+        writeNode(switchStatement.getExpression());
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(")");
+        copySpaceAndComments();
+        matchAndWrite(")");
 
-        context.copySpaceAndComments();
-        context.matchAndWrite("{");
+        copySpaceAndComments();
+        matchAndWrite("{");
 
         for (Object statementObject : switchStatement.statements()) {
             Statement statement = (Statement) statementObject;
 
             if (statement instanceof SwitchCase) {
-                context.copySpaceAndComments();
-                writeSwitchCase(context, (SwitchCase) statement);
+                copySpaceAndComments();
+                writeSwitchCase((SwitchCase) statement);
             } else {
-                context.copySpaceAndComments();
-                writeNode(context, statement);
+                copySpaceAndComments();
+                writeNode(statement);
             }
         }
 
-        context.copySpaceAndComments();
-        context.matchAndWrite("}");
+        copySpaceAndComments();
+        matchAndWrite("}");
     }
 
-    private void writeSwitchCase(Context context, SwitchCase switchCase) {
+    private void writeSwitchCase(SwitchCase switchCase) {
         if (switchCase.isDefault()) {
-            context.matchAndWrite("default");
+            matchAndWrite("default");
 
-            context.copySpaceAndComments();
-            context.matchAndWrite(":");
+            copySpaceAndComments();
+            matchAndWrite(":");
         } else {
-            context.matchAndWrite("case");
+            matchAndWrite("case");
 
-            context.copySpaceAndComments();
-            writeNode(context, switchCase.getExpression());
+            copySpaceAndComments();
+            writeNode(switchCase.getExpression());
 
-            context.copySpaceAndComments();
-            context.matchAndWrite(":");
+            copySpaceAndComments();
+            matchAndWrite(":");
         }
     }
 }

@@ -152,32 +152,17 @@ public class WriteCPPTest {
         return clazz.getMethods()[0].getBody();
     }
 
-    public void testWriteNode(ASTNode node, String javaSource, CompilationUnit compilationUnit,
-                              int sourceTabStop, String expectedCPPOutput) {
-        StringWriter writer = new StringWriter();
+    public void testWriteNode(ASTNode node, String javaSource, CompilationUnit compilationUnit, int sourceTabStop,
+                              String expectedOutput) {
         CPPProfile profile = new CPPProfile();
         profile.setTabStop(m_destTabStop);
 
-        TargetWriter targetWriter = new TargetWriter(writer, profile);
+        SourceFile sourceFile = new SourceFile(compilationUnit, javaSource, m_sourceTabStop);
 
-        Context context = cPlusPlusTranslator.createContext(
-                new SourceFile(compilationUnit, null, javaSource, m_sourceTabStop), writer, OutputType.SOURCE);
+        String cppOutput = cPlusPlusTranslator.translateNode(sourceFile, node);
 
-        context.setPosition(node.getStartPosition());
-        getWriteCPP().writeNode(context, node);
-
-        String cppOutput = writer.getBuffer().toString();
-
-        if (!cppOutput.equals(expectedCPPOutput))
-            fail("Output doesn't match expected output.\r\nEXPECTED:\r\n" + expectedCPPOutput +
+        if (!cppOutput.equals(expectedOutput))
+            fail("Output doesn't match expected output.\r\nEXPECTED:\r\n" + expectedOutput +
                  "\r\nACUAL:\r\n" + cppOutput);
-    }
-
-    static CPlusPlusASTWriters m_writeCPP = null;
-
-    CPlusPlusASTWriters getWriteCPP() {
-        if (m_writeCPP == null)
-            m_writeCPP = new CPlusPlusTranslator().getASTWriters();
-        return m_writeCPP;
     }
 }

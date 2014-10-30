@@ -25,7 +25,6 @@ package org.juniversal.translator.cplusplus.astwriters;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ForStatement;
-import org.juniversal.translator.core.Context;
 
 
 public class ForStatementWriter extends CPlusPlusASTWriter {
@@ -34,60 +33,60 @@ public class ForStatementWriter extends CPlusPlusASTWriter {
     }
 
     @Override
-    public void write(Context context, ASTNode node) {
+    public void write(ASTNode node) {
         ForStatement forStatement = (ForStatement) node;
 
-        context.matchAndWrite("for");
-        context.copySpaceAndComments();
+        matchAndWrite("for");
+        copySpaceAndComments();
 
-        context.matchAndWrite("(");
-        context.copySpaceAndComments();
+        matchAndWrite("(");
+        copySpaceAndComments();
 
         boolean first = true;
         for (Object initializerExpressionObject : forStatement.initializers()) {
             Expression initializerExpression = (Expression) initializerExpressionObject;
 
             if (!first) {
-                context.matchAndWrite(",");
-                context.copySpaceAndComments();
+                matchAndWrite(",");
+                copySpaceAndComments();
             }
 
-            writeNode(context, initializerExpression);
-            context.copySpaceAndComments();
+            writeNode(initializerExpression);
+            copySpaceAndComments();
 
             first = false;
         }
 
-        context.matchAndWrite(";");
-        context.copySpaceAndComments();
+        matchAndWrite(";");
+        copySpaceAndComments();
 
         Expression forExpression = forStatement.getExpression();
         if (forExpression != null) {
-            writeNode(context, forStatement.getExpression());
-            context.copySpaceAndComments();
+            writeNode(forStatement.getExpression());
+            copySpaceAndComments();
         }
 
-        context.matchAndWrite(";");
-        context.copySpaceAndComments();
+        matchAndWrite(";");
+        copySpaceAndComments();
 
         first = true;
         for (Object updaterExpressionObject : forStatement.updaters()) {
             Expression updaterExpression = (Expression) updaterExpressionObject;
 
             if (!first) {
-                context.matchAndWrite(",");
-                context.copySpaceAndComments();
+                matchAndWrite(",");
+                copySpaceAndComments();
             }
 
-            writeNode(context, updaterExpression);
-            context.copySpaceAndComments();
+            writeNode(updaterExpression);
+            copySpaceAndComments();
 
             first = false;
         }
 
-        context.matchAndWrite(")");
-        context.copySpaceAndComments();
+        matchAndWrite(")");
+        copySpaceAndComments();
 
-        writeNode(context, forStatement.getBody());
+        writeNode(forStatement.getBody());
     }
 }

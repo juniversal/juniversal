@@ -22,10 +22,8 @@
 
 package org.juniversal.translator.csharp.astwriters;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ForStatement;
-import org.juniversal.translator.core.Context;
 
 
 public class ForStatementWriter extends CSharpASTWriter<ForStatement> {
@@ -34,32 +32,32 @@ public class ForStatementWriter extends CSharpASTWriter<ForStatement> {
     }
 
     @Override
-    public void write(Context context, ForStatement forStatement) {
-        context.matchAndWrite("for");
+    public void write(ForStatement forStatement) {
+        matchAndWrite("for");
 
-        context.copySpaceAndComments();
-        context.matchAndWrite("(");
+        copySpaceAndComments();
+        matchAndWrite("(");
 
-        writeCommaDelimitedNodes(context, forStatement.initializers());
+        writeCommaDelimitedNodes(forStatement.initializers());
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(";");
+        copySpaceAndComments();
+        matchAndWrite(";");
 
         Expression forExpression = forStatement.getExpression();
         if (forExpression != null) {
-            context.copySpaceAndComments();
-            writeNode(context, forStatement.getExpression());
+            copySpaceAndComments();
+            writeNode(forStatement.getExpression());
         }
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(";");
+        copySpaceAndComments();
+        matchAndWrite(";");
 
-        writeCommaDelimitedNodes(context, forStatement.updaters());
+        writeCommaDelimitedNodes(forStatement.updaters());
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(")");
+        copySpaceAndComments();
+        matchAndWrite(")");
 
-        context.copySpaceAndComments();
-        writeNode(context, forStatement.getBody());
+        copySpaceAndComments();
+        writeNode(forStatement.getBody());
     }
 }

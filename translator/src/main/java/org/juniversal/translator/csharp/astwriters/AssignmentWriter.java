@@ -23,7 +23,6 @@
 package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.Assignment;
-import org.juniversal.translator.core.Context;
 
 
 // TODO: Finish this
@@ -33,52 +32,52 @@ public class AssignmentWriter extends CSharpASTWriter<Assignment> {
     }
 
     @Override
-    public void write(Context context, Assignment assignment) {
+    public void write(Assignment assignment) {
         Assignment.Operator operator = assignment.getOperator();
 
         if (operator == Assignment.Operator.RIGHT_SHIFT_UNSIGNED_ASSIGN) {
-            writeNode(context, assignment.getLeftHandSide());
+            writeNode(assignment.getLeftHandSide());
 
-            context.copySpaceAndComments();
-            context.matchAndWrite(">>>=", "=");
+            copySpaceAndComments();
+            matchAndWrite(">>>=", "=");
 
-            context.copySpaceAndComments();
-            context.write("rightShiftUnsigned(");
-            writeNodeAtDifferentPosition(assignment.getLeftHandSide(), context);
-            context.write(", ");
-            writeNode(context, assignment.getRightHandSide());
-            context.write(")");
+            copySpaceAndComments();
+            write("rightShiftUnsigned(");
+            writeNodeAtDifferentPosition(assignment.getLeftHandSide());
+            write(", ");
+            writeNode(assignment.getRightHandSide());
+            write(")");
         } else {
-            writeNode(context, assignment.getLeftHandSide());
+            writeNode(assignment.getLeftHandSide());
 
-            context.copySpaceAndComments();
+            copySpaceAndComments();
             if (operator == Assignment.Operator.ASSIGN)
-                context.matchAndWrite("=");
+                matchAndWrite("=");
             else if (operator == Assignment.Operator.PLUS_ASSIGN)
-                context.matchAndWrite("+=");
+                matchAndWrite("+=");
             else if (operator == Assignment.Operator.MINUS_ASSIGN)
-                context.matchAndWrite("-=");
+                matchAndWrite("-=");
             else if (operator == Assignment.Operator.TIMES_ASSIGN)
-                context.matchAndWrite("*=");
+                matchAndWrite("*=");
             else if (operator == Assignment.Operator.DIVIDE_ASSIGN)
-                context.matchAndWrite("/=");
+                matchAndWrite("/=");
             else if (operator == Assignment.Operator.BIT_AND_ASSIGN)
-                context.matchAndWrite("&=");
+                matchAndWrite("&=");
             else if (operator == Assignment.Operator.BIT_OR_ASSIGN)
-                context.matchAndWrite("|=");
+                matchAndWrite("|=");
             else if (operator == Assignment.Operator.BIT_XOR_ASSIGN)
-                context.matchAndWrite("^=");
+                matchAndWrite("^=");
             else if (operator == Assignment.Operator.REMAINDER_ASSIGN)
-                context.matchAndWrite("%=");
+                matchAndWrite("%=");
             else if (operator == Assignment.Operator.LEFT_SHIFT_ASSIGN)
-                context.matchAndWrite("<<=");
+                matchAndWrite("<<=");
             else if (operator == Assignment.Operator.RIGHT_SHIFT_SIGNED_ASSIGN)
-                context.matchAndWrite(">>=");
+                matchAndWrite(">>=");
             else if (operator == Assignment.Operator.RIGHT_SHIFT_UNSIGNED_ASSIGN)
-                context.matchAndWrite(">>>=");
+                matchAndWrite(">>>=");
 
-            context.copySpaceAndComments();
-            writeNode(context, assignment.getRightHandSide());
+            copySpaceAndComments();
+            writeNode(assignment.getRightHandSide());
         }
     }
 }

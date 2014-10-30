@@ -33,7 +33,9 @@ import java.util.List;
 public class CPlusPlusASTWriters extends ASTWriters {
     private CPlusPlusTranslator cPlusPlusTranslator;
 
-    public CPlusPlusASTWriters(CPlusPlusTranslator cPlusPlusTranslator) {
+    public CPlusPlusASTWriters(Context context, CPlusPlusTranslator cPlusPlusTranslator) {
+        super(context);
+
         this.cPlusPlusTranslator = cPlusPlusTranslator;
 
         addDeclarationWriters();
@@ -45,10 +47,10 @@ public class CPlusPlusASTWriters extends ASTWriters {
         // Simple name
         addWriter(SimpleName.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 SimpleName simpleName = (SimpleName) node;
 
-                context.matchAndWrite(simpleName.getIdentifier());
+                matchAndWrite(simpleName.getIdentifier());
             }
         });
     }
@@ -72,25 +74,25 @@ public class CPlusPlusASTWriters extends ASTWriters {
         // Variable declaration fragment
         addWriter(VariableDeclarationFragment.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) node;
 
                 // TODO: Handle syntax with extra dimensions on array
                 if (variableDeclarationFragment.getExtraDimensions() > 0)
-                    context.throwSourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
+                    throw sourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
 
-                if (context.isWritingVariableDeclarationNeedingStar())
-                    context.write("*");
+                if (getContext().isWritingVariableDeclarationNeedingStar())
+                    write("*");
 
-                writeNode(context, variableDeclarationFragment.getName());
+                writeNode(variableDeclarationFragment.getName());
 
                 Expression initializer = variableDeclarationFragment.getInitializer();
                 if (initializer != null) {
-                    context.copySpaceAndComments();
-                    context.matchAndWrite("=");
+                    copySpaceAndComments();
+                    matchAndWrite("=");
 
-                    context.copySpaceAndComments();
-                    writeNode(context, initializer);
+                    copySpaceAndComments();
+                    writeNode(initializer);
                 }
             }
         });
@@ -98,24 +100,22 @@ public class CPlusPlusASTWriters extends ASTWriters {
         // Single variable declaration (used in parameter list & catch clauses)
         addWriter(SingleVariableDeclaration.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) node;
 
                 // TODO: Handle syntax with extra dimensions on array
                 if (singleVariableDeclaration.getExtraDimensions() > 0)
-                    context.throwSourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
+                    throw sourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
 
                 // TODO: Handle final & varargs
 
                 Type type = singleVariableDeclaration.getType();
-                writeType(type, context, true);
+                writeType(type, true);
 
-                context.copySpaceAndComments();
+                copySpaceAndComments();
+                writeNode(singleVariableDeclaration.getName());
 
-                writeNode(context, singleVariableDeclaration.getName());
-
-                context.copySpaceAndComments();
-
+                copySpaceAndComments();
                 Expression initializer = singleVariableDeclaration.getInitializer();
                 if (initializer != null)
                     throw new JUniversalException("Unexpected initializer present for SingleVariableDeclaration");
@@ -125,23 +125,23 @@ public class CPlusPlusASTWriters extends ASTWriters {
         // Simple type
         addWriter(SimpleType.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 SimpleType simpleType = (SimpleType) node;
 
                 Name name = simpleType.getName();
                 if (name instanceof QualifiedName) {
                     QualifiedName qualifiedName = (QualifiedName) name;
 
-                    context.write(getNamespaceNameForPackageName(qualifiedName.getQualifier()));
-                    context.setPositionToEndOfNode(qualifiedName.getQualifier());
+                    write(getNamespaceNameForPackageName(qualifiedName.getQualifier()));
+                    setPositionToEndOfNode(qualifiedName.getQualifier());
 
-                    context.copySpaceAndComments();
-                    context.matchAndWrite(".", "::");
-                    context.matchAndWrite(qualifiedName.getName().getIdentifier());
+                    copySpaceAndComments();
+                    matchAndWrite(".", "::");
+                    matchAndWrite(qualifiedName.getName().getIdentifier());
                 } else {
                     SimpleName simpleName = (SimpleName) name;
 
-                    context.matchAndWrite(simpleName.getIdentifier());
+                    matchAndWrite(simpleName.getIdentifier());
                 }
             }
         });
@@ -149,13 +149,13 @@ public class CPlusPlusASTWriters extends ASTWriters {
         // Parameterized type
         addWriter(ParameterizedType.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ParameterizedType parameterizedType = (ParameterizedType) node;
 
-                writeNode(context, parameterizedType.getType());
+                writeNode(parameterizedType.getType());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("<");
+                copySpaceAndComments();
+                matchAndWrite("<");
 
                 boolean first = true;
                 List<?> typeArguments = parameterizedType.typeArguments();
@@ -163,67 +163,67 @@ public class CPlusPlusASTWriters extends ASTWriters {
                     Type typeArgument = (Type) typeArgumentObject;
 
                     if (!first) {
-                        context.copySpaceAndComments();
-                        context.matchAndWrite(",");
+                        copySpaceAndComments();
+                        matchAndWrite(",");
                     }
 
-                    context.copySpaceAndComments();
-                    writeNode(context, typeArgument);
+                    copySpaceAndComments();
+                    writeNode(typeArgument);
 
                     first = false;
                 }
 
-                context.matchAndWrite(">");
+                matchAndWrite(">");
             }
         });
 
         // Array type
         addWriter(ArrayType.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ArrayType arrayType = (ArrayType) node;
 
-                context.write("Array<");
-                writeNode(context, arrayType.getElementType());
-                context.skipSpaceAndComments();
-                context.write(">");
+                write("Array<");
+                writeNode(arrayType.getElementType());
+                skipSpaceAndComments();
+                write(">");
 
-                context.match("[");
-                context.skipSpaceAndComments();
+                match("[");
+                skipSpaceAndComments();
 
-                context.match("]");
+                match("]");
             }
         });
 
         // Primitive type
         addWriter(PrimitiveType.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 PrimitiveType primitiveType = (PrimitiveType) node;
 
-                CPPProfile profile = context.getCPPProfile();
+                CPPProfile profile = getCPPProfile();
 
                 PrimitiveType.Code code = primitiveType.getPrimitiveTypeCode();
                 if (code == PrimitiveType.BYTE)
-                    context.matchAndWrite("byte", profile.getInt8Type());
+                    matchAndWrite("byte", profile.getInt8Type());
                 else if (code == PrimitiveType.SHORT)
-                    context.matchAndWrite("short", profile.getInt16Type());
+                    matchAndWrite("short", profile.getInt16Type());
                 else if (code == PrimitiveType.CHAR)
-                    context.matchAndWrite("char", "unichar");
+                    matchAndWrite("char", "unichar");
                 else if (code == PrimitiveType.INT)
-                    context.matchAndWrite("int", profile.getInt32Type());
+                    matchAndWrite("int", profile.getInt32Type());
                 else if (code == PrimitiveType.LONG) {
-                    context.matchAndWrite("long", profile.getInt64Type());
+                    matchAndWrite("long", profile.getInt64Type());
                 } else if (code == PrimitiveType.FLOAT)
-                    context.matchAndWrite("float", profile.getFloat32Type());
+                    matchAndWrite("float", profile.getFloat32Type());
                 else if (code == PrimitiveType.DOUBLE)
-                    context.matchAndWrite("double", profile.getFloat64Type());
+                    matchAndWrite("double", profile.getFloat64Type());
                 else if (code == PrimitiveType.BOOLEAN)
-                    context.matchAndWrite("boolean", "bool");
+                    matchAndWrite("boolean", "bool");
                 else if (code == PrimitiveType.VOID)
-                    context.matchAndWrite("void", "void");
+                    matchAndWrite("void", "void");
                 else
-                    context.throwInvalidAST("Unknown primitive type: " + code);
+                    throw invalidAST("Unknown primitive type: " + code);
             }
         });
     }
@@ -236,10 +236,10 @@ public class CPlusPlusASTWriters extends ASTWriters {
         addWriter(Block.class, new CPlusPlusASTWriter(this) {
             @SuppressWarnings("unchecked")
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 Block block = (Block) node;
 
-                context.matchAndWrite("{");
+                matchAndWrite("{");
 
                 boolean firstStatement = true;
                 for (Statement statement : (List<Statement>) block.statements()) {
@@ -248,69 +248,69 @@ public class CPlusPlusASTWriters extends ASTWriters {
                     // constructor invocation is a statement other than the first, which it should
                     // never be, we let that error out since writeNode won't find a match for it.
                     if (firstStatement && statement instanceof SuperConstructorInvocation)
-                        context.setPositionToEndOfNodeSpaceAndComments(statement);
+                        setPositionToEndOfNodeSpaceAndComments(statement);
                     else {
-                        context.copySpaceAndComments();
-                        writeNode(context, statement);
+                        copySpaceAndComments();
+                        writeNode(statement);
                     }
 
                     firstStatement = false;
                 }
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("}");
+                copySpaceAndComments();
+                matchAndWrite("}");
             }
         });
 
         // Empty statement (";")
         addWriter(EmptyStatement.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
-                context.matchAndWrite(";");
+            public void write(ASTNode node) {
+                matchAndWrite(";");
             }
         });
 
         // Expression statement
         addWriter(ExpressionStatement.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ExpressionStatement expressionStatement = (ExpressionStatement) node;
 
-                writeNode(context, expressionStatement.getExpression());
+                writeNode(expressionStatement.getExpression());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                copySpaceAndComments();
+                matchAndWrite(";");
             }
         });
 
         // If statement
         addWriter(IfStatement.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 IfStatement ifStatement = (IfStatement) node;
 
-                context.matchAndWrite("if");
-                context.copySpaceAndComments();
+                matchAndWrite("if");
+                copySpaceAndComments();
 
-                context.matchAndWrite("(");
-                context.copySpaceAndComments();
+                matchAndWrite("(");
+                copySpaceAndComments();
 
-                writeNode(context, ifStatement.getExpression());
-                context.copySpaceAndComments();
+                writeNode(ifStatement.getExpression());
+                copySpaceAndComments();
 
-                context.matchAndWrite(")");
-                context.copySpaceAndComments();
+                matchAndWrite(")");
+                copySpaceAndComments();
 
-                writeNode(context, ifStatement.getThenStatement());
+                writeNode(ifStatement.getThenStatement());
 
                 Statement elseStatement = ifStatement.getElseStatement();
                 if (elseStatement != null) {
-                    context.copySpaceAndComments();
+                    copySpaceAndComments();
 
-                    context.matchAndWrite("else");
-                    context.copySpaceAndComments();
+                    matchAndWrite("else");
+                    copySpaceAndComments();
 
-                    writeNode(context, elseStatement);
+                    writeNode(elseStatement);
                 }
             }
         });
@@ -318,82 +318,82 @@ public class CPlusPlusASTWriters extends ASTWriters {
         // While statement
         addWriter(WhileStatement.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 WhileStatement whileStatement = (WhileStatement) node;
 
-                context.matchAndWrite("while");
+                matchAndWrite("while");
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("(");
+                copySpaceAndComments();
+                matchAndWrite("(");
 
-                context.copySpaceAndComments();
-                writeNode(context, whileStatement.getExpression());
+                copySpaceAndComments();
+                writeNode(whileStatement.getExpression());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(")");
+                copySpaceAndComments();
+                matchAndWrite(")");
 
-                context.copySpaceAndComments();
-                writeNode(context, whileStatement.getBody());
+                copySpaceAndComments();
+                writeNode(whileStatement.getBody());
             }
         });
 
         // Do while statement
         addWriter(DoStatement.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 DoStatement doStatement = (DoStatement) node;
 
-                context.matchAndWrite("do");
+                matchAndWrite("do");
 
-                context.copySpaceAndComments();
-                writeNode(context, doStatement.getBody());
+                copySpaceAndComments();
+                writeNode(doStatement.getBody());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("while");
+                copySpaceAndComments();
+                matchAndWrite("while");
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("(");
+                copySpaceAndComments();
+                matchAndWrite("(");
 
-                context.copySpaceAndComments();
-                writeNode(context, doStatement.getExpression());
+                copySpaceAndComments();
+                writeNode(doStatement.getExpression());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(")");
+                copySpaceAndComments();
+                matchAndWrite(")");
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                copySpaceAndComments();
+                matchAndWrite(";");
             }
         });
 
         // Continue statement
         addWriter(ContinueStatement.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ContinueStatement continueStatement = (ContinueStatement) node;
 
                 if (continueStatement.getLabel() != null)
-                    context.throwSourceNotSupported("continue statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
+                    throw sourceNotSupported("continue statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
 
-                context.matchAndWrite("continue");
+                matchAndWrite("continue");
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                copySpaceAndComments();
+                matchAndWrite(";");
             }
         });
 
         // Break statement
         addWriter(BreakStatement.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 BreakStatement breakStatement = (BreakStatement) node;
 
                 if (breakStatement.getLabel() != null)
-                    context.throwSourceNotSupported("break statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
+                    throw sourceNotSupported("break statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
 
-                context.matchAndWrite("break");
+                matchAndWrite("break");
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                copySpaceAndComments();
+                matchAndWrite(";");
             }
         });
 
@@ -403,19 +403,19 @@ public class CPlusPlusASTWriters extends ASTWriters {
         // Return statement
         addWriter(ReturnStatement.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ReturnStatement returnStatement = (ReturnStatement) node;
 
-                context.matchAndWrite("return");
+                matchAndWrite("return");
 
                 Expression expression = returnStatement.getExpression();
                 if (expression != null) {
-                    context.copySpaceAndComments();
-                    writeNode(context, returnStatement.getExpression());
+                    copySpaceAndComments();
+                    writeNode(returnStatement.getExpression());
                 }
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(";");
+                copySpaceAndComments();
+                matchAndWrite(";");
             }
         });
 
@@ -425,24 +425,24 @@ public class CPlusPlusASTWriters extends ASTWriters {
         // Throw statement
         addWriter(ThrowStatement.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ThrowStatement throwStatement = (ThrowStatement) node;
 
-                context.matchAndWrite("throw");
-                context.copySpaceAndComments();
+                matchAndWrite("throw");
+                copySpaceAndComments();
 
-                writeNode(context, throwStatement.getExpression());
-                context.copySpaceAndComments();
+                writeNode(throwStatement.getExpression());
+                copySpaceAndComments();
 
-                context.matchAndWrite(";");
+                matchAndWrite(";");
             }
         });
 
         // Delegating constructor invocation
         addWriter(ConstructorInvocation.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
-                context.throwSourceNotSupported("Delegating constructors aren't currently supported; for now you have to change the code to not use them (e.g. by adding an init method)");
+            public void write(ASTNode node) {
+                throw sourceNotSupported("Delegating constructors aren't currently supported; for now you have to change the code to not use them (e.g. by adding an init method)");
             }
         });
     }
@@ -476,95 +476,95 @@ public class CPlusPlusASTWriters extends ASTWriters {
         // Prefix expression
         addWriter(PrefixExpression.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 PrefixExpression prefixExpression = (PrefixExpression) node;
 
                 PrefixExpression.Operator operator = prefixExpression.getOperator();
                 if (operator == PrefixExpression.Operator.INCREMENT)
-                    context.matchAndWrite("++");
+                    matchAndWrite("++");
                 else if (operator == PrefixExpression.Operator.DECREMENT)
-                    context.matchAndWrite("--");
+                    matchAndWrite("--");
                 else if (operator == PrefixExpression.Operator.PLUS)
-                    context.matchAndWrite("+");
+                    matchAndWrite("+");
                 else if (operator == PrefixExpression.Operator.MINUS)
-                    context.matchAndWrite("-");
+                    matchAndWrite("-");
                 else if (operator == PrefixExpression.Operator.COMPLEMENT)
-                    context.matchAndWrite("~");
+                    matchAndWrite("~");
                 else if (operator == PrefixExpression.Operator.NOT)
-                    context.matchAndWrite("!");
-                else context.throwInvalidAST("Unknown prefix operator type: " + operator);
-                context.copySpaceAndComments();
+                    matchAndWrite("!");
+                else throw invalidAST("Unknown prefix operator type: " + operator);
+                copySpaceAndComments();
 
-                writeNode(context, prefixExpression.getOperand());
+                writeNode(prefixExpression.getOperand());
             }
         });
 
         // Postfix expression
         addWriter(PostfixExpression.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 PostfixExpression postfixExpression = (PostfixExpression) node;
 
-                writeNode(context, postfixExpression.getOperand());
-                context.copySpaceAndComments();
+                writeNode(postfixExpression.getOperand());
+                copySpaceAndComments();
 
                 PostfixExpression.Operator operator = postfixExpression.getOperator();
                 if (operator == PostfixExpression.Operator.INCREMENT)
-                    context.matchAndWrite("++");
+                    matchAndWrite("++");
                 else if (operator == PostfixExpression.Operator.DECREMENT)
-                    context.matchAndWrite("--");
-                else context.throwInvalidAST("Unknown postfix operator type: " + operator);
+                    matchAndWrite("--");
+                else throw invalidAST("Unknown postfix operator type: " + operator);
             }
         });
 
         // instanceof expression
         addWriter(InstanceofExpression.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 InstanceofExpression instanceofExpression = (InstanceofExpression) node;
 
-                context.write("INSTANCEOF(");
+                write("INSTANCEOF(");
 
                 Expression expression = instanceofExpression.getLeftOperand();
-                writeNode(context, expression);
+                writeNode(expression);
 
-                context.skipSpaceAndComments();
-                context.match("instanceof");
+                skipSpaceAndComments();
+                match("instanceof");
 
-                context.skipSpaceAndComments();
+                skipSpaceAndComments();
                 Type type = instanceofExpression.getRightOperand();
-                writeNode(context, type);
+                writeNode(type);
 
-                context.write(")");
+                write(")");
             }
         });
 
         // conditional expression
         addWriter(ConditionalExpression.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ConditionalExpression conditionalExpression = (ConditionalExpression) node;
 
-                writeNode(context, conditionalExpression.getExpression());
+                writeNode(conditionalExpression.getExpression());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite("?");
+                copySpaceAndComments();
+                matchAndWrite("?");
 
-                context.copySpaceAndComments();
-                writeNode(context, conditionalExpression.getThenExpression());
+                copySpaceAndComments();
+                writeNode(conditionalExpression.getThenExpression());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(":");
+                copySpaceAndComments();
+                matchAndWrite(":");
 
-                context.copySpaceAndComments();
-                writeNode(context, conditionalExpression.getElseExpression());
+                copySpaceAndComments();
+                writeNode(conditionalExpression.getElseExpression());
             }
         });
 
         // this
         addWriter(ThisExpression.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ThisExpression thisExpression = (ThisExpression) node;
 
                 // TODO: Handle qualified this expressions; probably need to do from parent invoking
@@ -574,48 +574,48 @@ public class CPlusPlusASTWriters extends ASTWriters {
                 if (thisExpression.getQualifier() != null)
                     throw new JUniversalException("Qualified this expression isn't supported yet");
 
-                context.matchAndWrite("this");
+                matchAndWrite("this");
             }
         });
 
         // Field access
         addWriter(FieldAccess.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 FieldAccess fieldAccess = (FieldAccess) node;
 
-                writeNode(context, fieldAccess.getExpression());
-                context.copySpaceAndComments();
+                writeNode(fieldAccess.getExpression());
+                copySpaceAndComments();
 
-                context.matchAndWrite(".", "->");
+                matchAndWrite(".", "->");
 
-                writeNode(context, fieldAccess.getName());
+                writeNode(fieldAccess.getName());
             }
         });
 
         // Array access
         addWriter(ArrayAccess.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ArrayAccess arrayAccess = (ArrayAccess) node;
 
-                writeNode(context, arrayAccess.getArray());
-                context.copySpaceAndComments();
+                writeNode(arrayAccess.getArray());
+                copySpaceAndComments();
 
-                context.matchAndWrite("[");
-                context.copySpaceAndComments();
+                matchAndWrite("[");
+                copySpaceAndComments();
 
-                writeNode(context, arrayAccess.getIndex());
-                context.copySpaceAndComments();
+                writeNode(arrayAccess.getIndex());
+                copySpaceAndComments();
 
-                context.matchAndWrite("]");
+                matchAndWrite("]");
             }
         });
 
         // Qualfied name
         addWriter(QualifiedName.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 QualifiedName qualifiedName = (QualifiedName) node;
 
                 // TODO: Figure out the other cases where this can occur & make them all correct
@@ -623,112 +623,111 @@ public class CPlusPlusASTWriters extends ASTWriters {
                 // Here assume that a QualifiedName refers to field access; if it refers to a type,
                 // the caller should catch that case itself and ensure it never gets here
 
-                writeNode(context, qualifiedName.getQualifier());
-                context.copySpaceAndComments();
+                writeNode(qualifiedName.getQualifier());
+                copySpaceAndComments();
 
-                context.matchAndWrite(".", "->");
+                matchAndWrite(".", "->");
 
-                writeNode(context, qualifiedName.getName());
+                writeNode(qualifiedName.getName());
             }
         });
 
         // Parenthesized expression
         addWriter(ParenthesizedExpression.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 ParenthesizedExpression parenthesizedExpression = (ParenthesizedExpression) node;
 
-                context.matchAndWrite("(");
-                context.copySpaceAndComments();
+                matchAndWrite("(");
+                copySpaceAndComments();
 
-                writeNode(context, parenthesizedExpression.getExpression());
-                context.copySpaceAndComments();
+                writeNode(parenthesizedExpression.getExpression());
+                copySpaceAndComments();
 
-                context.matchAndWrite(")");
+                matchAndWrite(")");
             }
         });
 
         // Cast expression
         addWriter(CastExpression.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 CastExpression castExpression = (CastExpression) node;
 
-                context.matchAndWrite("(", "static_cast<");
+                matchAndWrite("(", "static_cast<");
 
-                context.copySpaceAndComments();
-                writeNode(context, castExpression.getType());
+                copySpaceAndComments();
+                writeNode(castExpression.getType());
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(")", ">");
+                copySpaceAndComments();
+                matchAndWrite(")", ">");
 
                 // Skip just whitespace as that's not normally present here in C++ unlike Java, but
                 // if there's a newline or comment, preserve that
-                context.skipSpaceAndComments();
-                context.copySpaceAndComments();
+                skipSpaceAndComments();
+                copySpaceAndComments();
 
                 // Write out the parentheses unless by chance the casted expression already includes
                 // them
                 boolean needParentheses = !(castExpression.getExpression() instanceof ParenthesizedExpression);
                 if (needParentheses)
-                    context.write("(");
-                writeNode(context, castExpression.getExpression());
+                    write("(");
+                writeNode(castExpression.getExpression());
                 if (needParentheses)
-                    context.write(")");
+                    write(")");
             }
         });
 
         // Number literal
         addWriter(NumberLiteral.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 NumberLiteral numberLiteral = (NumberLiteral) node;
-                context.matchAndWrite(numberLiteral.getToken());
+                matchAndWrite(numberLiteral.getToken());
             }
         });
 
         // Boolean literal
         addWriter(BooleanLiteral.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 BooleanLiteral booleanLiteral = (BooleanLiteral) node;
-                context.matchAndWrite(booleanLiteral.booleanValue() ? "true" : "false");
+                matchAndWrite(booleanLiteral.booleanValue() ? "true" : "false");
             }
         });
 
         // Character literal
         addWriter(CharacterLiteral.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 CharacterLiteral characterLiteral = (CharacterLiteral) node;
 
                 // TODO: Map character escape sequences
-                context.matchAndWrite(characterLiteral.getEscapedValue());
+                matchAndWrite(characterLiteral.getEscapedValue());
             }
         });
 
         // Null literal
         addWriter(NullLiteral.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
-                context.matchAndWrite("null", "NULL");
+            public void write(ASTNode node) {
+                matchAndWrite("null", "NULL");
             }
         });
 
         // String literal
         addWriter(StringLiteral.class, new CPlusPlusASTWriter(this) {
             @Override
-            public void write(Context context, ASTNode node) {
+            public void write(ASTNode node) {
                 StringLiteral stringLiteral = (StringLiteral) node;
 
-                context.write("new String(" + stringLiteral.getEscapedValue() + "L)");
-                context.match(stringLiteral.getEscapedValue());
+                write("new String(" + stringLiteral.getEscapedValue() + "L)");
+                match(stringLiteral.getEscapedValue());
             }
         });
     }
 
-    @Override
-    public CPlusPlusTranslator getTranslator() {
+    @Override public CPlusPlusTranslator getTranslator() {
         return cPlusPlusTranslator;
     }
 }

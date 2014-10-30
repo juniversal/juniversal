@@ -25,7 +25,6 @@ package org.juniversal.translator.swift.astwriters;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
-import org.juniversal.translator.core.Context;
 
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +68,7 @@ public class InfixExpressionWriter extends SwiftASTWriter {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public void write(Context context, ASTNode node) {
+	public void write(ASTNode node) {
 		InfixExpression infixExpression = (InfixExpression) node;
 
         // TODO: Add spaces to left & right of binary operators if needed, per Swift's rules about needing space on
@@ -79,36 +78,36 @@ public class InfixExpressionWriter extends SwiftASTWriter {
 
 		if (operator == InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED) {
             // TODO: Handle this
-			context.write("rightShiftUnsigned(");
-            swiftASTWriters.writeNode(context, infixExpression.getLeftOperand());
+			write("rightShiftUnsigned(");
+            swiftASTWriters.writeNode(infixExpression.getLeftOperand());
 
 			// Skip spaces before the >>> but if there's a newline (or comments) there, copy them
-			context.skipSpacesAndTabs();
-			context.copySpaceAndComments();
-			context.matchAndWrite(">>>", ",");
+			skipSpacesAndTabs();
+			copySpaceAndComments();
+			matchAndWrite(">>>", ",");
 
-			context.copySpaceAndComments();
-            swiftASTWriters.writeNode(context, infixExpression.getRightOperand());
-			context.write(")");
+			copySpaceAndComments();
+            swiftASTWriters.writeNode(infixExpression.getRightOperand());
+			write(")");
 		}
 		else {
-            swiftASTWriters.writeNode(context, infixExpression.getLeftOperand());
+            swiftASTWriters.writeNode(infixExpression.getLeftOperand());
 
-			context.copySpaceAndComments();
+			copySpaceAndComments();
 			String operatorToken = this.equivalentOperators.get(infixExpression.getOperator());
-			context.matchAndWrite(operatorToken);
+			matchAndWrite(operatorToken);
 
-			context.copySpaceAndComments();
-            swiftASTWriters.writeNode(context, infixExpression.getRightOperand());
+			copySpaceAndComments();
+            swiftASTWriters.writeNode(infixExpression.getRightOperand());
 
 			if (infixExpression.hasExtendedOperands()) {
 				for (Expression extendedOperand : (List<Expression>) infixExpression.extendedOperands()) {
 					
-					context.copySpaceAndComments();
-					context.matchAndWrite(operatorToken);
+					copySpaceAndComments();
+					matchAndWrite(operatorToken);
 	
-					context.copySpaceAndComments();
-                    swiftASTWriters.writeNode(context, extendedOperand);
+					copySpaceAndComments();
+                    swiftASTWriters.writeNode(extendedOperand);
 				}
 			}
 		}

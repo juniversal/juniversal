@@ -37,43 +37,43 @@ public class FieldDeclarationWriter extends CSharpASTWriter<FieldDeclaration> {
     }
 
     @Override
-    public void write(Context context, FieldDeclaration fieldDeclaration) {
+    public void write(FieldDeclaration fieldDeclaration) {
         // TODO: Handle final/const
 
         List<?> modifiers = fieldDeclaration.modifiers();
         boolean[] wroteModifier = new boolean[1];
 
-        writeAccessModifier(context, modifiers);
+        writeAccessModifier(modifiers);
 
         // Skip the modifiers
-        context.skipModifiers(modifiers);
-        context.skipSpaceAndComments();
+        skipModifiers(modifiers);
+        skipSpaceAndComments();
 
         // Write the type
         if (wroteModifier[0])
-            context.write(" ");
-        writeNode(context, fieldDeclaration.getType());
+            write(" ");
+        writeNode(fieldDeclaration.getType());
 
-        writeCommaDelimitedNodes(context, fieldDeclaration.fragments());
+        writeCommaDelimitedNodes(fieldDeclaration.fragments());
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(";");
+        copySpaceAndComments();
+        matchAndWrite(";");
     }
 
     private void writeVariableDeclarationFragment(Context context, VariableDeclarationFragment variableDeclarationFragment) {
         // TODO: Check for syntax with extra dimensions on array
         // TODO: Handle check for int foo[] syntax instead of int[] foo
 
-        writeNode(context, variableDeclarationFragment.getName());
+        writeNode(variableDeclarationFragment.getName());
 
         // Only write out the initializer when writing to the source file; in that case the field must be static
         Expression initializer = variableDeclarationFragment.getInitializer();
         if (initializer != null) {
-            context.copySpaceAndComments();
-            context.matchAndWrite("=");
+            copySpaceAndComments();
+            matchAndWrite("=");
 
-            context.copySpaceAndComments();
-            writeNode(context, initializer);
+            copySpaceAndComments();
+            writeNode(initializer);
         }
     }
 }

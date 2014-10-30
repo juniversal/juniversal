@@ -24,12 +24,8 @@ package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.FileASTRequestor;
+import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.cplusplus.CPPProfile;
 import org.juniversal.translator.cplusplus.CPlusPlusTranslator;
 import org.juniversal.translator.csharp.CSharpTranslator;
 
@@ -39,11 +35,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 public abstract class Translator {
-    private CPPProfile cppProfile = new CPPProfile();
     private List<File> javaProjectDirectories;
     private File outputDirectory;
     private int preferredIndent = 4;
@@ -78,7 +72,13 @@ public abstract class Translator {
         }
 
         translator.init(args);
-        translator.translate();
+
+        try {
+            translator.translate();
+        } catch (UserViewableException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
     }
 
     public Translator() {
@@ -157,7 +157,7 @@ public abstract class Translator {
 
         FileASTRequestor astRequestor = new FileASTRequestor() {
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
-                SourceFile sourceFile = new SourceFile(compilationUnit, sourceFilePath, sourceTabStop);
+                SourceFile sourceFile = new SourceFile(compilationUnit, new File(sourceFilePath), sourceTabStop);
 
                 //boolean outputErrorForFile = false;
                 for (IProblem problem : compilationUnit.getProblems()) {
@@ -168,7 +168,7 @@ public abstract class Translator {
                 }
 
                 System.out.println("Called to accept AST for " + sourceFilePath);
-                translateAST(sourceFile);
+                translateFile(sourceFile);
             }
         };
 
@@ -198,7 +198,7 @@ public abstract class Translator {
 		 * ASTWriters astWriters = new ASTWriters();
 		 *
 		 * try { context.setPosition(typeDeclaration.getStartPosition());
-		 * context.skipSpaceAndComments();
+		 * skipSpaceAndComments();
 		 *
 		 * astWriters.writeNode(typeDeclaration, context); } catch (UserViewableException e) {
 		 * System.err.println(e.getMessage()); System.exit(1); } catch (RuntimeException e) { if (e
@@ -210,9 +210,9 @@ public abstract class Translator {
 		 */
     }
 
-    protected abstract void translateAST(SourceFile sourceFile);
+    public abstract void translateFile(SourceFile sourceFile);
 
-    public abstract ASTWriters getASTWriters();
+    public abstract String translateNode(SourceFile sourceFile, ASTNode astNode);
 
     public int getSourceTabStop() {
         return sourceTabStop;

@@ -22,34 +22,27 @@
 
 package org.juniversal.translator.cplusplus;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.juniversal.translator.cplusplus.astwriters.CPlusPlusASTWriters;
 
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.juniversal.translator.core.*;
+import org.juniversal.translator.csharp.astwriters.CSharpASTWriters;
 
 public class CPlusPlusTranslator extends Translator {
-	private CPlusPlusASTWriters cPlusPlusASTWriters;
 	private CPPProfile cppProfile = new CPPProfile();
 
-	public CPlusPlusTranslator() {
-		this.cPlusPlusASTWriters = new CPlusPlusASTWriters(this);
-	}
+    public CPPProfile getTargetProfile() {
+        return cppProfile;
+    }
 
-	@Override protected void translateAST(SourceFile sourceFile) {
+    @Override public void translateFile(SourceFile sourceFile) {
 		writeCPPFile(sourceFile, OutputType.HEADER);
 		writeCPPFile(sourceFile, OutputType.SOURCE);
 	}
-
-    public Context createContext(SourceFile sourceFile, Writer outputWriter, OutputType outputType) {
-        TargetWriter targetWriter = new TargetWriter(outputWriter, cppProfile);
-        return new Context(sourceFile, cppProfile, targetWriter, outputType);
-    }
 
     private void writeCPPFile(SourceFile sourceFile, OutputType outputType) {
 		CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
@@ -60,37 +53,34 @@ public class CPlusPlusTranslator extends Translator {
 		String fileName = outputType == OutputType.HEADER ? typeName + ".h" : typeName + ".cpp";
 		File file = new File(getOutputDirectory(), fileName);
 
-		FileWriter writer;
-		try {
-			writer = new FileWriter(file);
+		try (FileWriter writer = new FileWriter(file)) {
+            Context context = createContext(sourceFile, writer, outputType);
+            CPlusPlusASTWriters cPlusPlusASTWriters = new CPlusPlusASTWriters(context, this);
+
+            cPlusPlusASTWriters.writeRootNode(compilationUnit);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		Context context = createContext(sourceFile, writer, OutputType.SOURCE);
-
-		try {
-			cPlusPlusASTWriters.writeNode(context, compilationUnit);
-		} catch (UserViewableException e) {
-			System.err.println(e.getMessage());
-			System.exit(1);
-		} catch (RuntimeException e) {
-			if (e instanceof ContextPositionMismatchException)
-				throw e;
-			else
-				throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
-						+ context.getPositionDescription(context.getPosition()), e);
-		}
-
-		try {
-			writer.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+            throw new RuntimeException(e);
+        }
 	}
 
-    @Override
-    public CPlusPlusASTWriters getASTWriters() {
-        return cPlusPlusASTWriters;
+    @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
+        try (StringWriter writer = new StringWriter()) {
+            TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
+            Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
+
+            context.setPosition(astNode.getStartPosition());
+            CPlusPlusASTWriters cPlusPlusASTWriters = new CPlusPlusASTWriters(context, this);
+
+            cPlusPlusASTWriters.writeRootNode(astNode);
+
+            return writer.getBuffer().toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Context createContext(SourceFile sourceFile, Writer outputWriter, OutputType outputType) {
+        TargetWriter targetWriter = new TargetWriter(outputWriter, cppProfile);
+        return new Context(sourceFile, targetWriter, outputType);
     }
 }

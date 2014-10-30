@@ -25,7 +25,6 @@ package org.juniversal.translator.cplusplus.astwriters;
 import java.util.List;
 
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
@@ -48,37 +47,37 @@ public class MethodDeclarationWriter extends CPlusPlusASTWriter {
     }
 
     @Override
-	public void write(Context context, ASTNode node) {
+	public void write(ASTNode node) {
 		MethodDeclaration methodDeclaration = (MethodDeclaration) node;
 
-		TypeDeclaration typeDeclaration = context.getTypeDeclaration();
+		TypeDeclaration typeDeclaration = getContext().getTypeDeclaration();
 
 		// If we're writing the implementation of a generic method, include the "template<...>" prefix
 		@SuppressWarnings("unchecked")
-		List<TypeParameter> typeParameters = (List<TypeParameter>) context.getTypeDeclaration().typeParameters();
+		List<TypeParameter> typeParameters = (List<TypeParameter>) typeDeclaration.typeParameters();
 
 		boolean isGeneric = !typeParameters.isEmpty();
-		if (isGeneric && context.isWritingMethodImplementation()) {
-			context.write("template ");
-			writeTypeParameters(typeParameters, true, context);
-			context.writeln();
+		if (isGeneric && getContext().isWritingMethodImplementation()) {
+			write("template ");
+			writeTypeParameters(typeParameters, true);
+			writeln();
 		}
 
 		// Writer static & virtual modifiers, in the class definition
-		if (! context.isWritingMethodImplementation()) {
+		if (! getContext().isWritingMethodImplementation()) {
 			if (ASTUtil.containsStatic(methodDeclaration.modifiers()))
-				context.write("static ");
+				write("static ");
 			else {
 				boolean isFinal = ASTUtil.containsFinal(typeDeclaration.modifiers())
 						|| ASTUtil.containsFinal(methodDeclaration.modifiers());
 	
 				if (! isFinal)
-					context.write("virtual ");
+					write("virtual ");
 			}
 		}
 
-		context.skipModifiers(methodDeclaration.modifiers());
-		context.skipSpaceAndComments();
+		skipModifiers(methodDeclaration.modifiers());
+		skipSpaceAndComments();
 
 		// TODO: Handle arrays with extra dimensions
 
@@ -86,50 +85,50 @@ public class MethodDeclarationWriter extends CPlusPlusASTWriter {
 		if (! methodDeclaration.isConstructor()) {
 			Type returnType = methodDeclaration.getReturnType2();
 			if (returnType == null)
-				context.matchAndWrite("void");
-			else writeType(returnType, context, false);
+				matchAndWrite("void");
+			else writeType(returnType, false);
 
-			context.copySpaceAndComments();
+			copySpaceAndComments();
 		}
 
-		if (context.isWritingMethodImplementation()) {
-			context.write(context.getTypeDeclaration().getName().getIdentifier());
+		if (getContext().isWritingMethodImplementation()) {
+			write(getContext().getTypeDeclaration().getName().getIdentifier());
 
 			if (isGeneric)
-				ASTWriterUtil.writeTypeParameters(typeParameters, false, context);
+				writeTypeParameters(typeParameters, false);
 
-			context.write("::");
+			write("::");
 		}
-		context.matchAndWrite(methodDeclaration.getName().getIdentifier());
-		context.copySpaceAndComments();
+		matchAndWrite(methodDeclaration.getName().getIdentifier());
+		copySpaceAndComments();
 
-		writeParameterList(methodDeclaration, context);
-		writeThrownExceptions(methodDeclaration, context);
+		writeParameterList(methodDeclaration);
+		writeThrownExceptions(methodDeclaration);
 
-		if (context.isWritingMethodImplementation())
-			writeSuperConstructorInvocation(methodDeclaration, context);
+		if (getContext().isWritingMethodImplementation())
+			writeSuperConstructorInvocation(methodDeclaration);
 
-		if (context.isWritingMethodImplementation()) {
-			context.copySpaceAndComments();
-			writeNode(context, methodDeclaration.getBody());
+		if (getContext().isWritingMethodImplementation()) {
+			copySpaceAndComments();
+			writeNode(methodDeclaration.getBody());
 		}
 		else {
 			if (methodDeclaration.getBody() == null) {
-				context.write(" = 0");
-				context.copySpaceAndComments();
-				context.matchAndWrite(";");
+				write(" = 0");
+				copySpaceAndComments();
+				matchAndWrite(";");
 			}
 			else {
-				context.skipSpaceAndComments();
-				context.write(";");
-				context.setPositionToEndOfNode(methodDeclaration);
+				skipSpaceAndComments();
+				write(";");
+				setPositionToEndOfNode(methodDeclaration);
 			}
 		}
 	}
 
-	private void writeParameterList(MethodDeclaration methodDeclaration, Context context) {
-		context.matchAndWrite("(");
-		context.copySpaceAndComments();
+	private void writeParameterList(MethodDeclaration methodDeclaration) {
+		matchAndWrite("(");
+		copySpaceAndComments();
 
 		List<?> parameters = methodDeclaration.parameters();
 
@@ -138,20 +137,20 @@ public class MethodDeclarationWriter extends CPlusPlusASTWriter {
 			SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) object;
 
 			if (! first) {
-				context.matchAndWrite(",");
-				context.copySpaceAndComments();
+				matchAndWrite(",");
+				copySpaceAndComments();
 			}
 
-			writeNode(context, singleVariableDeclaration);
-			context.copySpaceAndComments();
+			writeNode(singleVariableDeclaration);
+			copySpaceAndComments();
 
 			first = false;
 		}
 
-		context.matchAndWrite(")");
+		matchAndWrite(")");
 	}
 
-	private void writeThrownExceptions(MethodDeclaration methodDeclaration, Context context) {
+	private void writeThrownExceptions(MethodDeclaration methodDeclaration) {
 		// If there are any checked exceptions, output them just as a comment. We don't turn them
 		// into C++ checked exceptions because we don't declare runtime exceptions in the C++; since
 		// we don't declare all exceptions for C++ we can't declare any since we never want
@@ -160,35 +159,35 @@ public class MethodDeclarationWriter extends CPlusPlusASTWriter {
 		boolean first;
 		if (thrownExceptions.size() > 0) {
 
-			context.copySpaceAndComments();
+			copySpaceAndComments();
 
-			context.write("/* ");
-			context.matchAndWrite("throws");
+			write("/* ");
+			matchAndWrite("throws");
 
 			first = true;
 			for (Object exceptionNameObject : thrownExceptions) {
 				Name exceptionName = (Name) exceptionNameObject;
 
-				context.skipSpaceAndComments();
+				skipSpaceAndComments();
 				if (first)
-					context.write(" ");
+					write(" ");
 				else {
-					context.matchAndWrite(",");
+					matchAndWrite(",");
 
-					context.skipSpaceAndComments();
-					context.write(" ");
+					skipSpaceAndComments();
+					write(" ");
 				}
 	
-				context.matchAndWrite(exceptionName.toString());
+				matchAndWrite(exceptionName.toString());
 	
 				first = false;
 			}
-			context.write(" */");
+			write(" */");
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private void writeSuperConstructorInvocation(MethodDeclaration methodDeclaration, Context context) {
+	private void writeSuperConstructorInvocation(MethodDeclaration methodDeclaration) {
 		Block body = methodDeclaration.getBody();
 		if (body == null)
 			return;
@@ -203,42 +202,42 @@ public class MethodDeclarationWriter extends CPlusPlusASTWriter {
 		if (superConstructorInvocation == null)
 			return;
 
-		int originalPosition = context.getPosition();
-		context.setPositionToStartOfNode(superConstructorInvocation);
+		int originalPosition = getPosition();
+		setPositionToStartOfNode(superConstructorInvocation);
 
 		// TODO: Support <expression>.super
 		if (superConstructorInvocation.getExpression() != null)
-			context.throwSourceNotSupported("<expression>.super constructor invocation syntax not currently supported");
+			throw sourceNotSupported("<expression>.super constructor invocation syntax not currently supported");
 		
 		// TODO: Support type arguments here
 		if (! superConstructorInvocation.typeArguments().isEmpty())
-			context.throwSourceNotSupported("super constructor invocation with type arguments not currently supported");
+			throw sourceNotSupported("super constructor invocation with type arguments not currently supported");
 
-		context.write(" : ");
-		context.matchAndWrite("super");
-		context.copySpaceAndComments();
-		context.matchAndWrite("(");
+		write(" : ");
+		matchAndWrite("super");
+		copySpaceAndComments();
+		matchAndWrite("(");
 
 		List<?> arguments = superConstructorInvocation.arguments();
 	
 		boolean first = true;
 		for (Expression argument : (List<Expression>) arguments) {
 			if (! first) {
-				context.copySpaceAndComments();
-				context.matchAndWrite(",");
+				copySpaceAndComments();
+				matchAndWrite(",");
 			}
 
-			context.copySpaceAndComments();
-			writeNode(context, argument);
+			copySpaceAndComments();
+			writeNode(argument);
 
 			first = false;
 		}
 
-		context.copySpaceAndComments();
-		context.matchAndWrite(")");
+		copySpaceAndComments();
+		matchAndWrite(")");
 
-		context.write(" ");
+		write(" ");
 
-		context.setPosition(originalPosition);
+		setPosition(originalPosition);
 	}
 }

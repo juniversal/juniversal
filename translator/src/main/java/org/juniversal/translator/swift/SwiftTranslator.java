@@ -22,6 +22,7 @@
 
 package org.juniversal.translator.swift;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.juniversal.translator.core.*;
@@ -29,33 +30,12 @@ import org.juniversal.translator.cplusplus.CPPProfile;
 import org.juniversal.translator.cplusplus.OutputType;
 import org.juniversal.translator.swift.astwriters.SwiftASTWriters;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 
 public class SwiftTranslator extends Translator {
-    private SwiftASTWriters swiftASTWriters;
     private CPPProfile cppProfile = new CPPProfile();
 
-    public SwiftTranslator() {
-        this.swiftASTWriters = new SwiftASTWriters(this);
-    }
-
-    @Override public SwiftASTWriters getASTWriters() {
-        return swiftASTWriters;
-    }
-
-    @Override protected void translateAST(SourceFile sourceFile) {
-        writeCSharpFile(sourceFile);
-    }
-
-    public Context createContext(SourceFile sourceFile, Writer outputWriter) {
-        TargetWriter targetWriter = new TargetWriter(outputWriter, cppProfile);
-        return new Context(swiftASTWriters, sourceFile, cppProfile, targetWriter, OutputType.SOURCE);
-    }
-
-    private void writeCSharpFile(SourceFile sourceFile) {
+    @Override public void translateFile(SourceFile sourceFile) {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
 
@@ -64,30 +44,28 @@ public class SwiftTranslator extends Translator {
         String fileName = typeName + ".cs";
         File file = new File(getOutputDirectory(), fileName);
 
-        FileWriter writer;
-        try {
-            writer = new FileWriter(file);
+        try (FileWriter writer = new FileWriter(file)) {
+            TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
+            Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
+            SwiftASTWriters swiftASTWriters = new SwiftASTWriters(context, this);
+
+            swiftASTWriters.writeRootNode(compilationUnit);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
-        Context context = createContext(sourceFile, writer);
+    @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
+        try (StringWriter writer = new StringWriter()) {
+            TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
+            Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
 
-        try {
-            swiftASTWriters.writeNode(context, compilationUnit);
-        } catch (UserViewableException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
-        } catch (RuntimeException e) {
-            if (e instanceof ContextPositionMismatchException)
-                throw e;
-            else
-                throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
-                                              + context.getPositionDescription(context.getPosition()), e);
-        }
+            context.setPosition(astNode.getStartPosition());
+            SwiftASTWriters swiftASTWriters = new SwiftASTWriters(context, this);
 
-        try {
-            writer.close();
+            swiftASTWriters.writeRootNode(astNode);
+
+            return writer.getBuffer().toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

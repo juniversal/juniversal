@@ -23,7 +23,6 @@
 package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
-import org.juniversal.translator.core.Context;
 
 public class SuperMethodInvocationWriter extends MethodInvocationWriterBase<SuperMethodInvocation> {
     public SuperMethodInvocationWriter(CSharpASTWriters cSharpASTWriters) {
@@ -31,18 +30,18 @@ public class SuperMethodInvocationWriter extends MethodInvocationWriterBase<Supe
     }
 
     @Override
-    public void write(Context context, SuperMethodInvocation superMethodInvocation) {
+    public void write(SuperMethodInvocation superMethodInvocation) {
         // TODO: Support this
         if (superMethodInvocation.getQualifier() != null)
-            context.throwSourceNotSupported("Qualified super invocations aren't currently supported");
+            throw sourceNotSupported("Qualified super invocations aren't currently supported");
 
-        context.matchAndWrite("super", "base");
+        matchAndWrite("super", "base");
 
-        context.copySpaceAndComments();
-        context.matchAndWrite(".");
+        copySpaceAndComments();
+        matchAndWrite(".");
 
-        context.copySpaceAndComments();
-        writeMethodInvocation(context, superMethodInvocation, superMethodInvocation.getName().getIdentifier(),
+        copySpaceAndComments();
+        writeMethodInvocation(superMethodInvocation, superMethodInvocation.getName().getIdentifier(),
                 superMethodInvocation.typeArguments(), superMethodInvocation.arguments(),
                 superMethodInvocation.resolveMethodBinding());
     }

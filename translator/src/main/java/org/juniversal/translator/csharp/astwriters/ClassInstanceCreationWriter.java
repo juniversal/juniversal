@@ -23,9 +23,6 @@
 package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.core.Context;
-
-import java.util.List;
 
 import static org.juniversal.translator.core.ASTUtil.*;
 
@@ -35,58 +32,58 @@ public class ClassInstanceCreationWriter extends CSharpASTWriter<ClassInstanceCr
         super(cSharpASTWriters);
     }
 
-    @Override public void write(Context context, ClassInstanceCreation classInstanceCreation) {
+    @Override public void write(ClassInstanceCreation classInstanceCreation) {
         //TODO: Handle type arguments
 
         // TODO: Support inner class creation via object.new
         if (classInstanceCreation.getExpression() != null)
-            context.throwSourceNotSupported("Inner classes not yet supported");
+            throw sourceNotSupported("Inner classes not yet supported");
 
         if (classInstanceCreation.getAnonymousClassDeclaration() != null) {
-            writeAnonymousInnerClassFunction(context, classInstanceCreation);
+            writeAnonymousInnerClassFunction(classInstanceCreation);
         } else {
-            context.matchAndWrite("new");
+            matchAndWrite("new");
 
-            context.copySpaceAndComments();
-            writeNode(context, classInstanceCreation.getType());
+            copySpaceAndComments();
+            writeNode(classInstanceCreation.getType());
 
-            context.copySpaceAndComments();
-            context.matchAndWrite("(");
+            copySpaceAndComments();
+            matchAndWrite("(");
 
-            writeCommaDelimitedNodes(context, classInstanceCreation.arguments());
+            writeCommaDelimitedNodes(classInstanceCreation.arguments());
 
             if (classInstanceCreation.getAnonymousClassDeclaration() != null) {
-                context.throwSourceNotSupported("Anonymous classes aren't yet supported");
+                throw sourceNotSupported("Anonymous classes aren't yet supported");
             }
 
-            context.copySpaceAndComments();
-            context.matchAndWrite(")");
+            copySpaceAndComments();
+            matchAndWrite(")");
         }
     }
 
-    private void writeAnonymousInnerClassFunction(Context context, ClassInstanceCreation classInstanceCreation) {
+    private void writeAnonymousInnerClassFunction(ClassInstanceCreation classInstanceCreation) {
         Type type = classInstanceCreation.getType();
 
-        if (! isFunctionalInterfaceImplementation(context, type))
-            context.throwSourceNotSupported("Anonymous inner classes are only supported when they implement a functional interface--an interface with a single abstract method and no constants");
+        if (! isFunctionalInterfaceImplementation(getContext(), type))
+            throw sourceNotSupported("Anonymous inner classes are only supported when they implement a functional interface--an interface with a single abstract method and no constants");
 
         MethodDeclaration functionalMethod = (MethodDeclaration) classInstanceCreation.getAnonymousClassDeclaration().bodyDeclarations().get(0);
 
-        context.write("(");
+        write("(");
         boolean first = true;
         for (Object parameterObject : functionalMethod.parameters()) {
             SingleVariableDeclaration parameter = (SingleVariableDeclaration) parameterObject;
 
             if (! first)
-                context.write(", ");
-            context.write(parameter.getName().getIdentifier());
+                write(", ");
+            write(parameter.getName().getIdentifier());
             first = false;
         }
-        context.write(") => ");
+        write(") => ");
 
-        context.setPosition(functionalMethod.getBody().getStartPosition());
-        writeNode(context, functionalMethod.getBody());
+        setPosition(functionalMethod.getBody().getStartPosition());
+        writeNode(functionalMethod.getBody());
 
-        context.setPositionToEndOfNode(classInstanceCreation);
+        setPositionToEndOfNode(classInstanceCreation);
     }
 }

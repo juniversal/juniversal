@@ -25,7 +25,6 @@ package org.juniversal.translator.cplusplus.astwriters;
 import java.util.List;
 
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.Context;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Type;
@@ -40,7 +39,7 @@ public class VariableDeclarationWriter extends CPlusPlusASTWriter {
     }
 
     @Override
-	public void write(Context context, ASTNode node) {
+	public void write(ASTNode node) {
 		// Variable declaration statements & expressions are quite similar, so we handle them both
 		// here together
 
@@ -48,48 +47,48 @@ public class VariableDeclarationWriter extends CPlusPlusASTWriter {
 			VariableDeclarationStatement variableDeclarationStatement = (VariableDeclarationStatement) node;
 
 			writeVariableDeclaration(variableDeclarationStatement.modifiers(), variableDeclarationStatement.getType(),
-					variableDeclarationStatement.fragments(), context);
-			context.copySpaceAndComments();
+					variableDeclarationStatement.fragments());
+			copySpaceAndComments();
 
-			context.matchAndWrite(";");
+			matchAndWrite(";");
 		} else {
 			VariableDeclarationExpression variableDeclarationExpression = (VariableDeclarationExpression) node;
 
 			writeVariableDeclaration(variableDeclarationExpression.modifiers(),
-					variableDeclarationExpression.getType(), variableDeclarationExpression.fragments(), context);
+					variableDeclarationExpression.getType(), variableDeclarationExpression.fragments());
 		}
 	}
 
-	private void writeVariableDeclaration(List<?> modifiers, Type type, List<?> fragments, Context context) {
+	private void writeVariableDeclaration(List<?> modifiers, Type type, List<?> fragments) {
 		// Turn "final" into "const"
 		if (ASTUtil.containsFinal(modifiers)) {
-			context.write("const");
-			context.skipModifiers(modifiers);
+			write("const");
+			skipModifiers(modifiers);
 
-			context.copySpaceAndComments();
+			copySpaceAndComments();
 		}
 
 		// Write the type
-        writeType(type, context, false);
+        writeType(type, false);
 
 		boolean needStar = false;
-		context.setWritingVariableDeclarationNeedingStar(needStar);
+		getContext().setWritingVariableDeclarationNeedingStar(needStar);
 
 		// Write the variable declaration(s)
 		boolean first = true;
 		for (Object fragment : fragments) {
 			VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) fragment;
 
-			context.copySpaceAndComments();
+			copySpaceAndComments();
 			if (!first) {
-				context.matchAndWrite(",");
-				context.copySpaceAndComments();
+				matchAndWrite(",");
+				copySpaceAndComments();
 			}
-            writeNode(context, variableDeclarationFragment);
+            writeNode(variableDeclarationFragment);
 
 			first = false;
 		}
 
-		context.setWritingVariableDeclarationNeedingStar(false);
+		getContext().setWritingVariableDeclarationNeedingStar(false);
 	}
 }

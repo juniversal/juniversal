@@ -23,33 +23,26 @@
 package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.Context;
-import org.juniversal.translator.core.JUniversalException;
-
-import java.util.ArrayList;
-
-import static org.juniversal.translator.core.ASTUtil.implementsInterface;
 
 public class MethodInvocationWriter extends MethodInvocationWriterBase<MethodInvocation> {
     public MethodInvocationWriter(CSharpASTWriters cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 
-    @Override public void write(Context context, MethodInvocation methodInvocation) {
+    @Override public void write(MethodInvocation methodInvocation) {
         @Nullable Expression expression = methodInvocation.getExpression();
         if (expression != null) {
-            writeNode(context, expression);
+            writeNode(expression);
 
-            context.copySpaceAndComments();
-            context.matchAndWrite(".");
+            copySpaceAndComments();
+            matchAndWrite(".");
 
-            context.copySpaceAndComments();
+            copySpaceAndComments();
         }
 
-        writeMethodInvocation(context, methodInvocation, methodInvocation.getName().getIdentifier(),
+        writeMethodInvocation(methodInvocation, methodInvocation.getName().getIdentifier(),
                 methodInvocation.typeArguments(), methodInvocation.arguments(), methodInvocation.resolveMethodBinding());
     }
 }

@@ -35,16 +35,18 @@ public class CompilationUnitWriter extends SwiftASTWriter {
         super(swiftASTWriters);
     }
     
-    public void write(Context context, ASTNode node) {
+    public void write(ASTNode node) {
 		CompilationUnit compilationUnit = (CompilationUnit) node;
 
 		TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
 
-		context.setPosition(mainTypeDeclaration.getStartPosition());
+		setPosition(mainTypeDeclaration.getStartPosition());
 
+/*
 		if (context.getOutputType() == OutputType.HEADER)
 			writeHeader(compilationUnit, mainTypeDeclaration, context);
 		else writeSource(compilationUnit, mainTypeDeclaration, context);
+*/
 	}
 
 	private void writeHeader(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration, Context context) {
@@ -52,51 +54,52 @@ public class CompilationUnitWriter extends SwiftASTWriter {
 		String multiIncludeDefine = name.toUpperCase() + "_H";
 		Type superclassType = mainTypeDeclaration.getSuperclassType();
 
-		context.writeln("#ifndef " + multiIncludeDefine);
-		context.writeln("#define " + multiIncludeDefine);
-		context.writeln();
+		writeln("#ifndef " + multiIncludeDefine);
+		writeln("#define " + multiIncludeDefine);
+		writeln();
 
-		context.writeln("#include \"juniversal.h\"");
+		writeln("#include \"juniversal.h\"");
 		if (superclassType != null) {
 			if (superclassType instanceof SimpleType)
-				ASTWriterUtil.writeIncludeForTypeName(((SimpleType) superclassType).getName(), context);
+				//writeIncludeForTypeName(((SimpleType) superclassType).getName());
+                ;
 			else if (superclassType instanceof ParameterizedType) {
 				// TODO: Finish this; make check for dependencies everywhere in all code via visitor
 			}
 		}
-		context.writeln();
+		writeln();
 
-		context.writeln("namespace " + getPackageNamespaceName(compilationUnit) + " {");
-		context.writeln("JU_USING_STD_NAMESPACES");
-		context.writeln();
+		writeln("namespace " + getPackageNamespaceName(compilationUnit) + " {");
+		writeln("JU_USING_STD_NAMESPACES");
+		writeln();
 
 		// Copy class Javadoc or other comments before the class starts
-		context.copySpaceAndComments();
+		copySpaceAndComments();
 
-        swiftASTWriters.writeNode(context, mainTypeDeclaration);
+        swiftASTWriters.writeNode(mainTypeDeclaration);
 
-		context.copySpaceAndComments();
+		copySpaceAndComments();
 
-		context.writeln();
-		context.writeln("}");   // Close namespace definition
+		writeln();
+		writeln("}");   // Close namespace definition
 
-		context.writeln("#endif // " + multiIncludeDefine);
+		writeln("#endif // " + multiIncludeDefine);
 	}
 
 	private void writeSource(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration, Context context) {
-		ASTWriterUtil.writeIncludeForTypeName(mainTypeDeclaration.getName(), context);
-		context.writeln();
+		//writeIncludeForTypeName(mainTypeDeclaration.getName(), context);
+		writeln();
 		
-		context.writeln("JU_USING_STD_NAMESPACES");
-		context.writeln("using namespace " + getPackageNamespaceName(compilationUnit) + ";");
-		context.writeln();
+		writeln("JU_USING_STD_NAMESPACES");
+		writeln("using namespace " + getPackageNamespaceName(compilationUnit) + ";");
+		writeln();
 
 		context.setPosition(mainTypeDeclaration.getStartPosition());
-		context.skipSpaceAndComments();   // Skip any Javadoc included in the node
+		skipSpaceAndComments();   // Skip any Javadoc included in the node
 
-        swiftASTWriters.writeNode(context, mainTypeDeclaration);
+        swiftASTWriters.writeNode(mainTypeDeclaration);
 
-		context.skipSpaceAndComments();
+		skipSpaceAndComments();
 	}
 
 	private String getPackageNamespaceName(CompilationUnit compilationUnit) {

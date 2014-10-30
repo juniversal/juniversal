@@ -25,7 +25,6 @@ package org.juniversal.translator.csharp.astwriters;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.Context;
 
 import java.util.List;
 
@@ -37,14 +36,14 @@ public class TypeDeclarationWriter extends CSharpASTWriter<TypeDeclaration> {
     }
 
     @Override
-    public void write(Context context, TypeDeclaration typeDeclaration) {
-        @Nullable TypeDeclaration outerTypeDeclaration = context.getTypeDeclaration();
-        context.setTypeDeclaration(typeDeclaration);
+    public void write(TypeDeclaration typeDeclaration) {
+        @Nullable TypeDeclaration outerTypeDeclaration = getContext().getTypeDeclaration();
+        getContext().setTypeDeclaration(typeDeclaration);
 
         try {
             List<?> modifiers = typeDeclaration.modifiers();
             if (outerTypeDeclaration != null && ! containsStatic(modifiers))
-                context.throwSourceNotSupported("Only static nested classes are supported, as C# and Swift don't support inner (non static) classes.  Make the nested class static and pass in the outer instance to the constructor, to simulate an inner class.");
+                throw sourceNotSupported("Only static nested classes are supported, as C# and Swift don't support inner (non static) classes.  Make the nested class static and pass in the outer instance to the constructor, to simulate an inner class.");
 
             boolean isInterface = typeDeclaration.isInterface();
 
@@ -52,93 +51,93 @@ public class TypeDeclarationWriter extends CSharpASTWriter<TypeDeclaration> {
 
             boolean isGeneric = !typeParameters.isEmpty();
 
-            writeAccessModifier(context, modifiers);
+            writeAccessModifier(modifiers);
 
             if (ASTUtil.containsFinal(modifiers))
-                writeSealedModifier(context);
+                writeSealedModifier();
 
             // Skip the modifiers
-            context.skipModifiers(modifiers);
+            skipModifiers(modifiers);
 
             if (isInterface)
-                context.matchAndWrite("interface");
+                matchAndWrite("interface");
             else
-                context.matchAndWrite("class");
+                matchAndWrite("class");
 
-            context.copySpaceAndComments();
-            writeNode(context, typeDeclaration.getName());
+            copySpaceAndComments();
+            writeNode(typeDeclaration.getName());
 
             if (isGeneric) {
-                context.copySpaceAndComments();
-                context.matchAndWrite("<");
+                copySpaceAndComments();
+                matchAndWrite("<");
 
-                writeCommaDelimitedNodes(context, typeParameters, (TypeParameter typeParameter) -> {
-                    context.copySpaceAndComments();
-                    writeNode(context, typeParameter.getName());
+                writeCommaDelimitedNodes(typeParameters, (TypeParameter typeParameter) -> {
+                    copySpaceAndComments();
+                    writeNode(typeParameter.getName());
 
                     // Skip any constraints; they'll be written out at the end of the declaration line
-                    context.setPositionToEndOfNode(typeParameter);
+                    setPositionToEndOfNode(typeParameter);
                 });
 
-                context.copySpaceAndComments();
-                context.matchAndWrite(">");
+                copySpaceAndComments();
+                matchAndWrite(">");
             }
 
             // TODO: Implement this
-            writeSuperClassAndInterfaces(context, typeDeclaration);
+            writeSuperClassAndInterfaces(typeDeclaration);
 
             if (isGeneric)
-                writeTypeParameterConstraints(context, typeParameters);
+                writeTypeParameterConstraints(typeParameters);
 
-            context.copySpaceAndComments();
-            context.matchAndWrite("{");
+            copySpaceAndComments();
+            matchAndWrite("{");
 
-            writeNodes(context, typeDeclaration.bodyDeclarations());
+            writeNodes(typeDeclaration.bodyDeclarations());
 
-            context.copySpaceAndComments();
-            context.matchAndWrite("}");
+            copySpaceAndComments();
+            matchAndWrite("}");
         } finally {
-            context.setTypeDeclaration(outerTypeDeclaration);
+            getContext().setTypeDeclaration(outerTypeDeclaration);
         }
     }
 
-    private void writeSuperClassAndInterfaces(Context context, TypeDeclaration typeDeclaration) {
+    private void writeSuperClassAndInterfaces(TypeDeclaration typeDeclaration) {
         Type superclassType = typeDeclaration.getSuperclassType();
         boolean isInterface = typeDeclaration.isInterface();
 
         if (superclassType != null) {
-            context.copySpaceAndComments();
-            context.matchAndWrite("extends", ":");
+            copySpaceAndComments();
+            matchAndWrite("extends", ":");
 
-            context.copySpaceAndComments();
-            writeNode(context, superclassType);
+            copySpaceAndComments();
+            writeNode(superclassType);
         }
 
         // Write out the super interfaces, if any
         forEach(typeDeclaration.superInterfaceTypes(), (Type superInterfaceType, boolean first) -> {
             if (first) {
                 if (superclassType == null) {
-                    context.copySpaceAndComments();
+                    copySpaceAndComments();
 
                     // An interface extends another interface whereas a class implements interfaces
-                    context.matchAndWrite(isInterface ? "extends" : "implements", ":");
+                    matchAndWrite(isInterface ? "extends" : "implements", ":");
                 } else {
-                    context.skipSpaceAndComments();
-                    context.matchAndWrite("implements", ", ");
+                    skipSpaceAndComments();
+                    matchAndWrite("implements", ", ");
                 }
             } else {
-                context.copySpaceAndComments();
-                context.matchAndWrite(",");
+                copySpaceAndComments();
+                matchAndWrite(",");
             }
 
             // Ensure there's at least a space after the "public" keyword (not required in Java which just has the
             // comma there)
-            int originalPosition = context.getPosition();
-            context.copySpaceAndComments();
-            if (context.getPosition() == originalPosition)
-                context.write(" ");
+            int originalPosition = getPosition();
+            copySpaceAndComments();
+            if (getPosition() == originalPosition)
+                write(" ");
 
-            writeNode(context, superInterfaceType);
+            writeNode(superInterfaceType);
         });
     }
 }

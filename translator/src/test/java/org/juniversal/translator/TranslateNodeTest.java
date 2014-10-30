@@ -27,14 +27,11 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
-import org.juniversal.translator.core.ASTWriters;
-import org.juniversal.translator.core.Context;
 import org.juniversal.translator.core.SourceFile;
 import org.juniversal.translator.core.SourceNotSupportedException;
-import org.juniversal.translator.cplusplus.CPPProfile;
+import org.juniversal.translator.core.Translator;
 import org.juniversal.translator.csharp.CSharpTranslator;
 
-import java.io.StringWriter;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -228,17 +225,18 @@ public class TranslateNodeTest {
     }
 
     protected void testTranslateNode(ASTNode node, String javaFullSource, String javaNodeSource,
-                                     CompilationUnit compilationUnit,
-                                     @Nullable String expectedCSharp, @Nullable String expectedSwift) {
+                                     CompilationUnit compilationUnit, @Nullable String expectedCSharp,
+                                     @Nullable String expectedSwift) {
+/*
         CPPProfile profile = new CPPProfile();
         profile.setTabStop(destTabStop);
+*/
 
-        StringWriter cSharpStringWriter = new StringWriter();
-        Context cSharpContext = cSharpTranslator.createContext(new SourceFile(compilationUnit, null, javaFullSource,
-                        sourceTabStop), cSharpStringWriter);
-        testTranslate(cSharpTranslator.getASTWriters(), node, javaNodeSource, cSharpStringWriter, expectedCSharp);
+        SourceFile sourceFile = new SourceFile(compilationUnit, javaFullSource, 4);
 
-        //testTranslate(swiftTranslator, node, javaFullSource, javaNodeSource, compilationUnit, expectedSwift);
+        testTranslate(cSharpTranslator, sourceFile, node, javaNodeSource, expectedCSharp);
+        //testTranslate(swiftTranslator, sourceFile, node, javaNodeSource, expectedSwift);
+
 
 /*
         if (!actualSwift.equals(expectedSwift == null ? java : expectedSwift))
@@ -247,15 +245,13 @@ public class TranslateNodeTest {
 */
     }
 
-    private void testTranslate(ASTWriters astWriters, ASTNode node, String javaNodeSource, StringWriter stringWriter,
+    private void testTranslate(Translator translator, SourceFile sourceFile, ASTNode node, String javaNodeSource,
                                @Nullable String expectedOutput) {
-        astWriters.getContext().setPosition(node.getStartPosition());
-
         String effectiveExpectedOutput = expectedOutput == null ? javaNodeSource : expectedOutput;
 
         if (effectiveExpectedOutput.startsWith(("NOT-SUPPORTED:"))) {
             try {
-                astWriters.writeNode(astWriters.getContext(), node);
+                translator.translateNode(sourceFile, node);
             } catch (SourceNotSupportedException e) {
                 String expectedError = effectiveExpectedOutput.substring("NOT-SUPPORTED: ".length());
 
@@ -267,9 +263,7 @@ public class TranslateNodeTest {
                 assertEquals(expectedError, actutalError);
             }
         } else {
-            astWriters.writeNode(astWriters.getContext(), node);
-
-            String actualOutput = stringWriter.getBuffer().toString();
+            String actualOutput = translator.translateNode(sourceFile, node);
             assertEqualsNormalizeNewlines(effectiveExpectedOutput, actualOutput);
         }
     }
