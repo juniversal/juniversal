@@ -42,13 +42,14 @@ public class CSharpTranslator extends Translator {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         AbstractTypeDeclaration mainTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
 
+        ;
+
         String packageName = mainTypeDeclaration.getName().getFullyQualifiedName();
         String typeName = mainTypeDeclaration.getName().getIdentifier();
 
-
         String fileName = typeName + ".cs";
-        File file = new File(getOutputDirectory(), fileName);
 
+        File file = new File(getPackageDirectory(mainTypeDeclaration), fileName);
         try (FileWriter writer = new FileWriter(file)) {
             TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
             Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);

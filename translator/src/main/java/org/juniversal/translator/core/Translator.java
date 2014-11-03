@@ -97,7 +97,7 @@ public abstract class Translator {
                         usageError();
                     arg = args[i];
 
-                    this.outputDirectory = validateAndNormalizeDirectoryArgument(arg);
+                    this.outputDirectory = validateAndNormalizeDirectoryArgument(arg, false);
                 } else if (arg.equals("-l")) {
                     // Skip target language arg, as that was already captured
                     ++i;
@@ -111,7 +111,7 @@ public abstract class Translator {
                 } else
                     usageError();
             } else
-                this.javaProjectDirectories.add(validateAndNormalizeDirectoryArgument(arg));
+                this.javaProjectDirectories.add(validateAndNormalizeDirectoryArgument(arg, true));
         }
 
         // Ensure that there's at least one input directory & the output directory is specified
@@ -124,7 +124,7 @@ public abstract class Translator {
         System.exit(1);
     }
 
-    private static File validateAndNormalizeDirectoryArgument(String path) {
+    private static File validateAndNormalizeDirectoryArgument(String path, boolean ensureExists) {
         File file = new File(path);
         try {
             file = file.getCanonicalFile();
@@ -132,7 +132,7 @@ public abstract class Translator {
             throw new UserViewableException("IOException when turning directory argument into canonical path: " + file.getPath());
         }
 
-        if (!file.exists())
+        if (ensureExists && !file.exists())
             throw new UserViewableException("Directory doesn't exist: " + file.getPath());
 
         return file;
@@ -140,6 +140,22 @@ public abstract class Translator {
 
     public File getOutputDirectory() {
         return outputDirectory;
+    }
+
+    public File getPackageDirectory(AbstractTypeDeclaration abstractTypeDeclaration) {
+        String[] packageNameComponents = abstractTypeDeclaration.resolveBinding().getPackage().getNameComponents();
+
+        File directory = outputDirectory;
+        for (String packageNameComponent : packageNameComponents) {
+            directory = new File(directory, packageNameComponent);
+        }
+
+        if (! directory.exists()) {
+            if (!directory.mkdirs())
+                throw new JUniversalException("Unable to create directory for path: " + directory);
+        }
+
+        return directory;
     }
 
     public void translate() {

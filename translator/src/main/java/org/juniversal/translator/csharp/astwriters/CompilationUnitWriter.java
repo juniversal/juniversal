@@ -39,7 +39,7 @@ class CompilationUnitWriter extends CSharpASTWriter<CompilationUnit> {
     public void write(CompilationUnit compilationUnit) {
         copySpaceAndComments();
 
-        // TODO: This results in an extra newline normally; distinguish between case where package is only think on line & multiple things on the line
+        // TODO: This results in an extra newline normally; distinguish between case where package is only thing on line & multiple things on that line
         @Nullable PackageDeclaration packageDeclaration = compilationUnit.getPackage();
         if (packageDeclaration != null) {
             setPositionToEndOfNodeSpaceAndComments(packageDeclaration);
@@ -47,11 +47,34 @@ class CompilationUnitWriter extends CSharpASTWriter<CompilationUnit> {
 
         for (Object importDeclarationObject : compilationUnit.imports()) {
             ImportDeclaration importDeclaration = (ImportDeclaration) importDeclarationObject;
+            Name importDeclarationName = importDeclaration.getName();
+
+            if (importDeclaration.isStatic())
+                throw sourceNotSupported("Static imports aren't currently supported");
 
             copySpaceAndComments();
-            //TODO: Process import statements; but for now just skip
-            setPositionToEndOfNodeSpaceAndComments(importDeclaration);
+            matchAndWrite("import", "using");
+
+            if (importDeclaration.isOnDemand()) {
+                copySpaceAndComments();
+                writeNode(importDeclarationName);
+            }
+            else {
+                if (! (importDeclarationName instanceof QualifiedName))
+                    throw sourceNotSupported("Class import is unexpectedly not a fully qualified name (with a '.' in it)");
+                QualifiedName qualifiedName = (QualifiedName) importDeclarationName;
+
+                copySpaceAndComments();
+                writeNodeAtDifferentPosition(qualifiedName.getName());
+                write(" = ");
+                writeNode(qualifiedName);
+            }
+
+            copySpaceAndComments();
+            matchAndWrite(";");
         }
+
+        copySpaceAndComments();
 
         int previousIndent = 0;
         if (packageDeclaration != null) {
@@ -78,7 +101,7 @@ class CompilationUnitWriter extends CSharpASTWriter<CompilationUnit> {
 
         AbstractTypeDeclaration firstTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
 
-        copySpaceAndComments();
+        //copySpaceAndComments();
         writeNode(firstTypeDeclaration);
         copySpaceAndComments();
 
