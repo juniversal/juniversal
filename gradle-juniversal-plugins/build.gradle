@@ -93,7 +93,7 @@ uploadArchives {
                     developer {
                         //id 'manfred'
                         name 'Bret Johnson'
-                        email 'bret@bretajohnson.com'
+                        email 'bret.johnson@microsoft.com'
                     }
                 }
             }
