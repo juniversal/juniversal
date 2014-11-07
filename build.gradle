@@ -25,3 +25,7 @@ apply plugin: 'java'
 subprojects {
     sourceCompatibility = 1.8
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.1'
+}
