@@ -3,16 +3,15 @@ package org.gradle
 import org.junit.Test
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.api.Project
-import org.juniversal.JavaToCSharpTask
 
 import static org.junit.Assert.*
 
-class JavaToCSharpPluginTest {
+class JavaToCSharpTangiblePluginTest {
     @Test
     public void pluginAddsTaskToProject() {
         Project project = ProjectBuilder.builder().build()
-        project.apply plugin: 'javaToCSharp'
+        project.apply plugin: 'javaToCSharpTangible'
 
-        assertTrue(project.tasks.javaToCSharp != null)
+        assertTrue(project.tasks.javaToCSharpTangible != null)
     }
 }

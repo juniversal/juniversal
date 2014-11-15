@@ -1,7 +1,7 @@
-package org.juniversal;
+package org.juniversal.common;
 
-import org.gradle.api.Project;
-import org.slf4j.Logger;
+import org.juniversal.common.support.CommonProject;
+import org.juniversal.common.support.Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,15 +13,30 @@ import java.util.ArrayList;
  * @author Bret Johnson
  * @since 7/10/2014 1:56 AM
  */
-public class JavaToCSharpImpl {
-    private Logger logger;
+public class JavaToCSharpTangible {
+    private CommonProject project;
+    private File converterDirectory;
+    private File converterSettings;
+    private boolean runMinimized;
 
-    public JavaToCSharpImpl(Project project, Logger logger) {
-        this.logger = logger;
+    public JavaToCSharpTangible(CommonProject project) {
+        this.project = project;
+    }
+
+    public void setConverterDirectory(File converterDirectory) {
+        this.converterDirectory = converterDirectory;
+    }
+
+    public void setConverterSettings(File converterSettings) {
+        this.converterSettings = converterSettings;
+    }
+
+    public void setRunMinimized(boolean runMinimized) {
+        this.runMinimized = runMinimized;
     }
 
     // TODO: Check into why converterSettings not used
-    public void convert(File sourceDirectory, File outputDirectory, File converterDirectory, File converterSettings, boolean runMinimized) {
+    public void convert(File sourceDirectory, File outputDirectory) {
         // Delete the generated source directories
         Utils.deleteChildDirectoriesExcept(outputDirectory, "Properties", "nontranslated", "Bin", "obj");
 
@@ -43,14 +58,14 @@ public class JavaToCSharpImpl {
         args.add(converterDirectory.getAbsolutePath());
 
         System.out.println("Starting convert...");
-        Process process = Utils.exec(args, converterDirectory, logger);
+        Process process = project.exec(args, converterDirectory);
         System.out.println("Done with convert");
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String inputLine;
         try {
             while ((inputLine = reader.readLine()) != null) {
-                logger.info(inputLine);
+                project.info(inputLine);
             }
             reader.close();
         } catch (IOException e) {

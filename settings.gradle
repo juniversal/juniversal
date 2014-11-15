@@ -20,5 +20,5 @@
  * THE SOFTWARE.
  */
 
-rootProject.name = 'juniversal-translator'
-include 'translator', 'translator-test-cases'
+// rootProject.name = 'juniversal-translator'
+include 'juniversal-translator'

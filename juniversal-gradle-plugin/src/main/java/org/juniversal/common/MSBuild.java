@@ -1,7 +1,8 @@
-package org.juniversal;
+package org.juniversal.common;
 
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
+import org.juniversal.common.support.CommonProject;
+import org.juniversal.common.support.Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,16 +14,16 @@ import java.util.ArrayList;
  * @author Bret Johnson
  * @since 7/10/2014 1:56 AM
  */
-public class MSBuildImpl {
-    private Logger logger;
-    private File projectDirectory;
+public class MSBuild {
+    private CommonProject project;
 
-    public MSBuildImpl(Logger logger, File projectDirectory) {
-        this.logger = logger;
-        this.projectDirectory = projectDirectory;
+    public MSBuild(CommonProject project) {
+        this.project = project;
     }
 
-    public void msbuild(@Nullable File projectFile, @Nullable File msbuildDirectory, String target, String configuration, String verbosity) {
+    public void build(@Nullable File projectFile, @Nullable File msbuildDirectory, String target, String configuration, String verbosity) {
+        File projectDirectory = project.getProjectDirectory();
+
         File effectiveProjectFile;
         if (projectFile != null) {
             effectiveProjectFile = projectFile;
@@ -56,16 +57,16 @@ public class MSBuildImpl {
         args.add(effectiveProjectFile.getAbsolutePath());
 
         try {
-            Process msbuild = Utils.exec(args, null, logger);
+            Process msbuild = project.exec(args, null);
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(msbuild.getInputStream()));
             String inputLine;
             while ((inputLine = reader.readLine()) != null) {
                 if (inputLine.contains(": error "))
-                    logger.error(inputLine);
+                    project.error(inputLine);
                 else if (inputLine.contains(": warning "))
-                    logger.warn(inputLine);
-                else logger.info(inputLine);
+                    project.warn(inputLine);
+                else project.info(inputLine);
             }
             reader.close();
 

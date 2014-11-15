@@ -1,4 +1,4 @@
-package org.juniversal;
+package org.juniversal.common.support;
 
 import org.slf4j.Logger;
 
@@ -11,23 +11,6 @@ import java.util.List;
  * @since 7/8/2014 9:39 PM
  */
 public class Utils {
-    public static Process exec(List<String> args, File directory, Logger logger) {
-        StringBuilder fullCommandLine = new StringBuilder();
-        for (String arg : args)
-            fullCommandLine.append(arg + " ");
-        logger.debug("Executing: " + fullCommandLine);
-
-        String[] argsArray = args.toArray(new String[0]);
-        Process process;
-        try {
-            process = Runtime.getRuntime().exec(argsArray, null, directory);
-        } catch (IOException e) {
-            throw new RuntimeException("IO exception when running: " + fullCommandLine, e);
-        }
-
-        return process;
-    }
-
     public static File getFirstThatExists(String messageIfNoneExist, File... files) {
         for (File file : files) {
             if (file.exists())

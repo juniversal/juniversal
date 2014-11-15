@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="Gradle: annotations-9.0.4">
+  <library name="Gradle: com.intellij:annotations:9.0.4">
     <CLASSES>
       <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.intellij/annotations/9.0.4/cafc03cc8bdd1c9106bda1da71c41e75523383d6/annotations-9.0.4.jar!/" />
     </CLASSES>

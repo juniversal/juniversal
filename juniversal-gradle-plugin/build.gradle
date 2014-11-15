@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.12'
+    gradleVersion = '2.1'
 }
 
 dependencies {
@@ -21,7 +21,7 @@ repositories {
 
 group = 'org.juniversal'
 version = '0.8-SNAPSHOT'
-archivesBaseName = "gradle-juniversal-plugins"
+archivesBaseName = "juniversal-gradle-plugin"
 
 compileJava.targetCompatibility = "1.6"
 compileJava.sourceCompatibility = "1.6"
@@ -69,10 +69,10 @@ uploadArchives {
             }
 
             pom.project {
-                name 'JUniversal Gradle plugins'
+                name 'JUniversal Gradle plugin'
                 packaging 'jar'
                 // optionally artifactId can be defined here
-                description 'Gradle plugins here are for source code conversion and invoking MSBuild'
+                description 'Gradle plugin tasks here are for source code conversion and invoking MSBuild'
                 url 'https://github.com/juniversal/juniversal'
 
                 scm {

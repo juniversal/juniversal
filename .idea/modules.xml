@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/juniversal-translator.iml" filepath="$PROJECT_DIR$/juniversal-translator.iml" />
-      <module fileurl="file://$PROJECT_DIR$/translator/translator.iml" filepath="$PROJECT_DIR$/translator/translator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/juniversal.iml" filepath="$PROJECT_DIR$/juniversal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/juniversal-translator/juniversal-translator.iml" filepath="$PROJECT_DIR$/juniversal-translator/juniversal-translator.iml" />
     </modules>
   </component>
 </project>
-
