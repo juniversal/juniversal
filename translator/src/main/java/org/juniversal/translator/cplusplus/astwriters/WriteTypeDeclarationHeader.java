@@ -48,7 +48,7 @@ public class WriteTypeDeclarationHeader {
 
 		// Skip the modifiers and the space/comments following them
 		context.skipModifiers(typeDeclaration.modifiers());
-		context.skipSpaceAndComments();
+        context.skipSpaceAndComments();
 
 		// Remember how much the type is indented (typically only nested types are indented), so we
 		// can use that in determining the "natural" indent for some things inside the type
@@ -63,32 +63,32 @@ public class WriteTypeDeclarationHeader {
 		boolean isGeneric = !typeParameters.isEmpty();
 
 		if (isGeneric) {
-			context.write("template ");
-			ASTWriterUtil.writeTypeParameters(typeParameters, true, context);
-			context.write(" ");
+            context.write("template ");
+			//sCPlusPlusASTWriter.writeTypeParameters(typeParameters, true);
+            context.write(" ");
 		}
 
 		if (isInterface)
-			context.matchAndWrite("interface", "class");
+            context.matchAndWrite("interface", "class");
 		else
-			context.matchAndWrite("class");
+            context.matchAndWrite("class");
 
-		context.copySpaceAndComments();
-		context.matchAndWrite(typeDeclaration.getName().getIdentifier());
+        context.copySpaceAndComments();
+        context.matchAndWrite(typeDeclaration.getName().getIdentifier());
 
 		// Skip past the type parameters
 		if (isGeneric) {
 			context.setPosition(ASTUtil.getEndPosition(typeParameters));
-			context.skipSpaceAndComments();
-			context.match(">");
+            context.skipSpaceAndComments();
+            context.match(">");
 		}
 
 		writeSuperClassAndInterfaces();
 
-		context.copySpaceAndComments();
-		context.matchAndWrite("{");
-		context.copySpaceAndCommentsUntilEOL();
-		context.writeln();
+        context.copySpaceAndComments();
+        context.matchAndWrite("{");
+        context.copySpaceAndCommentsUntilEOL();
+        context.writeln();
 
 		// context.getTargetWriter().incrementByPreferredIndent();
 
@@ -98,8 +98,8 @@ public class WriteTypeDeclarationHeader {
 		writeSuperDefinition();
 		writeFields();
 
-		context.writeSpaces(typeIndent);
-		context.write("};");
+        context.writeSpaces(typeIndent);
+        context.write("};");
 
 		context.setPosition(ASTUtil.getEndPosition(typeDeclaration));
 	}
@@ -111,13 +111,13 @@ public class WriteTypeDeclarationHeader {
 		List<Type> superInterfaceTypes = (List<Type>) typeDeclaration.superInterfaceTypes();
 
 		if (superclassType == null)
-			context.write(" : public Object");
+            context.write(" : public Object");
 		else {
-			context.copySpaceAndComments();
-			context.matchAndWrite("extends", ": public");
+            context.copySpaceAndComments();
+            context.matchAndWrite("extends", ": public");
 
-			context.copySpaceAndComments();
-			astWriters.writeNode(superclassType, context);
+            context.copySpaceAndComments();
+			astWriters.writeNode(superclassType);
 		}
 
 		// Write out the super interfaces, if any
@@ -126,21 +126,21 @@ public class WriteTypeDeclarationHeader {
 			Type superInterfaceType = (Type) superInterfaceTypeObject;
 
 			if (firstInterface) {
-				context.skipSpaceAndComments();
-				context.matchAndWrite("implements", ", public");
+                context.skipSpaceAndComments();
+                context.matchAndWrite("implements", ", public");
 			} else {
-				context.copySpaceAndComments();
-				context.matchAndWrite(",", ", public");
+                context.copySpaceAndComments();
+                context.matchAndWrite(",", ", public");
 			}
 
 			// Ensure there's at least a space after the "public" keyword (not required in Java
 			// which just has the comma there)
 			int originalPosition = context.getPosition();
-			context.copySpaceAndComments();
+            context.copySpaceAndComments();
 			if (context.getPosition() == originalPosition)
-				context.write(" ");
+                context.write(" ");
 
-			astWriters.writeNode(superInterfaceType, context);
+			astWriters.writeNode(superInterfaceType);
 			firstInterface = false;
 		}
 	}
@@ -176,7 +176,7 @@ public class WriteTypeDeclarationHeader {
 
 		// If we've already output something for the class, add a blank line separator
 		if (outputSomethingForType)
-			context.writeln();
+            context.writeln();
 
 		writeAccessLevelGroup(accessLevel, " // Nested class(es)");
 
@@ -185,20 +185,20 @@ public class WriteTypeDeclarationHeader {
 		for (TypeDeclaration nestedTypeDeclaration : typeDeclarations) {
 
 			context.setPositionToStartOfNodeSpaceAndComments(nestedTypeDeclaration);
-			context.copySpaceAndComments();
+            context.copySpaceAndComments();
 
-			astWriters.writeNode(nestedTypeDeclaration, context);
+			astWriters.writeNode(nestedTypeDeclaration);
 
 			// Copy any trailing comment associated with the class, on the same line as the closing
 			// brace; rare but possible
-			context.copySpaceAndCommentsUntilEOL();
+            context.copySpaceAndCommentsUntilEOL();
 
-			context.writeln();
+            context.writeln();
 		}
 	}
 
 	private void writeAccessLevelGroup(AccessLevel accessLevel, String headerComment) {
-		context.writeSpaces(typeIndent);
+        context.writeSpaces(typeIndent);
 		
 		String headerText;
 		if (accessLevel == AccessLevel.PUBLIC || accessLevel == AccessLevel.PACKAGE)
@@ -209,10 +209,10 @@ public class WriteTypeDeclarationHeader {
 			headerText = "private:";
 		else throw new JUniversalException("Unknown access level: " + accessLevel);
 
-		context.write(headerText);
+        context.write(headerText);
 		if (headerComment != null)
-			context.write(headerComment);
-		context.writeln();
+            context.write(headerComment);
+        context.writeln();
 	}
 
 	private void writeMethods() {
@@ -246,7 +246,7 @@ public class WriteTypeDeclarationHeader {
 
 		// If we've already output something for the class, add a blank line separator
 		if (outputSomethingForType)
-			context.writeln();
+            context.writeln();
 
 		writeAccessLevelGroup(accessLevel, null);
 
@@ -265,39 +265,39 @@ public class WriteTypeDeclarationHeader {
 			// standard indent.
 			context.skipSpacesAndTabsBackward();
 			if (context.getSourceLogicalColumn() == 0)
-				context.copySpaceAndComments();
+                context.copySpaceAndComments();
 			else {
-				context.writeSpaces(context.getPreferredIndent());
+                context.writeSpaces(context.getPreferredIndent());
 				context.skipSpacesAndTabs();
 			}
 
-			astWriters.writeNode(methodDeclaration, context);
+			astWriters.writeNode(methodDeclaration);
 
 			// Copy any trailing comment associated with the method; that's sometimes there for
 			// one-liners
-			context.copySpaceAndCommentsUntilEOL();
+            context.copySpaceAndCommentsUntilEOL();
 
-			context.writeln();
+            context.writeln();
 		}
 	}
 
 	private void writeSuperDefinition() {
 		// If we've already output something for the class, add a blank line separator
 		if (outputSomethingForType)
-			context.writeln();
+            context.writeln();
 
 		writeAccessLevelGroup(AccessLevel.PRIVATE, null);
 
-		context.writeSpaces(typeIndent + context.getPreferredIndent());
+        context.writeSpaces(typeIndent + context.getPreferredIndent());
 
-		context.write("typedef ");
+        context.write("typedef ");
 
 		Type superclassType = typeDeclaration.getSuperclassType();
 		if (superclassType == null)
-			context.write("Object");
+            context.write("Object");
 		else astWriters.writeNodeAtDifferentPosition(superclassType, context);
 
-		context.writeln(" super;");
+        context.writeln(" super;");
 	}
 
 	private void writeFields() {
@@ -316,7 +316,7 @@ public class WriteTypeDeclarationHeader {
 
 					// If we've already output something for the class, add a blank line separator
 					if (outputSomethingForType)
-						context.writeln();
+                        context.writeln();
 
 					writeAccessLevelGroup(accessLevel, " // Data");
 				}
@@ -324,25 +324,25 @@ public class WriteTypeDeclarationHeader {
 				// Skip back to the beginning of the comments, ignoring any comments associated with
 				// the previous node
 				context.setPosition(fieldDeclaration.getStartPosition());
-				context.skipSpaceAndCommentsBackward();
-				context.skipSpaceAndCommentsUntilEOL();
+                context.skipSpaceAndCommentsBackward();
+                context.skipSpaceAndCommentsUntilEOL();
 				context.skipNewline();
 
 				if (firstItemForAccessLevel)
 					context.skipBlankLines();
 
-				context.copySpaceAndComments();
+                context.copySpaceAndComments();
 
 				// If the member is on the same line as other members, for some unusual reason, then
 				// the above code won't indent it. So indent it here since in our output every
 				// member/method is on it's own line in the class definition.
 				if (context.getSourceLogicalColumn() == 0)
-					context.writeSpaces(context.getPreferredIndent());
+                    context.writeSpaces(context.getPreferredIndent());
 
-				astWriters.writeNode(fieldDeclaration, context);
+				astWriters.writeNode(fieldDeclaration);
 
-				context.copySpaceAndCommentsUntilEOL();
-				context.writeln();
+                context.copySpaceAndCommentsUntilEOL();
+                context.writeln();
 
 				outputSomethingForType = true;
 				lastAccessLevel = accessLevel;

@@ -23,8 +23,6 @@
 package org.juniversal.translator.cplusplus.astwriters;
 
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.core.Context;
 import org.juniversal.translator.cplusplus.OutputType;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -33,75 +31,73 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 
-public class FieldDeclarationWriter extends ASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
-
+public class FieldDeclarationWriter extends CPlusPlusASTWriter {
     public FieldDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+        super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
+	public void write(ASTNode node) {
 		FieldDeclaration fieldDeclaration = (FieldDeclaration) node;
 
 		// TODO: Handle final/const
 
 		boolean isStatic = ASTUtil.containsStatic(fieldDeclaration.modifiers());
 
-		if (context.getOutputType() == OutputType.HEADER && isStatic)
-			context.write("static ");
-		context.skipModifiers(fieldDeclaration.modifiers());
+		if (getContext().getOutputType() == OutputType.HEADER && isStatic)
+			write("static ");
+		skipModifiers(fieldDeclaration.modifiers());
 
 		// Write the type
-		context.skipSpaceAndComments();
-        cPlusPlusASTWriters.writeType(fieldDeclaration.getType(), context, false);
+		skipSpaceAndComments();
+        writeType(fieldDeclaration.getType(), false);
 
 		boolean first = true;
 		for (Object fragment : fieldDeclaration.fragments()) {
 			VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) fragment;
 
 			if (! first) {
-				context.copySpaceAndComments();
-				context.matchAndWrite(",");
+				copySpaceAndComments();
+				matchAndWrite(",");
 			}
 
-			context.copySpaceAndComments();
-			writeVariableDeclarationFragment(variableDeclarationFragment, context,
-					context.getOutputType() == OutputType.SOURCE);
+			copySpaceAndComments();
+			writeVariableDeclarationFragment(variableDeclarationFragment,
+                    getContext().getOutputType() == OutputType.SOURCE);
 
 			first = false;
 		}
 
-		context.copySpaceAndComments();
-		context.matchAndWrite(";");
+		copySpaceAndComments();
+		matchAndWrite(";");
 	}
 
 	private void writeVariableDeclarationFragment(VariableDeclarationFragment variableDeclarationFragment,
-			Context context, boolean writingSourceFile) {
+                                                  boolean writingSourceFile) {
 
 		// TODO: Handle syntax with extra dimensions on array
 		if (variableDeclarationFragment.getExtraDimensions() > 0)
-			context.throwSourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
+			throw sourceNotSupported("\"int foo[]\" syntax not currently supported; use \"int[] foo\" instead");
 
-		if (context.isWritingVariableDeclarationNeedingStar())
-			context.write("*");
+		if (getContext().isWritingVariableDeclarationNeedingStar())
+			write("*");
 
 		if (writingSourceFile)
-			context.write(context.getTypeDeclaration().getName().getIdentifier() + "::");
-        cPlusPlusASTWriters.writeNode(variableDeclarationFragment.getName(), context);
+			write(getContext().getTypeDeclaration().getName().getIdentifier() + "::");
+        writeNode(variableDeclarationFragment.getName());
 
 		// Only write out the initializer when writing to the source file; in that case the field
 		// must be static
 		Expression initializer = variableDeclarationFragment.getInitializer();
 		if (initializer != null) {
 			if (!writingSourceFile)
-				context.setPosition(ASTUtil.getEndPosition(initializer));
+				setPosition(ASTUtil.getEndPosition(initializer));
 			else {
-				context.copySpaceAndComments();
-				context.matchAndWrite("=");
+				copySpaceAndComments();
+				matchAndWrite("=");
 
-				context.copySpaceAndComments();
-                cPlusPlusASTWriters.writeNode(initializer, context);
+				copySpaceAndComments();
+                writeNode(initializer);
 			}
 		}
 	}

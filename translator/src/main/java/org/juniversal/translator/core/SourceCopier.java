@@ -22,21 +22,19 @@
 
 package org.juniversal.translator.core;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class SourceCopier {
     private SourceFile sourceFile;
     private String source;
-    private int sourceTabStop;
+    private TargetWriter targetWriter;
 
-    public SourceCopier(SourceFile sourceFile, int sourceTabStop, TargetWriter targetWriter) {
+    public SourceCopier(SourceFile sourceFile, TargetWriter targetWriter) {
         this.sourceFile = sourceFile;
         this.source = sourceFile.getSource();
-        this.sourceTabStop = sourceTabStop;
         this.targetWriter = targetWriter;
     }
-
-    private TargetWriter targetWriter;
 
     public int match(int startPosition, String match) {
         if (!source.startsWith(match, startPosition))
@@ -253,7 +251,7 @@ public class SourceCopier {
     }
 
     private int copySingleLineComment(int position) {
-        int commentStartSourceColumn = getSourceLogicalColumn(position);
+        int commentStartSourceColumn = sourceFile.getSourceLogicalColumn(position);
         int commentStartOutputColumn = targetWriter.getCurrColumn();
 
         while (true) {
@@ -290,7 +288,8 @@ public class SourceCopier {
                 peekPosition = skipSpacesAndTabs(peekPosition);
                 peekChar = getSourceCharAt(peekPosition);
 
-                if (peekChar == '/' && getSourceCharAt(peekPosition + 1) == '/' && getSourceLogicalColumn(peekPosition) == commentStartSourceColumn) {
+                if (peekChar == '/' && getSourceCharAt(peekPosition + 1) == '/' &&
+                    sourceFile.getSourceLogicalColumn(peekPosition) == commentStartSourceColumn) {
                     position = peekPosition;
                     commentContinues = true;
                 }
@@ -301,7 +300,7 @@ public class SourceCopier {
 
             targetWriter.write("\n");
 
-            int currSourceColumn = getSourceLogicalColumn(position);
+            int currSourceColumn = sourceFile.getSourceLogicalColumn(position);
 
             // Ensure that subsequent lines of the comment are indented by the same amount, relative
             // to the first of the comment, as they are in the source
@@ -311,7 +310,7 @@ public class SourceCopier {
 
     private int copyMultilineComment(int position) {
         int currChar;
-        int commentStartSourceColumn = getSourceLogicalColumn(position);
+        int commentStartSourceColumn = sourceFile.getSourceLogicalColumn(position);
         int commentStartOutputColumn = targetWriter.getCurrColumn();
 
         targetWriter.write("/*");
@@ -333,7 +332,7 @@ public class SourceCopier {
                 ++position;
 
                 position = skipSpacesAndTabs(position);
-                int currSourceColumn = getSourceLogicalColumn(position);
+                int currSourceColumn = sourceFile.getSourceLogicalColumn(position);
 
                 // Ensure that subsequent lines of the multiline comment are indented by the
                 // same amount, relative to the first of the comment, as they are in the
@@ -356,6 +355,7 @@ public class SourceCopier {
      * @param startPosition starting position in source
      */
     public int copySpacesAndTabs(int startPosition) {
+        int sourceTabStop = sourceFile.getSourceTabStop();
 
         int logicalColumn = -1; // -1 means don't know logical (untabified) column--yet
         int logicalColumnOffset = 0; // Logical (untabified) column offset
@@ -371,7 +371,7 @@ public class SourceCopier {
             } else if (currChar == '\t') {
                 // If we haven't yet computed the logical column, compute it now
                 if (logicalColumn == -1)
-                    logicalColumn = getSourceLogicalColumn(position);
+                    logicalColumn = sourceFile.getSourceLogicalColumn(position);
 
                 int spacesForTab = sourceTabStop - (logicalColumn % sourceTabStop);
 
@@ -498,94 +498,5 @@ public class SourceCopier {
         if (position < 0)
             return -1;
         return source.charAt(position);
-    }
-
-    /**
-     * Gets the logical column in the source corresponding to the specified position. "Logical" means with tabs expanded
-     * according to the specified source tab stop.
-     *
-     * @param position source position in question
-     * @return logical column
-     */
-    public int getSourceLogicalColumn(int position) {
-        int physicalColumn = sourceFile.getCompilationUnit().getColumnNumber(position);
-        if (physicalColumn < 0)
-            throw new JUniversalException("Position is invalid: " + position);
-
-        int logicalColumn = 0;
-        for (int i = position - physicalColumn; i < position; ++i) {
-            char currChar = source.charAt(i);
-            if (currChar == '\t')
-                logicalColumn += sourceTabStop - (logicalColumn % sourceTabStop);
-            else
-                ++logicalColumn;
-        }
-
-        return logicalColumn;
-    }
-
-    /**
-     * Returns a description of the specified position, including line number, column number, and the contents of the
-     * entire line with the position marked. Normally this description is put in error messages. The description should
-     * normally be output starting on a new line; the description doesn't include a line break at the beginning though
-     * it does include a line break in the middle. If more text will be output following the description, the caller
-     * should normally add a line break before appending additional text.
-     *
-     * @param position position in source file
-     * @return description string for position, with one line break in the middle
-     */
-    public String getPositionDescription(int position) {
-        String prefix = sourceFile.isDiskFile() ? "    File " + sourceFile.getSourceFilePath() + "\n" : "";
-
-        CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
-
-        int lineNumber = compilationUnit.getLineNumber(position);
-        if (lineNumber < 0) {
-            if (position == source.length())
-                return prefix + "End of file";
-            else return prefix + "Position " + position + " isn't valid";
-        }
-
-        int columnNumber = getSourceLogicalColumn(position);
-
-        int startPosition = compilationUnit.getPosition(lineNumber, 0);
-        int startOfNextLine = compilationUnit.getPosition(lineNumber + 1, 0);
-        // If on last line, set endPosition to end of source else set it to end of line
-        int endPosition = (startOfNextLine == -1) ? source.length() - 1 : startOfNextLine - 1;
-
-        // Chop off newlines / carriage returns on the end of the line
-        while (endPosition >= 0 && (source.charAt(endPosition) == '\n' || source.charAt(endPosition) == '\r'))
-            --endPosition;
-        if (endPosition < position)
-            endPosition = position;
-
-        String linePrefix = "    " + lineNumber + ":" + columnNumber + ":  ";
-
-        String line = source.substring(startPosition, endPosition + 1);
-
-        StringBuilder description = new StringBuilder(prefix);
-        description.append(linePrefix).append(line).append("\n");
-
-        // Append spaces or tabs to position the caret at the right spot on the line
-        String textBeforePositionMarker = linePrefix + source.substring(startPosition, position);
-        int length = textBeforePositionMarker.length();
-        for (int i = 0; i < length; ++i)
-            if (textBeforePositionMarker.charAt(i) == '\t')
-                description.append('\t');
-            else description.append(' ');
-        description.append("^");
-
-        return description.toString();
-    }
-
-    public int getSourceLineNumber(int position) {
-        CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
-
-        int lineNumber = compilationUnit.getLineNumber(position);
-        if (lineNumber < 0) {
-            if (position == source.length())
-                throw new JUniversalException("Position " + position + " is at end of source file; can't get line number");
-            else throw new JUniversalException("Position " + position + " isn't valid");
-        } else return lineNumber;
     }
 }

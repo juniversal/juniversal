@@ -25,21 +25,19 @@ package org.juniversal.translator.swift.astwriters;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
-import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.core.Context;
 
 import java.util.List;
 
 
-public class ClassInstanceCreationWriter extends ASTWriter {
+public class ClassInstanceCreationWriter extends SwiftASTWriter {
     private SwiftASTWriters swiftASTWriters;
 
     public ClassInstanceCreationWriter(SwiftASTWriters swiftASTWriters) {
-        this.swiftASTWriters = swiftASTWriters;
+        super(swiftASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
+	public void write(ASTNode node) {
 		ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) node;
 
 		//TODO: Handle type arguments
@@ -47,16 +45,16 @@ public class ClassInstanceCreationWriter extends ASTWriter {
 
 		// TODO: Support inner class creation via object.new
 		if (classInstanceCreation.getExpression() != null)
-			context.throwSourceNotSupported("Inner classes not yet supported");
+			throw sourceNotSupported("Inner classes not yet supported");
 
-		context.matchAndWrite("new");
-		context.copySpaceAndComments();
+		matchAndWrite("new");
+		copySpaceAndComments();
 
-        swiftASTWriters.writeNode(classInstanceCreation.getType(), context);
-		context.copySpaceAndComments();
+        swiftASTWriters.writeNode(classInstanceCreation.getType());
+		copySpaceAndComments();
 
-		context.matchAndWrite("(");
-		context.copySpaceAndComments();
+		matchAndWrite("(");
+		copySpaceAndComments();
 
 		List<?> arguments = classInstanceCreation.arguments();
 
@@ -65,16 +63,16 @@ public class ClassInstanceCreationWriter extends ASTWriter {
 			Expression argument = (Expression) object;
 
 			if (! first) {
-				context.matchAndWrite(",");
-				context.copySpaceAndComments();
+				matchAndWrite(",");
+				copySpaceAndComments();
 			}
 
-            swiftASTWriters.writeNode(argument, context);
-			context.copySpaceAndComments();
+            swiftASTWriters.writeNode(argument);
+			copySpaceAndComments();
 
 			first = false;
 		}
 
-		context.matchAndWrite(")");
+		matchAndWrite(")");
 	}
 }

@@ -20,73 +20,44 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus.astwriters;
+package org.juniversal.translator.csharp.astwriters;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ForStatement;
 
 
-public class ForStatementWriter extends CPlusPlusASTWriter {
-    public ForStatementWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        super(cPlusPlusASTWriters);
+public class ForStatementWriter extends CSharpASTWriter<ForStatement> {
+    public ForStatementWriter(CSharpASTWriters cSharpASTWriters) {
+        super(cSharpASTWriters);
     }
 
     @Override
-    public void write(ASTNode node) {
-        ForStatement forStatement = (ForStatement) node;
-
+    public void write(ForStatement forStatement) {
         matchAndWrite("for");
-        copySpaceAndComments();
 
+        copySpaceAndComments();
         matchAndWrite("(");
+
+        writeCommaDelimitedNodes(forStatement.initializers());
+
         copySpaceAndComments();
-
-        boolean first = true;
-        for (Object initializerExpressionObject : forStatement.initializers()) {
-            Expression initializerExpression = (Expression) initializerExpressionObject;
-
-            if (!first) {
-                matchAndWrite(",");
-                copySpaceAndComments();
-            }
-
-            writeNode(initializerExpression);
-            copySpaceAndComments();
-
-            first = false;
-        }
-
         matchAndWrite(";");
-        copySpaceAndComments();
 
         Expression forExpression = forStatement.getExpression();
         if (forExpression != null) {
+            copySpaceAndComments();
             writeNode(forStatement.getExpression());
-            copySpaceAndComments();
         }
 
+        copySpaceAndComments();
         matchAndWrite(";");
+
+        writeCommaDelimitedNodes(forStatement.updaters());
+
         copySpaceAndComments();
-
-        first = true;
-        for (Object updaterExpressionObject : forStatement.updaters()) {
-            Expression updaterExpression = (Expression) updaterExpressionObject;
-
-            if (!first) {
-                matchAndWrite(",");
-                copySpaceAndComments();
-            }
-
-            writeNode(updaterExpression);
-            copySpaceAndComments();
-
-            first = false;
-        }
-
         matchAndWrite(")");
-        copySpaceAndComments();
 
+        copySpaceAndComments();
         writeNode(forStatement.getBody());
     }
 }

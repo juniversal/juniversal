@@ -56,8 +56,8 @@ public class WriteTypeDeclarationSource {
 				// header
 				context.setPositionToStartOfNode(fieldDeclaration);
 
-				astWriters.writeNode(fieldDeclaration, context);
-				context.writeln();
+				astWriters.writeNode(fieldDeclaration);
+                context.writeln();
 				outputSomething = true;
 			}
 		}
@@ -82,15 +82,15 @@ public class WriteTypeDeclarationSource {
 
 	private void writeNestedType(CPlusPlusASTWriters astWriters, Context context, TypeDeclaration nestedTypeDeclaration) {
 		if (outputSomething)
-			context.writeln(2);
+            context.writeln(2);
 
-		context.writeln("/**");
-		context.writeln(" *    " + nestedTypeDeclaration.getName());
-		context.writeln(" */");
-		context.writeln();
+        context.writeln("/**");
+        context.writeln(" *    " + nestedTypeDeclaration.getName());
+        context.writeln(" */");
+        context.writeln();
 
 		context.setPositionToStartOfNode(nestedTypeDeclaration);
-		astWriters.writeNode(nestedTypeDeclaration, context);
+		astWriters.writeNode(nestedTypeDeclaration);
 		outputSomething = true;
 	}
 
@@ -117,14 +117,14 @@ public class WriteTypeDeclarationSource {
 		if (! outputSomething)
 			context.skipBlankLines();
 
-		context.copySpaceAndComments();
-		astWriters.writeNode(methodDeclaration, context);
+        context.copySpaceAndComments();
+		astWriters.writeNode(methodDeclaration);
 
 		context.setWritingMethodImplementation(false);
 		context.getTargetWriter().setAdditionalIndentation(previousIndent);
 
-		context.copySpaceAndCommentsUntilEOL();
-		context.writeln();
+        context.copySpaceAndCommentsUntilEOL();
+        context.writeln();
 
 		outputSomething = true;
 	}

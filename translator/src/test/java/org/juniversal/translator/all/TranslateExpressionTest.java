@@ -20,31 +20,19 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus.astwriters;
+package org.juniversal.translator.all;
 
-import org.juniversal.translator.cplusplus.OutputType;
+import org.junit.Test;
+import org.juniversal.translator.TranslateNodeTest;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
-
-public class TypeDeclarationWriter extends CPlusPlusASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
-
-    public TypeDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        super(cPlusPlusASTWriters);
+public class TranslateExpressionTest extends TranslateNodeTest {
+    @Test public void testFieldAccess() {
+        testTranslateIntExpression("this /*abc*/ . /*def*/ intField", null, null);
     }
 
-    public void write(ASTNode node) {
-		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
+    @Test public void testArrayAccess() {
+        testTranslateIntExpression("intArrayField[0]", null, null);
 
-		TypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
-		getContext().setTypeDeclaration(typeDeclaration);
-
-		if (getContext().getOutputType() == OutputType.HEADER)
-			new WriteTypeDeclarationHeader(typeDeclaration, getContext(), cPlusPlusASTWriters);
-		else new WriteTypeDeclarationSource(typeDeclaration, cPlusPlusASTWriters, getContext());
-
-		getContext().setTypeDeclaration(oldTypeDeclaration);
-	}
+        testTranslateIntExpression("intArrayField /*abc*/ [ /*def*/ 0 /*ghi*/ ]", null, null);
+    }
 }

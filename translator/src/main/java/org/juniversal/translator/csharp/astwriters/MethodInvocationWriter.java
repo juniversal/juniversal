@@ -20,31 +20,29 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus.astwriters;
+package org.juniversal.translator.csharp.astwriters;
 
-import org.juniversal.translator.cplusplus.OutputType;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.jetbrains.annotations.Nullable;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
-
-public class TypeDeclarationWriter extends CPlusPlusASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
-
-    public TypeDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        super(cPlusPlusASTWriters);
+public class MethodInvocationWriter extends MethodInvocationWriterBase<MethodInvocation> {
+    public MethodInvocationWriter(CSharpASTWriters cSharpASTWriters) {
+        super(cSharpASTWriters);
     }
 
-    public void write(ASTNode node) {
-		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
+    @Override public void write(MethodInvocation methodInvocation) {
+        @Nullable Expression expression = methodInvocation.getExpression();
+        if (expression != null) {
+            writeNode(expression);
 
-		TypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
-		getContext().setTypeDeclaration(typeDeclaration);
+            copySpaceAndComments();
+            matchAndWrite(".");
 
-		if (getContext().getOutputType() == OutputType.HEADER)
-			new WriteTypeDeclarationHeader(typeDeclaration, getContext(), cPlusPlusASTWriters);
-		else new WriteTypeDeclarationSource(typeDeclaration, cPlusPlusASTWriters, getContext());
+            copySpaceAndComments();
+        }
 
-		getContext().setTypeDeclaration(oldTypeDeclaration);
-	}
+        writeMethodInvocation(methodInvocation, methodInvocation.getName().getIdentifier(),
+                methodInvocation.typeArguments(), methodInvocation.arguments(), methodInvocation.resolveMethodBinding());
+    }
 }

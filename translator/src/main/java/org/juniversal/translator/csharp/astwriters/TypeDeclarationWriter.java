@@ -22,28 +22,122 @@
 
 package org.juniversal.translator.csharp.astwriters;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.core.ASTWriters;
-import org.juniversal.translator.core.Context;
+import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.Nullable;
+import org.juniversal.translator.core.ASTUtil;
 
+import java.util.List;
 
-class TypeDeclarationWriter extends ASTWriter {
-    private CSharpASTWriters cSharpASTWriters;
+import static org.juniversal.translator.core.ASTUtil.*;
 
-    TypeDeclarationWriter(CSharpASTWriters cSharpASTWriters) {
-        this.cSharpASTWriters = cSharpASTWriters;
+public class TypeDeclarationWriter extends CSharpASTWriter<TypeDeclaration> {
+    public TypeDeclarationWriter(CSharpASTWriters cSharpASTWriters) {
+        super(cSharpASTWriters);
     }
 
-    public void write(ASTNode node, Context context) {
-        TypeDeclaration typeDeclaration = (TypeDeclaration) node;
+    @Override
+    public void write(TypeDeclaration typeDeclaration) {
+        @Nullable TypeDeclaration outerTypeDeclaration = getContext().getTypeDeclaration();
+        getContext().setTypeDeclaration(typeDeclaration);
 
-        TypeDeclaration oldTypeDeclaration = context.getTypeDeclaration();
-        context.setTypeDeclaration(typeDeclaration);
+        try {
+            List<?> modifiers = typeDeclaration.modifiers();
+            if (outerTypeDeclaration != null && ! containsStatic(modifiers))
+                throw sourceNotSupported("Only static nested classes are supported, as C# and Swift don't support inner (non static) classes.  Make the nested class static and pass in the outer instance to the constructor, to simulate an inner class.");
 
-        new WriteTypeDeclaration(typeDeclaration, context, cSharpASTWriters);
+            boolean isInterface = typeDeclaration.isInterface();
 
-        context.setTypeDeclaration(oldTypeDeclaration);
+            List typeParameters = typeDeclaration.typeParameters();
+
+            boolean isGeneric = !typeParameters.isEmpty();
+
+            writeAccessModifier(modifiers);
+
+            if (ASTUtil.containsFinal(modifiers))
+                writeSealedModifier();
+
+            // Skip the modifiers
+            skipModifiers(modifiers);
+
+            if (isInterface)
+                matchAndWrite("interface");
+            else
+                matchAndWrite("class");
+
+            copySpaceAndComments();
+            writeNode(typeDeclaration.getName());
+
+            if (isGeneric) {
+                copySpaceAndComments();
+                matchAndWrite("<");
+
+                writeCommaDelimitedNodes(typeParameters, (TypeParameter typeParameter) -> {
+                    copySpaceAndComments();
+                    writeNode(typeParameter.getName());
+
+                    // Skip any constraints; they'll be written out at the end of the declaration line
+                    setPositionToEndOfNode(typeParameter);
+                });
+
+                copySpaceAndComments();
+                matchAndWrite(">");
+            }
+
+            // TODO: Implement this
+            writeSuperClassAndInterfaces(typeDeclaration);
+
+            if (isGeneric)
+                writeTypeParameterConstraints(typeParameters);
+
+            copySpaceAndComments();
+            matchAndWrite("{");
+
+            writeNodes(typeDeclaration.bodyDeclarations());
+
+            copySpaceAndComments();
+            matchAndWrite("}");
+        } finally {
+            getContext().setTypeDeclaration(outerTypeDeclaration);
+        }
+    }
+
+    private void writeSuperClassAndInterfaces(TypeDeclaration typeDeclaration) {
+        Type superclassType = typeDeclaration.getSuperclassType();
+        boolean isInterface = typeDeclaration.isInterface();
+
+        if (superclassType != null) {
+            copySpaceAndComments();
+            matchAndWrite("extends", ":");
+
+            copySpaceAndComments();
+            writeNode(superclassType);
+        }
+
+        // Write out the super interfaces, if any
+        forEach(typeDeclaration.superInterfaceTypes(), (Type superInterfaceType, boolean first) -> {
+            if (first) {
+                if (superclassType == null) {
+                    copySpaceAndComments();
+
+                    // An interface extends another interface whereas a class implements interfaces
+                    matchAndWrite(isInterface ? "extends" : "implements", ":");
+                } else {
+                    skipSpaceAndComments();
+                    matchAndWrite("implements", ", ");
+                }
+            } else {
+                copySpaceAndComments();
+                matchAndWrite(",");
+            }
+
+            // Ensure there's at least a space after the "public" keyword (not required in Java which just has the
+            // comma there)
+            int originalPosition = getPosition();
+            copySpaceAndComments();
+            if (getPosition() == originalPosition)
+                write(" ");
+
+            writeNode(superInterfaceType);
+        });
     }
 }

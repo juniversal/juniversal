@@ -21,4 +21,4 @@
  */
 
 rootProject.name = 'juniversal-translator'
-include 'translator'
+include 'translator', 'translator-test-cases'

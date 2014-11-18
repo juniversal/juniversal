@@ -24,21 +24,17 @@ package org.juniversal.translator.swift.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.core.Context;
 
 import java.util.List;
 
 
-public class VariableDeclarationWriter extends ASTWriter {
-    private SwiftASTWriters swiftASTWriters;
-
+public class VariableDeclarationWriter extends SwiftASTWriter {
     public VariableDeclarationWriter(SwiftASTWriters swiftASTWriters) {
-        this.swiftASTWriters = swiftASTWriters;
+        super(swiftASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
+	public void write(ASTNode node) {
 		// Variable declaration statements & expressions are quite similar, so we handle them both
 		// here together
 
@@ -46,48 +42,43 @@ public class VariableDeclarationWriter extends ASTWriter {
 			VariableDeclarationStatement variableDeclarationStatement = (VariableDeclarationStatement) node;
 
 			writeVariableDeclaration(variableDeclarationStatement.modifiers(), variableDeclarationStatement.getType(),
-					variableDeclarationStatement.fragments(), context);
-			context.copySpaceAndComments();
+					variableDeclarationStatement.fragments());
+			copySpaceAndComments();
 
-			context.matchAndWrite(";");
+			matchAndWrite(";");
 		} else {
 			VariableDeclarationExpression variableDeclarationExpression = (VariableDeclarationExpression) node;
 
 			writeVariableDeclaration(variableDeclarationExpression.modifiers(),
-					variableDeclarationExpression.getType(), variableDeclarationExpression.fragments(), context);
+					variableDeclarationExpression.getType(), variableDeclarationExpression.fragments());
 		}
 	}
 
-	private void writeVariableDeclaration(List<?> modifiers, Type type, List<?> fragments, Context context) {
+	private void writeVariableDeclaration(List<?> modifiers, Type type, List<?> fragments) {
 		// Turn "final" into "const"
 		if (ASTUtil.containsFinal(modifiers)) {
-			context.write("const");
-			context.skipModifiers(modifiers);
+			write("const");
+			skipModifiers(modifiers);
 
-			context.copySpaceAndComments();
+			copySpaceAndComments();
 		}
 
 		// Write the type
-        swiftASTWriters.writeType(type, context, false);
-
-		boolean needStar = false;
-		context.setWritingVariableDeclarationNeedingStar(needStar);
+        writeNode(type);
 
 		// Write the variable declaration(s)
 		boolean first = true;
 		for (Object fragment : fragments) {
 			VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) fragment;
 
-			context.copySpaceAndComments();
+			copySpaceAndComments();
 			if (!first) {
-				context.matchAndWrite(",");
-				context.copySpaceAndComments();
+				matchAndWrite(",");
+				copySpaceAndComments();
 			}
-            swiftASTWriters.writeNode(variableDeclarationFragment, context);
+            writeNode(variableDeclarationFragment);
 
 			first = false;
 		}
-
-		context.setWritingVariableDeclarationNeedingStar(false);
 	}
 }

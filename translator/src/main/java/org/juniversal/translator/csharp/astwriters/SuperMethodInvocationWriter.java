@@ -20,31 +20,29 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus.astwriters;
+package org.juniversal.translator.csharp.astwriters;
 
-import org.juniversal.translator.cplusplus.OutputType;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
-
-public class TypeDeclarationWriter extends CPlusPlusASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
-
-    public TypeDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        super(cPlusPlusASTWriters);
+public class SuperMethodInvocationWriter extends MethodInvocationWriterBase<SuperMethodInvocation> {
+    public SuperMethodInvocationWriter(CSharpASTWriters cSharpASTWriters) {
+        super(cSharpASTWriters);
     }
 
-    public void write(ASTNode node) {
-		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
+    @Override
+    public void write(SuperMethodInvocation superMethodInvocation) {
+        // TODO: Support this
+        if (superMethodInvocation.getQualifier() != null)
+            throw sourceNotSupported("Qualified super invocations aren't currently supported");
 
-		TypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
-		getContext().setTypeDeclaration(typeDeclaration);
+        matchAndWrite("super", "base");
 
-		if (getContext().getOutputType() == OutputType.HEADER)
-			new WriteTypeDeclarationHeader(typeDeclaration, getContext(), cPlusPlusASTWriters);
-		else new WriteTypeDeclarationSource(typeDeclaration, cPlusPlusASTWriters, getContext());
+        copySpaceAndComments();
+        matchAndWrite(".");
 
-		getContext().setTypeDeclaration(oldTypeDeclaration);
-	}
+        copySpaceAndComments();
+        writeMethodInvocation(superMethodInvocation, superMethodInvocation.getName().getIdentifier(),
+                superMethodInvocation.typeArguments(), superMethodInvocation.arguments(),
+                superMethodInvocation.resolveMethodBinding());
+    }
 }

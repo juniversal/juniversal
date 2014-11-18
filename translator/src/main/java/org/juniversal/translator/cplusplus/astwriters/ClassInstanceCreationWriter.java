@@ -24,23 +24,18 @@ package org.juniversal.translator.cplusplus.astwriters;
 
 import java.util.List;
 
-import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.core.Context;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 
 
-public class ClassInstanceCreationWriter extends ASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
-
+public class ClassInstanceCreationWriter extends CPlusPlusASTWriter {
     public ClassInstanceCreationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+        super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node, Context context) {
+	public void write(ASTNode node) {
 		ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) node;
 
 		//TODO: Handle type arguments
@@ -48,16 +43,16 @@ public class ClassInstanceCreationWriter extends ASTWriter {
 
 		// TODO: Support inner class creation via object.new
 		if (classInstanceCreation.getExpression() != null)
-			context.throwSourceNotSupported("Inner classes not yet supported");
+			throw sourceNotSupported("Inner classes not yet supported");
 
-		context.matchAndWrite("new");
-		context.copySpaceAndComments();
+		matchAndWrite("new");
+		copySpaceAndComments();
 
-        cPlusPlusASTWriters.writeNode(classInstanceCreation.getType(), context);
-		context.copySpaceAndComments();
+        writeNode(classInstanceCreation.getType());
+		copySpaceAndComments();
 
-		context.matchAndWrite("(");
-		context.copySpaceAndComments();
+		matchAndWrite("(");
+		copySpaceAndComments();
 
 		List<?> arguments = classInstanceCreation.arguments();
 
@@ -66,16 +61,16 @@ public class ClassInstanceCreationWriter extends ASTWriter {
 			Expression argument = (Expression) object;
 
 			if (! first) {
-				context.matchAndWrite(",");
-				context.copySpaceAndComments();
+				matchAndWrite(",");
+				copySpaceAndComments();
 			}
 
-            cPlusPlusASTWriters.writeNode(argument, context);
-			context.copySpaceAndComments();
+            writeNode(argument);
+			copySpaceAndComments();
 
 			first = false;
 		}
 
-		context.matchAndWrite(")");
+		matchAndWrite(")");
 	}
 }

@@ -27,8 +27,17 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import java.util.HashMap;
 
-public class ASTWriters {
+public abstract class ASTWriters {
+    private Context context;
     private HashMap<Class<? extends ASTNode>, ASTWriter> m_visitors = new HashMap<>();
+
+    protected ASTWriters(Context context) {
+        this.context = context;
+    }
+
+    public Context getContext() {
+        return context;
+    }
 
     protected void addWriter(Class<? extends ASTNode> clazz, ASTWriter visitor) {
         if (m_visitors.get(clazz) != null)
@@ -36,7 +45,9 @@ public class ASTWriters {
         m_visitors.put(clazz, visitor);
     }
 
-    public ASTWriter getVisitor(Class<? extends ASTNode> clazz) {
+    public abstract Translator getTranslator();
+
+    public ASTWriter getVisitor(Class clazz) {
         ASTWriter visitor = m_visitors.get(clazz);
         if (visitor == null)
             throw new JUniversalException("No visitor found for class " + clazz.getName());
@@ -44,8 +55,7 @@ public class ASTWriters {
     }
 
     private static final boolean VALIDATE_CONTEXT_POSITION = true;
-
-    public void writeNode(ASTNode node, Context context) {
+    public void writeNode(ASTNode node) {
         int nodeStartPosition;
         if (VALIDATE_CONTEXT_POSITION) {
             nodeStartPosition = node.getStartPosition();
@@ -64,7 +74,7 @@ public class ASTWriters {
             else context.assertPositionIs(nodeStartPosition);
         }
 
-        getVisitor(node.getClass()).write(node, context);
+        getVisitor(node.getClass()).write(node);
 
         if (VALIDATE_CONTEXT_POSITION) {
             if (context.getKnowinglyProcessedTrailingSpaceAndComments())
@@ -73,6 +83,19 @@ public class ASTWriters {
         }
 
         context.setKnowinglyProcessedTrailingSpaceAndComments(false);
+    }
+
+    public void writeRootNode(ASTNode node) {
+        try {
+            writeNode(node);
+        }
+        catch (RuntimeException e) {
+            if (e instanceof ContextPositionMismatchException)
+                throw e;
+            else
+                throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
+                                              + context.getPositionDescription(context.getPosition()), e);
+        }
     }
 
     /**
@@ -86,8 +109,7 @@ public class ASTWriters {
     public void writeNodeAtDifferentPosition(ASTNode node, Context context) {
         int originalPosition = context.getPosition();
         context.setPosition(node.getStartPosition());
-        writeNode(node, context);
+        writeNode(node);
         context.setPosition(originalPosition);
     }
 }
-
