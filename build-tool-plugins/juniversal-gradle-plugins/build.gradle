@@ -1,0 +1,122 @@
+apply plugin: 'groovy'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.1'
+}
+
+repositories {
+    mavenCentral()
+
+    maven {
+        // Use snapshot repository for now, until released to Maven central public
+        url uri('https://oss.sonatype.org/content/repositories/snapshots/')
+        credentials {
+            username 'bretajohnson'
+            password 'd4E6i4TQzetI'
+        }
+    }
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    compile group: 'com.intellij', name: 'annotations', version: '9.0.4'
+
+    compile group: 'org.juniversal', name: 'juniversal-translator', version: '0.7-SNAPSHOT'
+
+    testCompile 'junit:junit:4.11'
+}
+
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+group = 'org.juniversal'
+version = '0.8-SNAPSHOT'
+archivesBaseName = "juniversal-gradle-plugins"
+
+compileJava.targetCompatibility = "1.6"
+compileJava.sourceCompatibility = "1.6"
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': "JUniversal translators and related tool Gradle plugins",
+                'Implementation-Version': version,
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version')
+
+    }
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+/*
+        mavenDeployer {
+            repository(url: uri('../repo'))
+        }
+*/
+
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+/*
+            repository(url: uri('../repo'))
+*/
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'JUniversal Gradle plugins'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'Gradle plugin tasks here are for source code conversion and invoking MSBuild'
+                url 'https://github.com/juniversal/juniversal'
+
+                scm {
+                    connection 'scm:git:git@github.com:juniversal/juniversal.git'
+                    developerConnection 'scm:git:git@github.com:juniversal/juniversal.git'
+                    url 'git@github.com:juniversal/juniversal.git'
+                }
+
+                // TODO: Update with correct license
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        //id 'manfred'
+                        name 'Bret Johnson'
+                        email 'bret.johnson@microsoft.com'
+                    }
+                }
+            }
+        }
+    }
+}
