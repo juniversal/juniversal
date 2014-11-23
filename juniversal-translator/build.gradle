@@ -1,0 +1,121 @@
+/*
+ * Copyright (c) 2012-2014, Microsoft Mobile
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+group = 'org.juniversal'
+version = '0.7-SNAPSHOT'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: '*.jar')
+
+    compile group: 'com.intellij', name: 'annotations', version:'9.0.4'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+jar {
+    from(configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+
+    manifest {
+        attributes 'Implementation-Title': "JUniversal Translator",
+                'Implementation-Version': version,
+                'Main-Class': 'org.juniversal.translator.core.Translator',
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version')
+
+    }
+}
+
+uploadArchives {
+    repositories {
+/*
+        mavenDeployer {
+            repository(url: uri('../repo'))
+        }
+*/
+
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+/*
+            repository(url: uri('../repo'))
+*/
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'JUniversal Translator'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'Translate Java to C# or C++'
+                url 'https://github.com/juniversal/juniversal'
+
+                scm {
+                    connection 'scm:git:git@github.com:juniversal/juniversal.git'
+                    developerConnection 'scm:git:git@github.com:juniversal/juniversal.git'
+                    url 'git@github.com:juniversal/juniversal.git'
+                }
+
+                // TODO: Update with correct license
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        //id 'manfred'
+                        name 'Bret Johnson'
+                        email 'bret.johnson@microsoft.com'
+                    }
+                }
+            }
+        }
+    }
+}
+
