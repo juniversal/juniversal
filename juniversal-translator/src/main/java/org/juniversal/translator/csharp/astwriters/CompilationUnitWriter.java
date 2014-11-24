@@ -20,13 +20,12 @@
  * THE SOFTWARE.
  */
 
-package
-        org /*abc*/.juniversal.
-                translator.csharp.
-                astwriters;
+package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
+
+import static org.juniversal.translator.core.ASTUtil.isThisName;
 
 
 // TODO: Finish this
@@ -49,6 +48,12 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
             ImportDeclaration importDeclaration = (ImportDeclaration) importDeclarationObject;
             Name importDeclarationName = importDeclaration.getName();
 
+            // Skip imports for the Nullable annotation
+            if (isThisName(importDeclarationName, "org.jetbrains.annotations.Nullable")) {
+                setPositionToEndOfNode(importDeclaration);
+                continue;
+            }
+
             if (importDeclaration.isStatic())
                 throw sourceNotSupported("Static imports aren't currently supported");
 
@@ -58,9 +63,8 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
             if (importDeclaration.isOnDemand()) {
                 copySpaceAndComments();
                 writeNode(importDeclarationName);
-            }
-            else {
-                if (! (importDeclarationName instanceof QualifiedName))
+            } else {
+                if (!(importDeclarationName instanceof QualifiedName))
                     throw sourceNotSupported("Class import is unexpectedly not a fully qualified name (with a '.' in it)");
                 QualifiedName qualifiedName = (QualifiedName) importDeclarationName;
 

@@ -22,7 +22,6 @@
 
 package org.juniversal.translator.core;
 
-import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -208,20 +207,16 @@ public class ASTUtil {
         return AccessLevel.PACKAGE;
     }
 
-    public static boolean isFinal(TypeDeclaration typeDeclaration) {
-        return containsFinal(typeDeclaration.modifiers());
+    public static boolean isFinal(BodyDeclaration bodyDeclaration) {
+        return containsFinal(bodyDeclaration.modifiers());
     }
 
-    public static boolean isFinal(MethodDeclaration methodDeclaration) {
-        return containsFinal(methodDeclaration.modifiers());
+    public static boolean isStatic(BodyDeclaration bodyDeclaration) {
+        return containsStatic(bodyDeclaration.modifiers());
     }
 
-    public static boolean isStatic(MethodDeclaration methodDeclaration) {
-        return containsStatic(methodDeclaration.modifiers());
-    }
-
-    public static boolean isPrivate(MethodDeclaration methodDeclaration) {
-        return getAccessModifier(methodDeclaration.modifiers()) == AccessLevel.PRIVATE;
+    public static boolean isPrivate(BodyDeclaration bodyDeclaration) {
+        return getAccessModifier(bodyDeclaration.modifiers()) == AccessLevel.PRIVATE;
     }
 
     public static boolean isOverride(MethodDeclaration methodDeclaration) {
@@ -255,7 +250,7 @@ public class ASTUtil {
         return typeBinding != null && typeBinding.getQualifiedName().equals(qualifiedTypeName);
     }
 
-    public static boolean isMethod(MethodDeclaration methodDeclaration, String methodName, String... parameterTypes) {
+    public static boolean isThisMethod(MethodDeclaration methodDeclaration, String methodName, String... parameterTypes) {
         // If the method names don't match, it's not the specified method
         if (!methodDeclaration.getName().getIdentifier().equals(methodName))
             return false;
@@ -276,6 +271,18 @@ public class ASTUtil {
         }
 
         return true;
+    }
+
+    public static boolean isThisName(Name name, String nameString) {
+        // Check first, in the case of a qualified name, whether the name string has a suffix that's the simple name
+        // portion of the qualified name.   This check is just an optimization, so in the typical case where there is
+        // no match it won't allocate a new object & build the full name string to compare
+        if (name instanceof QualifiedName) {
+            if (!nameString.endsWith(((QualifiedName) name).getName().getIdentifier()))
+                return false;
+        }
+
+        return name.getFullyQualifiedName().equals(nameString);
     }
 
     public static boolean isArrayLengthField(FieldAccess fieldAccess) {

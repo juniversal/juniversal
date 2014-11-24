@@ -68,6 +68,10 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
         writeModifier("sealed");
     }
 
+    public void writeReadonlyModifier() {
+        writeModifier("readonly");
+    }
+
     public void writeOverrideModifier() {
         writeModifier("override");
     }

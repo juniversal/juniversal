@@ -273,6 +273,17 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
         addWriter(ArrayInitializer.class, new CSharpASTNodeWriter<ArrayInitializer>(this) {
             @Override
             public void write(ArrayInitializer arrayInitializer) {
+                // TODO: Test more cases here
+                if (arrayInitializer.getParent() instanceof ArrayInitializer) {
+                    context.write("new[] ");
+/*
+                    throw sourceNotSupported(
+                            "Nested array initializers, without a 'new' specified, aren't supported in C#.   Change the " +
+                            "Java source to include a new, a syntax supported by both Java and C#.  For instance, " +
+                            "change { {1, 2, 3}, {10, 11, 12} ) => { new int[] {1, 2, 3}, new int[] {10, 11, 12} }");
+*/
+                }
+
                 matchAndWrite("{");
 
                 // TODO: Check that number of expressions matches array size (I think, as I think C# requires exact number and Java allows less)

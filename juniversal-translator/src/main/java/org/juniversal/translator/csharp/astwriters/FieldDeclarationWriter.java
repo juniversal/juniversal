@@ -29,6 +29,10 @@ import org.juniversal.translator.core.Context;
 
 import java.util.List;
 
+import static org.juniversal.translator.core.ASTUtil.isFinal;
+import static org.juniversal.translator.core.ASTUtil.isOverride;
+import static org.juniversal.translator.core.ASTUtil.isStatic;
+
 
 // TODO: Finish this
 public class FieldDeclarationWriter extends CSharpASTNodeWriter<FieldDeclaration> {
@@ -38,20 +42,25 @@ public class FieldDeclarationWriter extends CSharpASTNodeWriter<FieldDeclaration
 
     @Override
     public void write(FieldDeclaration fieldDeclaration) {
-        // TODO: Handle final/const
+        boolean isFinal = isFinal(fieldDeclaration);
+        boolean isStatic = isStatic(fieldDeclaration);
 
         List<?> modifiers = fieldDeclaration.modifiers();
-        boolean[] wroteModifier = new boolean[1];
 
         writeAccessModifier(modifiers);
+
+        if (isStatic)
+            writeStaticModifier();
+
+        // TODO: Consider checking if value is fixed at compile time and marking const instead of readonly
+        if (isFinal)
+            writeReadonlyModifier();
 
         // Skip the modifiers
         skipModifiers(modifiers);
         skipSpaceAndComments();
 
         // Write the type
-        if (wroteModifier[0])
-            write(" ");
         writeNode(fieldDeclaration.getType());
 
         writeCommaDelimitedNodes(fieldDeclaration.fragments());

@@ -98,11 +98,11 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
 
         // Map overridden Object methods to their appropriate name in C#
         String mappedMethodName;
-        if (isMethod(methodDeclaration, "equals", "java.lang.Object"))
+        if (isThisMethod(methodDeclaration, "equals", "java.lang.Object"))
             mappedMethodName = "Equals";
-        else if (isMethod(methodDeclaration, "hashCode"))
+        else if (isThisMethod(methodDeclaration, "hashCode"))
             mappedMethodName = "GetHashCode";
-        else if (isMethod(methodDeclaration, "toString"))
+        else if (isThisMethod(methodDeclaration, "toString"))
             mappedMethodName = "ToString";
         else mappedMethodName = methodDeclaration.getName().getIdentifier();
 
