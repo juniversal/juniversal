@@ -44,12 +44,12 @@ public abstract class SwiftASTNodeWriter<T extends ASTNode> extends ASTNodeWrite
             copySpaceAndComments();
             writeNode(statement);
         } else {
-            if (getContext().startsOnSameLine(statement)) {
+            if (getSourceFileWriter().startsOnSameLine(statement)) {
                 if (forceSeparateLine) {
                     write(" {\n");
 
                     writeSpacesUntilColumn(blockStartColumn);
-                    writeSpaces(getContext().getPreferredIndent());
+                    writeSpaces(getPreferredIndent());
                     skipSpacesAndTabs();
 
                     copySpaceAndComments();

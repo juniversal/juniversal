@@ -188,8 +188,8 @@ public class MethodDeclarationWriter extends SwiftASTNodeWriter {
         if (superConstructorInvocation == null)
             return;
 
-        int originalPosition = context.getPosition();
-        context.setPositionToStartOfNode(superConstructorInvocation);
+        int originalPosition = getPosition();
+        setPositionToStartOfNode(superConstructorInvocation);
 
         // TODO: Support <expression>.super
         if (superConstructorInvocation.getExpression() != null)
@@ -224,6 +224,6 @@ public class MethodDeclarationWriter extends SwiftASTNodeWriter {
 
         write(" ");
 
-        context.setPosition(originalPosition);
+        setPosition(originalPosition);
     }
 }

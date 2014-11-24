@@ -32,19 +32,18 @@ import java.util.List;
 public class CPlusPlusSourceFileWriter extends SourceFileWriter {
     private CPlusPlusTranslator cPlusPlusTranslator;
     private Context context;
+    private OutputType outputType;
 
     public CPlusPlusSourceFileWriter(CPlusPlusTranslator cPlusPlusTranslator, SourceFile sourceFile, Writer writer,
                                      OutputType outputType) {
-        super(sourceFile);
+        super(sourceFile, new TargetWriter(writer, cPlusPlusTranslator.getDestTabStop()));
 
         this.cPlusPlusTranslator = cPlusPlusTranslator;
-        TargetWriter targetWriter = new TargetWriter(writer, cPlusPlusTranslator.getDestTabStop());
-        this.context = new Context(sourceFile, targetWriter, outputType);
+        this.outputType = outputType;
+        this.context = new Context();
 
         addDeclarationWriters();
-
         addStatementWriters();
-
         addExpressionWriters();
 
         // Simple name
@@ -66,6 +65,11 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
     @Override
     public Context getContext() {
         return context;
+    }
+
+    @Override
+    public OutputType getOutputType() {
+        return outputType;
     }
 
     /**

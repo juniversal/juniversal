@@ -50,7 +50,7 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
     }
 
     protected void writeNodeAtDifferentPosition(ASTNode node) {
-        getSourceFileWriter().writeNodeAtDifferentPosition(node, getContext());
+        getSourceFileWriter().writeNodeAtDifferentPosition(node);
     }
 
     public <TElmt> void writeCommaDelimitedNodes(List list, ASTUtil.IProcessListElmt<TElmt> processList) {
@@ -97,106 +97,106 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
     public Context getContext() { return getSourceFileWriter().getContext(); }
 
     public SourceNotSupportedException sourceNotSupported(String baseMessage) {
-        return getContext().sourceNotSupported(baseMessage);
+        return getSourceFileWriter().sourceNotSupported(baseMessage);
     }
 
     public JUniversalException invalidAST(String baseMessage) {
-        return getContext().invalidAST(baseMessage);
+        return getSourceFileWriter().invalidAST(baseMessage);
     }
 
     public int getTargetColumn() {
-        return getContext().getTargetColumn();
+        return getSourceFileWriter().getTargetColumn();
     }
 
     public TargetWriter getTargetWriter() {
-        return getContext().getTargetWriter();
+        return getSourceFileWriter().getTargetWriter();
     }
 
     public void copySpaceAndComments() {
-        getContext().copySpaceAndComments();
+        getSourceFileWriter().copySpaceAndComments();
     }
 
     public void copySpaceAndCommentsEnsuringDelimiter() {
-        getContext().copySpaceAndCommentsEnsuringDelimiter();
+        getSourceFileWriter().copySpaceAndCommentsEnsuringDelimiter();
     }
 
     public void copySpaceAndCommentsUntilEOL() {
-        getContext().copySpaceAndCommentsUntilEOL();
+        getSourceFileWriter().copySpaceAndCommentsUntilEOL();
     }
 
     public void skipSpaceAndComments() {
-        getContext().skipSpaceAndComments();
+        getSourceFileWriter().skipSpaceAndComments();
     }
 
     public void skipSpacesAndTabs() {
-        getContext().skipSpacesAndTabs();
+        getSourceFileWriter().skipSpacesAndTabs();
     }
 
     public void setKnowinglyProcessedTrailingSpaceAndComments(boolean knowinglyProcessedTrailingSpaceAndComments) {
-        getContext().setKnowinglyProcessedTrailingSpaceAndComments(knowinglyProcessedTrailingSpaceAndComments);
+        getSourceFileWriter().setKnowinglyProcessedTrailingSpaceAndComments(knowinglyProcessedTrailingSpaceAndComments);
     }
 
     public void matchAndWrite(String matchAndWrite) {
-        getContext().matchAndWrite(matchAndWrite);
+        getSourceFileWriter().matchAndWrite(matchAndWrite);
     }
 
     public void matchAndWrite(String match, String write) {
-        getContext().matchAndWrite(match, write);
+        getSourceFileWriter().matchAndWrite(match, write);
     }
 
     public void match(String match) {
-        getContext().match(match);
+        getSourceFileWriter().match(match);
     }
 
     public void write(String string) {
-        getContext().write(string);
+        getSourceFileWriter().write(string);
     }
 
     public void writeSpaces(int count) {
-        getContext().writeSpaces(count);
+        getSourceFileWriter().writeSpaces(count);
     }
 
     public void writeSpacesUntilColumn(int column) {
-        getContext().writeSpacesUntilColumn(column);
+        getSourceFileWriter().writeSpacesUntilColumn(column);
     }
 
     public void writeln(String string) {
-        getContext().writeln(string);
+        getSourceFileWriter().writeln(string);
     }
 
     public void writeln() {
-        getContext().writeln();
+        getSourceFileWriter().writeln();
     }
 
     public void setPosition(int position) {
-        getContext().setPosition(position);
+        getSourceFileWriter().setPosition(position);
     }
 
     public int getPosition() {
-        return getContext().getPosition();
+        return getSourceFileWriter().getPosition();
     }
 
     public void setPositionToStartOfNode(ASTNode node) {
-        getContext().setPositionToStartOfNode(node);
+        getSourceFileWriter().setPositionToStartOfNode(node);
     }
 
     public void setPositionToEndOfNode(ASTNode node) {
-        getContext().setPositionToEndOfNode(node);
+        getSourceFileWriter().setPositionToEndOfNode(node);
     }
 
     public void setPositionToEndOfNodeSpaceAndComments(ASTNode node) {
-        getContext().setPositionToEndOfNodeSpaceAndComments(node);
+        getSourceFileWriter().setPositionToEndOfNodeSpaceAndComments(node);
     }
 
     public void ensureModifiersJustFinalOrAnnotations(List<?> modifiers) {
-        getContext().ensureModifiersJustFinalOrAnnotations(modifiers);
+        getSourceFileWriter().ensureModifiersJustFinalOrAnnotations(modifiers);
     }
 
     public void skipModifiers(List extendedModifiers) {
-        getContext().skipModifiers(extendedModifiers);
+        getSourceFileWriter().skipModifiers(extendedModifiers);
     }
 
     public int getPreferredIndent() {
-        return getContext().getPreferredIndent();
+        return getSourceFileWriter().getPreferredIndent();
     }
 }

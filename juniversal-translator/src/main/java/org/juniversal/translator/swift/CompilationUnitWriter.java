@@ -93,7 +93,7 @@ public class CompilationUnitWriter extends SwiftASTNodeWriter {
 		writeln("using namespace " + getPackageNamespaceName(compilationUnit) + ";");
 		writeln();
 
-		context.setPosition(mainTypeDeclaration.getStartPosition());
+		setPosition(mainTypeDeclaration.getStartPosition());
 		skipSpaceAndComments();   // Skip any Javadoc included in the node
 
         swiftASTWriters.writeNode(mainTypeDeclaration);

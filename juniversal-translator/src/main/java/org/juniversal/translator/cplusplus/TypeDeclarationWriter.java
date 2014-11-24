@@ -39,8 +39,8 @@ public class TypeDeclarationWriter extends CPlusPlusASTNodeWriter {
 		TypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
 		getContext().setTypeDeclaration(typeDeclaration);
 
-		if (getContext().getOutputType() == OutputType.HEADER)
-			new WriteTypeDeclarationHeader(typeDeclaration, getContext(), cPlusPlusASTWriters);
+		if (getSourceFileWriter().getOutputType() == OutputType.HEADER)
+			new WriteTypeDeclarationHeader(typeDeclaration, cPlusPlusASTWriters);
 		else new WriteTypeDeclarationSource(typeDeclaration, cPlusPlusASTWriters, getContext());
 
 		getContext().setTypeDeclaration(oldTypeDeclaration);

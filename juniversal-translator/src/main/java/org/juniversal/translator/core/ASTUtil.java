@@ -351,8 +351,8 @@ public class ASTUtil {
         return false;
     }
 
-    public static boolean isFunctionalInterfaceImplementation(Context context, Type type) {
-        ITypeBinding typeBinding = context.resolveTypeBinding(type);
+    public static boolean isFunctionalInterfaceImplementation(SourceFileWriter sourceFileWriter, Type type) {
+        ITypeBinding typeBinding = sourceFileWriter.resolveTypeBinding(type);
 
         if (!typeBinding.isInterface())
             return false;
@@ -381,7 +381,7 @@ public class ASTUtil {
     public static void addWildcardTypes(Type type, ArrayList<WildcardType> wildcardTypes) {
         if (type.isParameterizedType()) {
             ParameterizedType parameterizedType = (ParameterizedType) type;
-
+            
             for (Object typeArgumentObject : parameterizedType.typeArguments()) {
                 Type typeArgument = (Type) typeArgumentObject;
                 addWildcardTypes(typeArgument, wildcardTypes);

@@ -42,6 +42,10 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
         return cPlusPlusASTWriters.getTranslator().getTargetProfile();
     }
 
+    public OutputType getOutputType() {
+        return getSourceFileWriter().getOutputType();
+    }
+
     @Override
     protected CPlusPlusSourceFileWriter getSourceFileWriter() {
         return cPlusPlusASTWriters;

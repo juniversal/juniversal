@@ -25,8 +25,6 @@ package org.juniversal.translator.csharp;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.*;
-import org.juniversal.translator.cplusplus.OutputType;
-import org.juniversal.translator.csharp.astwriters.*;
 
 import java.io.Writer;
 import java.util.ArrayList;
@@ -46,11 +44,10 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
     private HashSet<String> cSharpReservedWords;
 
     public CSharpSourceFileWriter(CSharpTranslator cSharpTranslator, SourceFile sourceFile, Writer writer) {
-        super(sourceFile);
+        super(sourceFile, new TargetWriter(writer, cSharpTranslator.getDestTabStop()));
 
         this.cSharpTranslator = cSharpTranslator;
-        TargetWriter targetWriter = new TargetWriter(writer, cSharpTranslator.getDestTabStop());
-        this.context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
+        this.context = new Context();
 
         addDeclarationWriters();
         addStatementWriters();
@@ -177,6 +174,9 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
                 } else if (isType(simpleType, "java.lang.StringBuilder")) {
                     write("StringBuilder");
                     setPositionToEndOfNode(name);
+                } else if (isType(simpleType, "java.lang.Throwable")) {
+                    write("Exception");
+                    setPositionToEndOfNode(name);
                 } else if (name instanceof QualifiedName) {
                     QualifiedName qualifiedName = (QualifiedName) name;
 
@@ -275,7 +275,7 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
             public void write(ArrayInitializer arrayInitializer) {
                 // TODO: Test more cases here
                 if (arrayInitializer.getParent() instanceof ArrayInitializer) {
-                    context.write("new[] ");
+                    write("new[] ");
 /*
                     throw sourceNotSupported(
                             "Nested array initializers, without a 'new' specified, aren't supported in C#.   Change the " +
@@ -871,7 +871,7 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
      * @return hash set containing set of C#-only reserved words
      */
     public HashSet<String> createCSharpReservedWords() {
-        HashSet<String> reservedWords = new HashSet<String>();
+        HashSet<String> reservedWords = new HashSet<>();
 
         reservedWords.add("as");
         reservedWords.add("base");

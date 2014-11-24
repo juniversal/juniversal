@@ -44,7 +44,7 @@ public class FieldDeclarationWriter extends CPlusPlusASTNodeWriter {
 
 		boolean isStatic = ASTUtil.containsStatic(fieldDeclaration.modifiers());
 
-		if (getContext().getOutputType() == OutputType.HEADER && isStatic)
+		if (getSourceFileWriter().getOutputType() == OutputType.HEADER && isStatic)
 			write("static ");
 		skipModifiers(fieldDeclaration.modifiers());
 
@@ -63,7 +63,7 @@ public class FieldDeclarationWriter extends CPlusPlusASTNodeWriter {
 
 			copySpaceAndComments();
 			writeVariableDeclarationFragment(variableDeclarationFragment,
-                    getContext().getOutputType() == OutputType.SOURCE);
+                    getSourceFileWriter().getOutputType() == OutputType.SOURCE);
 
 			first = false;
 		}

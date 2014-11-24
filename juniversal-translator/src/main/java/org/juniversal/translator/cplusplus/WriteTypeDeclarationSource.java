@@ -34,13 +34,13 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class WriteTypeDeclarationSource {
-	private final CPlusPlusSourceFileWriter astWriters;
+	private final CPlusPlusSourceFileWriter sourceFileWriter;
 	private final Context context;
 	private boolean outputSomething;
 
 	@SuppressWarnings("unchecked")
-	public WriteTypeDeclarationSource(TypeDeclaration typeDeclaration, CPlusPlusSourceFileWriter astWriters, Context context) {
-		this.astWriters = astWriters;
+	public WriteTypeDeclarationSource(TypeDeclaration typeDeclaration, CPlusPlusSourceFileWriter sourceFileWriter, Context context) {
+		this.sourceFileWriter = sourceFileWriter;
 		this.context = context;
 		outputSomething = false;
 
@@ -54,10 +54,10 @@ public class WriteTypeDeclarationSource {
 
 				// Skip any Javadoc comments for the field; field comments are just output in the
 				// header
-				context.setPositionToStartOfNode(fieldDeclaration);
+				sourceFileWriter.setPositionToStartOfNode(fieldDeclaration);
 
-				astWriters.writeNode(fieldDeclaration);
-                context.writeln();
+				sourceFileWriter.writeNode(fieldDeclaration);
+				sourceFileWriter.writeln();
 				outputSomething = true;
 			}
 		}
@@ -73,24 +73,24 @@ public class WriteTypeDeclarationSource {
 			else if (bodyDeclaration instanceof TypeDeclaration) {
 				TypeDeclaration nestedTypeDeclaration = (TypeDeclaration) bodyDeclaration;
 
-				writeNestedType(astWriters, context, nestedTypeDeclaration);
+				writeNestedType(nestedTypeDeclaration);
 			}
 		}
 
-		context.setPosition(ASTUtil.getEndPosition(typeDeclaration));
+		sourceFileWriter.setPosition(ASTUtil.getEndPosition(typeDeclaration));
 	}
 
-	private void writeNestedType(CPlusPlusSourceFileWriter astWriters, Context context, TypeDeclaration nestedTypeDeclaration) {
+	private void writeNestedType(TypeDeclaration nestedTypeDeclaration) {
 		if (outputSomething)
-            context.writeln(2);
+            sourceFileWriter.writeln(2);
 
-        context.writeln("/**");
-        context.writeln(" *    " + nestedTypeDeclaration.getName());
-        context.writeln(" */");
-        context.writeln();
+        sourceFileWriter.writeln("/**");
+        sourceFileWriter.writeln(" *    " + nestedTypeDeclaration.getName());
+        sourceFileWriter.writeln(" */");
+        sourceFileWriter.writeln();
 
-		context.setPositionToStartOfNode(nestedTypeDeclaration);
-		astWriters.writeNode(nestedTypeDeclaration);
+		sourceFileWriter.setPositionToStartOfNode(nestedTypeDeclaration);
+		sourceFileWriter.writeNode(nestedTypeDeclaration);
 		outputSomething = true;
 	}
 
@@ -98,33 +98,33 @@ public class WriteTypeDeclarationSource {
 		// We assume that the first non-whitespace text on the first line of the method
 		// isn't indented at all--there's nothing in the method left of it. Unindent the
 		// whole method by that amount, since methods aren't indented in the C++ source.
-		CompilationUnit compilationUnit = context.getCompilationUnit();
+		CompilationUnit compilationUnit = sourceFileWriter.getCompilationUnit();
 		int methodLine = compilationUnit.getLineNumber(methodDeclaration.getStartPosition());
 		int methodLineStartPosition = compilationUnit.getPosition(methodLine, 0);
-		context.setPosition(methodLineStartPosition);
-		context.skipSpacesAndTabs();
-		int additionalIndent = context.getSourceLogicalColumn(context.getPosition());
+		sourceFileWriter.setPosition(methodLineStartPosition);
+		sourceFileWriter.skipSpacesAndTabs();
+		int additionalIndent = sourceFileWriter.getSourceLogicalColumn(sourceFileWriter.getPosition());
 
-		int previousIndent = context.getTargetWriter().setAdditionalIndentation(-1 * additionalIndent);
+		int previousIndent = sourceFileWriter.getTargetWriter().setAdditionalIndentation(-1 * additionalIndent);
 
 		context.setWritingMethodImplementation(true);
 
 		// Skip back to the beginning of the comments, ignoring any comments associated with
 		// the previous node
-		context.setPositionToStartOfNodeSpaceAndComments(methodDeclaration);
+		sourceFileWriter.setPositionToStartOfNodeSpaceAndComments(methodDeclaration);
 
 		// If we haven't output anything yet, don't include the separator blank lines
 		if (! outputSomething)
-			context.skipBlankLines();
+			sourceFileWriter.skipBlankLines();
 
-        context.copySpaceAndComments();
-		astWriters.writeNode(methodDeclaration);
+        sourceFileWriter.copySpaceAndComments();
+		sourceFileWriter.writeNode(methodDeclaration);
 
 		context.setWritingMethodImplementation(false);
-		context.getTargetWriter().setAdditionalIndentation(previousIndent);
+		sourceFileWriter.getTargetWriter().setAdditionalIndentation(previousIndent);
 
-        context.copySpaceAndCommentsUntilEOL();
-        context.writeln();
+        sourceFileWriter.copySpaceAndCommentsUntilEOL();
+        sourceFileWriter.writeln();
 
 		outputSomething = true;
 	}

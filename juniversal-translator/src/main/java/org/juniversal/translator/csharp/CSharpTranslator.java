@@ -25,10 +25,8 @@ package org.juniversal.translator.csharp;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.juniversal.translator.core.*;
-import org.juniversal.translator.cplusplus.CPPProfile;
-import org.juniversal.translator.cplusplus.OutputType;
-import org.juniversal.translator.csharp.astwriters.CSharpSourceFileWriter;
+import org.juniversal.translator.core.SourceFile;
+import org.juniversal.translator.core.Translator;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -36,7 +34,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 public class CSharpTranslator extends Translator {
-    @Override public void translateFile(SourceFile sourceFile) {
+    @Override
+    public void translateFile(SourceFile sourceFile) {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         AbstractTypeDeclaration mainTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
 
@@ -55,7 +54,8 @@ public class CSharpTranslator extends Translator {
         }
     }
 
-    @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
+    @Override
+    public String translateNode(SourceFile sourceFile, ASTNode astNode) {
         try (StringWriter writer = new StringWriter()) {
             CSharpSourceFileWriter cSharpSourceFileWriter = new CSharpSourceFileWriter(this, sourceFile, writer);
 

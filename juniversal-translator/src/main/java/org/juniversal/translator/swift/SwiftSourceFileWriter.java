@@ -35,16 +35,13 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
     private Context context;
 
     public SwiftSourceFileWriter(SwiftTranslator swiftTranslator, SourceFile sourceFile, Writer writer) {
-        super(sourceFile);
+        super(sourceFile, new TargetWriter(writer, swiftTranslator.getDestTabStop()));
 
         this.swiftTranslator = swiftTranslator;
-        TargetWriter targetWriter = new TargetWriter(writer, swiftTranslator.getDestTabStop());
-        this.context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
+        this.context = new Context();
 
         addDeclarationWriters();
-
         addStatementWriters();
-
         addExpressionWriters();
 
         // Simple name

@@ -86,8 +86,8 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
     }
 
     public void writeVariableDeclaration(List<?> modifiers, Type type, List<?> fragments) {
-        getContext().ensureModifiersJustFinalOrAnnotations(modifiers);
-        getContext().skipModifiers(modifiers);
+        ensureModifiersJustFinalOrAnnotations(modifiers);
+        skipModifiers(modifiers);
 
         // Write the type
         writeNode(type);
