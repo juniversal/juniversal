@@ -23,19 +23,12 @@
 package org.juniversal.translator.swift.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.AccessLevel;
-import org.juniversal.translator.core.Context;
-import org.juniversal.translator.core.JUniversalException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
-public class TypeDeclarationWriter extends SwiftASTWriter {
-    private SwiftASTWriters swiftASTWriters;
+public class TypeDeclarationWriter extends SwiftASTNodeWriter {
+    private SwiftSourceFileWriter swiftASTWriters;
 
-    public TypeDeclarationWriter(SwiftASTWriters swiftASTWriters) {
+    public TypeDeclarationWriter(SwiftSourceFileWriter swiftASTWriters) {
         super(swiftASTWriters);
     }
 

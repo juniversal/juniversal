@@ -28,10 +28,10 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
-public class TypeDeclarationWriter extends CPlusPlusASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
+public class TypeDeclarationWriter extends CPlusPlusASTNodeWriter {
+    private CPlusPlusSourceFileWriter cPlusPlusASTWriters;
 
-    public TypeDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+    public TypeDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

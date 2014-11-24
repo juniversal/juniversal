@@ -23,7 +23,7 @@
 package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.core.ASTWriter;
+import org.juniversal.translator.core.ASTNodeWriter;
 import org.juniversal.translator.core.AccessLevel;
 import org.juniversal.translator.core.JUniversalException;
 
@@ -33,15 +33,15 @@ import java.util.List;
 import static org.juniversal.translator.core.ASTUtil.getAccessModifier;
 
 
-public abstract class CSharpASTWriter<T extends ASTNode> extends ASTWriter<T> {
-    private CSharpASTWriters cSharpASTWriters;
+public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
+    private CSharpSourceFileWriter cSharpASTWriters;
 
-    protected CSharpASTWriter(CSharpASTWriters cSharpASTWriters) {
+    protected CSharpASTNodeWriter(CSharpSourceFileWriter cSharpASTWriters) {
         this.cSharpASTWriters = cSharpASTWriters;
     }
 
     @Override
-    protected CSharpASTWriters getASTWriters() {
+    protected CSharpSourceFileWriter getSourceFileWriter() {
         return cSharpASTWriters;
     }
 

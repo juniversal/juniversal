@@ -22,21 +22,27 @@
 
 package org.juniversal.translator.cplusplus.astwriters;
 
+import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.*;
 import org.juniversal.translator.cplusplus.CPPProfile;
-import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.cplusplus.CPlusPlusTranslator;
+import org.juniversal.translator.cplusplus.OutputType;
 
+import java.io.Writer;
 import java.util.List;
 
 
-public class CPlusPlusASTWriters extends ASTWriters {
+public class CPlusPlusSourceFileWriter extends SourceFileWriter {
     private CPlusPlusTranslator cPlusPlusTranslator;
+    private Context context;
 
-    public CPlusPlusASTWriters(Context context, CPlusPlusTranslator cPlusPlusTranslator) {
-        super(context);
+    public CPlusPlusSourceFileWriter(CPlusPlusTranslator cPlusPlusTranslator, SourceFile sourceFile, Writer writer,
+                                     OutputType outputType) {
+        super(sourceFile);
 
         this.cPlusPlusTranslator = cPlusPlusTranslator;
+        TargetWriter targetWriter = new TargetWriter(writer, cPlusPlusTranslator.getDestTabStop());
+        this.context = new Context(sourceFile, targetWriter, outputType);
 
         addDeclarationWriters();
 
@@ -45,7 +51,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         addExpressionWriters();
 
         // Simple name
-        addWriter(SimpleName.class, new CPlusPlusASTWriter(this) {
+        addWriter(SimpleName.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 SimpleName simpleName = (SimpleName) node;
@@ -53,6 +59,16 @@ public class CPlusPlusASTWriters extends ASTWriters {
                 matchAndWrite(simpleName.getIdentifier());
             }
         });
+    }
+
+    @Override
+    public CPlusPlusTranslator getTranslator() {
+        return cPlusPlusTranslator;
+    }
+
+    @Override
+    public Context getContext() {
+        return context;
     }
 
     /**
@@ -72,7 +88,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         addWriter(FieldDeclaration.class, new FieldDeclarationWriter(this));
 
         // Variable declaration fragment
-        addWriter(VariableDeclarationFragment.class, new CPlusPlusASTWriter(this) {
+        addWriter(VariableDeclarationFragment.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) node;
@@ -98,7 +114,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Single variable declaration (used in parameter list & catch clauses)
-        addWriter(SingleVariableDeclaration.class, new CPlusPlusASTWriter(this) {
+        addWriter(SingleVariableDeclaration.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) node;
@@ -123,7 +139,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Simple type
-        addWriter(SimpleType.class, new CPlusPlusASTWriter(this) {
+        addWriter(SimpleType.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 SimpleType simpleType = (SimpleType) node;
@@ -147,7 +163,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Parameterized type
-        addWriter(ParameterizedType.class, new CPlusPlusASTWriter(this) {
+        addWriter(ParameterizedType.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ParameterizedType parameterizedType = (ParameterizedType) node;
@@ -178,7 +194,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Array type
-        addWriter(ArrayType.class, new CPlusPlusASTWriter(this) {
+        addWriter(ArrayType.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ArrayType arrayType = (ArrayType) node;
@@ -196,7 +212,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Primitive type
-        addWriter(PrimitiveType.class, new CPlusPlusASTWriter(this) {
+        addWriter(PrimitiveType.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 PrimitiveType primitiveType = (PrimitiveType) node;
@@ -233,7 +249,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
      */
     private void addStatementWriters() {
         // Block
-        addWriter(Block.class, new CPlusPlusASTWriter(this) {
+        addWriter(Block.class, new CPlusPlusASTNodeWriter(this) {
             @SuppressWarnings("unchecked")
             @Override
             public void write(ASTNode node) {
@@ -263,7 +279,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Empty statement (";")
-        addWriter(EmptyStatement.class, new CPlusPlusASTWriter(this) {
+        addWriter(EmptyStatement.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 matchAndWrite(";");
@@ -271,7 +287,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Expression statement
-        addWriter(ExpressionStatement.class, new CPlusPlusASTWriter(this) {
+        addWriter(ExpressionStatement.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ExpressionStatement expressionStatement = (ExpressionStatement) node;
@@ -284,7 +300,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // If statement
-        addWriter(IfStatement.class, new CPlusPlusASTWriter(this) {
+        addWriter(IfStatement.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 IfStatement ifStatement = (IfStatement) node;
@@ -316,7 +332,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // While statement
-        addWriter(WhileStatement.class, new CPlusPlusASTWriter(this) {
+        addWriter(WhileStatement.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 WhileStatement whileStatement = (WhileStatement) node;
@@ -338,7 +354,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Do while statement
-        addWriter(DoStatement.class, new CPlusPlusASTWriter(this) {
+        addWriter(DoStatement.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 DoStatement doStatement = (DoStatement) node;
@@ -366,7 +382,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Continue statement
-        addWriter(ContinueStatement.class, new CPlusPlusASTWriter(this) {
+        addWriter(ContinueStatement.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ContinueStatement continueStatement = (ContinueStatement) node;
@@ -382,7 +398,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Break statement
-        addWriter(BreakStatement.class, new CPlusPlusASTWriter(this) {
+        addWriter(BreakStatement.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 BreakStatement breakStatement = (BreakStatement) node;
@@ -401,7 +417,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         addWriter(ForStatement.class, new ForStatementWriter(this));
 
         // Return statement
-        addWriter(ReturnStatement.class, new CPlusPlusASTWriter(this) {
+        addWriter(ReturnStatement.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ReturnStatement returnStatement = (ReturnStatement) node;
@@ -423,7 +439,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         addWriter(VariableDeclarationStatement.class, new VariableDeclarationWriter(this));
 
         // Throw statement
-        addWriter(ThrowStatement.class, new CPlusPlusASTWriter(this) {
+        addWriter(ThrowStatement.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ThrowStatement throwStatement = (ThrowStatement) node;
@@ -439,7 +455,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Delegating constructor invocation
-        addWriter(ConstructorInvocation.class, new CPlusPlusASTWriter(this) {
+        addWriter(ConstructorInvocation.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 throw sourceNotSupported("Delegating constructors aren't currently supported; for now you have to change the code to not use them (e.g. by adding an init method)");
@@ -474,7 +490,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         addWriter(InfixExpression.class, new InfixExpressionWriter(this));
 
         // Prefix expression
-        addWriter(PrefixExpression.class, new CPlusPlusASTWriter(this) {
+        addWriter(PrefixExpression.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 PrefixExpression prefixExpression = (PrefixExpression) node;
@@ -500,7 +516,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Postfix expression
-        addWriter(PostfixExpression.class, new CPlusPlusASTWriter(this) {
+        addWriter(PostfixExpression.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 PostfixExpression postfixExpression = (PostfixExpression) node;
@@ -518,7 +534,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // instanceof expression
-        addWriter(InstanceofExpression.class, new CPlusPlusASTWriter(this) {
+        addWriter(InstanceofExpression.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 InstanceofExpression instanceofExpression = (InstanceofExpression) node;
@@ -540,7 +556,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // conditional expression
-        addWriter(ConditionalExpression.class, new CPlusPlusASTWriter(this) {
+        addWriter(ConditionalExpression.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ConditionalExpression conditionalExpression = (ConditionalExpression) node;
@@ -562,7 +578,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // this
-        addWriter(ThisExpression.class, new CPlusPlusASTWriter(this) {
+        addWriter(ThisExpression.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ThisExpression thisExpression = (ThisExpression) node;
@@ -579,7 +595,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Field access
-        addWriter(FieldAccess.class, new CPlusPlusASTWriter(this) {
+        addWriter(FieldAccess.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 FieldAccess fieldAccess = (FieldAccess) node;
@@ -594,7 +610,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Array access
-        addWriter(ArrayAccess.class, new CPlusPlusASTWriter(this) {
+        addWriter(ArrayAccess.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ArrayAccess arrayAccess = (ArrayAccess) node;
@@ -613,7 +629,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Qualfied name
-        addWriter(QualifiedName.class, new CPlusPlusASTWriter(this) {
+        addWriter(QualifiedName.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 QualifiedName qualifiedName = (QualifiedName) node;
@@ -633,7 +649,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Parenthesized expression
-        addWriter(ParenthesizedExpression.class, new CPlusPlusASTWriter(this) {
+        addWriter(ParenthesizedExpression.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ParenthesizedExpression parenthesizedExpression = (ParenthesizedExpression) node;
@@ -649,7 +665,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Cast expression
-        addWriter(CastExpression.class, new CPlusPlusASTWriter(this) {
+        addWriter(CastExpression.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 CastExpression castExpression = (CastExpression) node;
@@ -679,7 +695,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Number literal
-        addWriter(NumberLiteral.class, new CPlusPlusASTWriter(this) {
+        addWriter(NumberLiteral.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 NumberLiteral numberLiteral = (NumberLiteral) node;
@@ -688,7 +704,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Boolean literal
-        addWriter(BooleanLiteral.class, new CPlusPlusASTWriter(this) {
+        addWriter(BooleanLiteral.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 BooleanLiteral booleanLiteral = (BooleanLiteral) node;
@@ -697,7 +713,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Character literal
-        addWriter(CharacterLiteral.class, new CPlusPlusASTWriter(this) {
+        addWriter(CharacterLiteral.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 CharacterLiteral characterLiteral = (CharacterLiteral) node;
@@ -708,7 +724,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // Null literal
-        addWriter(NullLiteral.class, new CPlusPlusASTWriter(this) {
+        addWriter(NullLiteral.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 matchAndWrite("null", "NULL");
@@ -716,7 +732,7 @@ public class CPlusPlusASTWriters extends ASTWriters {
         });
 
         // String literal
-        addWriter(StringLiteral.class, new CPlusPlusASTWriter(this) {
+        addWriter(StringLiteral.class, new CPlusPlusASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 StringLiteral stringLiteral = (StringLiteral) node;
@@ -725,9 +741,5 @@ public class CPlusPlusASTWriters extends ASTWriters {
                 match(stringLiteral.getEscapedValue());
             }
         });
-    }
-
-    @Override public CPlusPlusTranslator getTranslator() {
-        return cPlusPlusTranslator;
     }
 }

@@ -30,11 +30,11 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class InfixExpressionWriter extends SwiftASTWriter {
-    private SwiftASTWriters swiftASTWriters;
+public class InfixExpressionWriter extends SwiftASTNodeWriter {
+    private SwiftSourceFileWriter swiftASTWriters;
 	private HashMap<InfixExpression.Operator, String> equivalentOperators;  // Operators that have the same token in both Java & C++
 
-	public InfixExpressionWriter(SwiftASTWriters swiftASTWriters) {
+	public InfixExpressionWriter(SwiftSourceFileWriter swiftASTWriters) {
 		super(swiftASTWriters);
 
         // TODO: Handle fact that Swift's operator precedence is different than Java's

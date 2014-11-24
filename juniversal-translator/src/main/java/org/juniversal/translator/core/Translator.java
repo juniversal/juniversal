@@ -42,6 +42,7 @@ public abstract class Translator {
     private File outputDirectory;
     private int preferredIndent = 4;
     private int sourceTabStop = 4;
+    private int destTabStop = -1;
     private String[] classpath;
     private String[] sourcepath;
 
@@ -247,6 +248,10 @@ public abstract class Translator {
 
     public int getSourceTabStop() {
         return sourceTabStop;
+    }
+
+    public int getDestTabStop() {
+        return destTabStop;
     }
 
     /**

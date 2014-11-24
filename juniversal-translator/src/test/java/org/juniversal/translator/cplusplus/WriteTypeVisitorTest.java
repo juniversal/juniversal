@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.juniversal.translator.TranslateNodeTest;
 import org.juniversal.translator.core.SourceFile;
 import org.juniversal.translator.core.SourceNotSupportedException;
-import org.juniversal.translator.cplusplus.astwriters.CPlusPlusASTWriters;
 
 import static org.junit.Assert.*;
 

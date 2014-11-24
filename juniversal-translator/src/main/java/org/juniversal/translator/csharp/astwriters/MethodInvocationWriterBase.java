@@ -33,8 +33,8 @@ import java.util.List;
 
 import static org.juniversal.translator.core.ASTUtil.*;
 
-public abstract class MethodInvocationWriterBase<T extends Expression> extends CSharpASTWriter<T> {
-    public MethodInvocationWriterBase(CSharpASTWriters cSharpASTWriters) {
+public abstract class MethodInvocationWriterBase<T extends Expression> extends CSharpASTNodeWriter<T> {
+    public MethodInvocationWriterBase(CSharpSourceFileWriter cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

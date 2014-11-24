@@ -27,8 +27,8 @@ import org.eclipse.jdt.core.dom.*;
 import static org.juniversal.translator.core.ASTUtil.*;
 
 
-public class ClassInstanceCreationWriter extends CSharpASTWriter<ClassInstanceCreation> {
-    public ClassInstanceCreationWriter(CSharpASTWriters cSharpASTWriters) {
+public class ClassInstanceCreationWriter extends CSharpASTNodeWriter<ClassInstanceCreation> {
+    public ClassInstanceCreationWriter(CSharpSourceFileWriter cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

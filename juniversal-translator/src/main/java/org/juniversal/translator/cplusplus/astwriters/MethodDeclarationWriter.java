@@ -39,10 +39,10 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeParameter;
 
 
-public class MethodDeclarationWriter extends CPlusPlusASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
+public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter {
+    private CPlusPlusSourceFileWriter cPlusPlusASTWriters;
 
-    public MethodDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+    public MethodDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

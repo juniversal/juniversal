@@ -20,38 +20,86 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus.astwriters;
+package org.juniversal.translator.swift.astwriters;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.TypeParameter;
-import org.juniversal.translator.core.ASTWriter;
-import org.juniversal.translator.cplusplus.CPPProfile;
+import org.eclipse.jdt.core.dom.*;
+import org.juniversal.translator.core.ASTNodeWriter;
 
 import java.util.List;
 
 
-public abstract class CPlusPlusASTWriter<T extends ASTNode> extends ASTWriter<T> {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
+public abstract class SwiftASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
+    private SwiftSourceFileWriter swiftASTWriters;
 
-    protected CPlusPlusASTWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+    protected SwiftASTNodeWriter(SwiftSourceFileWriter swiftASTWriters) {
+        this.swiftASTWriters = swiftASTWriters;
     }
 
-    public CPPProfile getCPPProfile() {
-        return cPlusPlusASTWriters.getTranslator().getTargetProfile();
+    @Override protected SwiftSourceFileWriter getSourceFileWriter() {
+        return swiftASTWriters;
     }
 
-    @Override
-    protected CPlusPlusASTWriters getASTWriters() {
-        return cPlusPlusASTWriters;
+    public void writeStatementEnsuringBraces(Statement statement, int blockStartColumn, boolean forceSeparateLine) {
+        if (statement instanceof Block) {
+            copySpaceAndComments();
+            writeNode(statement);
+        } else {
+            if (getContext().startsOnSameLine(statement)) {
+                if (forceSeparateLine) {
+                    write(" {\n");
+
+                    writeSpacesUntilColumn(blockStartColumn);
+                    writeSpaces(getContext().getPreferredIndent());
+                    skipSpacesAndTabs();
+
+                    copySpaceAndComments();
+
+                    writeNode(statement);
+
+                    copySpaceAndCommentsUntilEOL();
+                    setKnowinglyProcessedTrailingSpaceAndComments(true);
+                    writeln();
+
+                    writeSpacesUntilColumn(blockStartColumn);
+                    write("}");
+                } else {
+                    copySpaceAndCommentsEnsuringDelimiter();
+
+                    write("{ ");
+                    writeNode(statement);
+                    write(" }");
+                }
+            } else {
+                write(" {");
+
+                copySpaceAndComments();
+
+                writeNode(statement);
+
+                copySpaceAndCommentsUntilEOL();
+                setKnowinglyProcessedTrailingSpaceAndComments(true);
+                writeln();
+
+                writeSpacesUntilColumn(blockStartColumn);
+                write("}");
+            }
+        }
+    }
+
+    public void writeConditionNoParens(Expression expression) {
+        match("(");
+        skipSpaceAndComments();
+
+        writeNode(expression);
+
+        skipSpaceAndComments();
+        match(")");
     }
 
     /**
      * Write out a type, when it's used (as opposed to defined).
+     *  @param type    type to write
      *
-     * @param type type to write
      */
     public void writeType(Type type, boolean useRawPointer) {
         boolean referenceType = !type.isPrimitiveType();
@@ -70,29 +118,9 @@ public abstract class CPlusPlusASTWriter<T extends ASTNode> extends ASTWriter<T>
         }
     }
 
-    public static String getNamespaceNameForPackageName(Name packageName) {
-        if (packageName == null)
-            return getNamespaceNameForPackageName((String) null);
-        else return getNamespaceNameForPackageName(packageName.getFullyQualifiedName());
-    }
-
-    public static String getNamespaceNameForPackageName(String packageName) {
-        if (packageName == null)
-            return "unnamed";
-        else return packageName.replace('.', '_');
-    }
-
-    public void writeIncludeForTypeName(Name typeName) {
-        String typeNameString = typeName.getFullyQualifiedName();
-        String includePath = typeNameString.replace('.', '/');
-
-        writeln("#include \"" + includePath + ".h\"");
-    }
-
     /**
      * Write out the type parameters in the specified list, surrounded by "<" and ">".
-     *
-     * @param typeParameters      list of TypeParameter objects
+     *  @param typeParameters list of TypeParameter objects
      * @param includeClassKeyword if true, each parameter is prefixed with "class "
      */
     public void writeTypeParameters(List<TypeParameter> typeParameters, boolean includeClassKeyword) {
@@ -102,7 +130,7 @@ public abstract class CPlusPlusASTWriter<T extends ASTNode> extends ASTWriter<T>
 
         write("<");
         for (TypeParameter typeParameter : typeParameters) {
-            if (!first)
+            if (! first)
                 write(", ");
 
             if (includeClassKeyword)
@@ -114,13 +142,4 @@ public abstract class CPlusPlusASTWriter<T extends ASTNode> extends ASTWriter<T>
 
         write(">");
     }
-
-/*
-    public void writeIncludeForTypeName(Name typeName) {
-        String typeNameString = typeName.getFullyQualifiedName();
-        String includePath = typeNameString.replace('.', '/');
-
-        writeln("#include \"" + includePath + ".h\"");
-    }
-*/
 }

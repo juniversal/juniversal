@@ -29,10 +29,10 @@ import org.eclipse.jdt.core.dom.Expression;
 import java.util.List;
 
 
-public class ClassInstanceCreationWriter extends SwiftASTWriter {
-    private SwiftASTWriters swiftASTWriters;
+public class ClassInstanceCreationWriter extends SwiftASTNodeWriter {
+    private SwiftSourceFileWriter swiftASTWriters;
 
-    public ClassInstanceCreationWriter(SwiftASTWriters swiftASTWriters) {
+    public ClassInstanceCreationWriter(SwiftSourceFileWriter swiftASTWriters) {
         super(swiftASTWriters);
     }
 

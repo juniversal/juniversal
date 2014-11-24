@@ -28,7 +28,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.juniversal.translator.core.*;
 import org.juniversal.translator.cplusplus.CPPProfile;
 import org.juniversal.translator.cplusplus.OutputType;
-import org.juniversal.translator.csharp.astwriters.CSharpASTWriters;
+import org.juniversal.translator.csharp.astwriters.CSharpSourceFileWriter;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -36,13 +36,9 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 public class CSharpTranslator extends Translator {
-    private CPPProfile cppProfile = new CPPProfile();
-
     @Override public void translateFile(SourceFile sourceFile) {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         AbstractTypeDeclaration mainTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
-
-        ;
 
         String packageName = mainTypeDeclaration.getName().getFullyQualifiedName();
         String typeName = mainTypeDeclaration.getName().getIdentifier();
@@ -51,11 +47,9 @@ public class CSharpTranslator extends Translator {
 
         File file = new File(getPackageDirectory(mainTypeDeclaration), fileName);
         try (FileWriter writer = new FileWriter(file)) {
-            TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
-            Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
-            CSharpASTWriters cSharpASTWriters = new CSharpASTWriters(context, this);
+            CSharpSourceFileWriter cSharpSourceFileWriter = new CSharpSourceFileWriter(this, sourceFile, writer);
 
-            cSharpASTWriters.writeRootNode(compilationUnit);
+            cSharpSourceFileWriter.writeRootNode(compilationUnit);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -63,13 +57,9 @@ public class CSharpTranslator extends Translator {
 
     @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
         try (StringWriter writer = new StringWriter()) {
-            TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
-            Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
+            CSharpSourceFileWriter cSharpSourceFileWriter = new CSharpSourceFileWriter(this, sourceFile, writer);
 
-            context.setPosition(astNode.getStartPosition());
-            CSharpASTWriters cSharpASTWriters = new CSharpASTWriters(context, this);
-
-            cSharpASTWriters.writeRootNode(astNode);
+            cSharpSourceFileWriter.writeRootNode(astNode);
 
             return writer.getBuffer().toString();
         } catch (IOException e) {

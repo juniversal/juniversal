@@ -22,65 +22,62 @@
 
 package org.juniversal.translator.cplusplus;
 
-import java.io.*;
-
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.juniversal.translator.cplusplus.astwriters.CPlusPlusASTWriters;
-
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.juniversal.translator.core.*;
-import org.juniversal.translator.csharp.astwriters.CSharpASTWriters;
+import org.juniversal.translator.core.ASTUtil;
+import org.juniversal.translator.core.SourceFile;
+import org.juniversal.translator.core.Translator;
+import org.juniversal.translator.cplusplus.astwriters.CPlusPlusSourceFileWriter;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.StringWriter;
 
 public class CPlusPlusTranslator extends Translator {
-	private CPPProfile cppProfile = new CPPProfile();
+    private CPPProfile cppProfile = new CPPProfile();
 
     public CPPProfile getTargetProfile() {
         return cppProfile;
     }
 
-    @Override public void translateFile(SourceFile sourceFile) {
-		writeCPPFile(sourceFile, OutputType.HEADER);
-		writeCPPFile(sourceFile, OutputType.SOURCE);
-	}
+    @Override
+    public void translateFile(SourceFile sourceFile) {
+        writeCPPFile(sourceFile, OutputType.HEADER);
+        writeCPPFile(sourceFile, OutputType.SOURCE);
+    }
 
     private void writeCPPFile(SourceFile sourceFile, OutputType outputType) {
-		CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
-		TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
+        CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
+        TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
 
-		String typeName = mainTypeDeclaration.getName().getIdentifier();
+        String typeName = mainTypeDeclaration.getName().getIdentifier();
 
-		String fileName = outputType == OutputType.HEADER ? typeName + ".h" : typeName + ".cpp";
-		File file = new File(getOutputDirectory(), fileName);
+        String fileName = outputType == OutputType.HEADER ? typeName + ".h" : typeName + ".cpp";
+        File file = new File(getOutputDirectory(), fileName);
 
-		try (FileWriter writer = new FileWriter(file)) {
-            Context context = createContext(sourceFile, writer, outputType);
-            CPlusPlusASTWriters cPlusPlusASTWriters = new CPlusPlusASTWriters(context, this);
+        try (FileWriter writer = new FileWriter(file)) {
+            CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter = new CPlusPlusSourceFileWriter(this, sourceFile, writer,
+                    outputType);
 
-            cPlusPlusASTWriters.writeRootNode(compilationUnit);
-		} catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-	}
-
-    @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
-        try (StringWriter writer = new StringWriter()) {
-            TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
-            Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
-
-            context.setPosition(astNode.getStartPosition());
-            CPlusPlusASTWriters cPlusPlusASTWriters = new CPlusPlusASTWriters(context, this);
-
-            cPlusPlusASTWriters.writeRootNode(astNode);
-
-            return writer.getBuffer().toString();
+            cPlusPlusSourceFileWriter.writeRootNode(compilationUnit);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Context createContext(SourceFile sourceFile, Writer outputWriter, OutputType outputType) {
-        TargetWriter targetWriter = new TargetWriter(outputWriter, cppProfile);
-        return new Context(sourceFile, targetWriter, outputType);
+    @Override
+    public String translateNode(SourceFile sourceFile, ASTNode astNode) {
+        try (StringWriter writer = new StringWriter()) {
+            CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter = new CPlusPlusSourceFileWriter(this, sourceFile, writer,
+                    OutputType.SOURCE);
+
+            cPlusPlusSourceFileWriter.writeRootNode(astNode);
+
+            return writer.getBuffer().toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -25,7 +25,7 @@ package org.juniversal.translator.csharp.astwriters;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
 public class MethodInvocationWriter extends MethodInvocationWriterBase<MethodInvocation> {
-    public MethodInvocationWriter(CSharpASTWriters cSharpASTWriters) {
+    public MethodInvocationWriter(CSharpSourceFileWriter cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

@@ -33,8 +33,8 @@ import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
-public class CompilationUnitWriter extends CPlusPlusASTWriter {
-    public CompilationUnitWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+public class CompilationUnitWriter extends CPlusPlusASTNodeWriter {
+    public CompilationUnitWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

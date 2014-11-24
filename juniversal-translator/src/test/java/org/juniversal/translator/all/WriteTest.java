@@ -22,19 +22,7 @@
 
 package org.juniversal.translator.all;
 
-import org.eclipse.jdt.core.dom.*;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
-import org.juniversal.translator.core.SourceFile;
-import org.juniversal.translator.core.TargetWriter;
-import org.juniversal.translator.cplusplus.CPPProfile;
-import org.juniversal.translator.core.Context;
-import org.juniversal.translator.cplusplus.OutputType;
-import org.juniversal.translator.csharp.CSharpTranslator;
-import org.juniversal.translator.swift.SwiftTranslator;
-import org.juniversal.translator.swift.astwriters.SwiftASTWriters;
-
-import java.io.StringWriter;
 
 import static org.junit.Assert.fail;
 

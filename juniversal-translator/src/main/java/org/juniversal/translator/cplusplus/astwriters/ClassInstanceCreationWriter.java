@@ -29,8 +29,8 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 
 
-public class ClassInstanceCreationWriter extends CPlusPlusASTWriter {
-    public ClassInstanceCreationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+public class ClassInstanceCreationWriter extends CPlusPlusASTNodeWriter {
+    public ClassInstanceCreationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

@@ -33,8 +33,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 
-public class VariableDeclarationWriter extends CPlusPlusASTWriter {
-    public VariableDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+public class VariableDeclarationWriter extends CPlusPlusASTNodeWriter {
+    public VariableDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

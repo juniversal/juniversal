@@ -24,11 +24,11 @@ package org.juniversal.translator.csharp.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.ASTWriters;
-import org.juniversal.translator.core.Context;
-import org.juniversal.translator.core.JUniversalException;
+import org.juniversal.translator.core.*;
+import org.juniversal.translator.cplusplus.OutputType;
 import org.juniversal.translator.csharp.CSharpTranslator;
 
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -40,14 +40,17 @@ import static org.juniversal.translator.core.ASTUtil.isType;
 // time not build time
 // TODO: Think about how to handle "transient" in Java
 
-public class CSharpASTWriters extends ASTWriters {
+public class CSharpSourceFileWriter extends SourceFileWriter {
     private CSharpTranslator cSharpTranslator;
+    private Context context;
     private HashSet<String> cSharpReservedWords;
 
-    public CSharpASTWriters(Context context, CSharpTranslator cSharpTranslator) {
-        super(context);
+    public CSharpSourceFileWriter(CSharpTranslator cSharpTranslator, SourceFile sourceFile, Writer writer) {
+        super(sourceFile);
 
         this.cSharpTranslator = cSharpTranslator;
+        TargetWriter targetWriter = new TargetWriter(writer, cSharpTranslator.getDestTabStop());
+        this.context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
 
         addDeclarationWriters();
         addStatementWriters();
@@ -55,7 +58,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Simple name
-        addWriter(SimpleName.class, new CSharpASTWriter<SimpleName>(this) {
+        addWriter(SimpleName.class, new CSharpASTNodeWriter<SimpleName>(this) {
             @Override
             public void write(SimpleName simpleName) {
                 String identifier = simpleName.getIdentifier();
@@ -66,6 +69,16 @@ public class CSharpASTWriters extends ASTWriters {
                 else matchAndWrite(identifier);
             }
         });
+    }
+
+    @Override
+    public CSharpTranslator getTranslator() {
+        return cSharpTranslator;
+    }
+
+    @Override
+    public Context getContext() {
+        return context;
     }
 
     /**
@@ -93,7 +106,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Variable declaration fragment
-        addWriter(VariableDeclarationFragment.class, new CSharpASTWriter<VariableDeclarationFragment>(this) {
+        addWriter(VariableDeclarationFragment.class, new CSharpASTNodeWriter<VariableDeclarationFragment>(this) {
             @Override
             public void write(VariableDeclarationFragment variableDeclarationFragment) {
                 // TODO: Handle syntax with extra dimensions on array
@@ -115,7 +128,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Single variable declaration (used in parameter list, catch clauses, and enhanced for statements)
-        addWriter(SingleVariableDeclaration.class, new CSharpASTWriter<SingleVariableDeclaration>(this) {
+        addWriter(SingleVariableDeclaration.class, new CSharpASTNodeWriter<SingleVariableDeclaration>(this) {
             @Override
             public void write(SingleVariableDeclaration singleVariableDeclaration) {
                 // TODO: Handle syntax with extra dimensions on array
@@ -150,7 +163,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Simple type
-        addWriter(SimpleType.class, new CSharpASTWriter<SimpleType>(this) {
+        addWriter(SimpleType.class, new CSharpASTNodeWriter<SimpleType>(this) {
             @Override
             public void write(SimpleType simpleType) {
                 Name name = simpleType.getName();
@@ -182,7 +195,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Parameterized type
-        addWriter(ParameterizedType.class, new CSharpASTWriter<ParameterizedType>(this) {
+        addWriter(ParameterizedType.class, new CSharpASTNodeWriter<ParameterizedType>(this) {
             @Override
             public void write(ParameterizedType parameterizedType) {
                 writeNode(parameterizedType.getType());
@@ -197,7 +210,7 @@ public class CSharpASTWriters extends ASTWriters {
             }
         });
 
-        addWriter(WildcardType.class, new CSharpASTWriter<WildcardType>(this) {
+        addWriter(WildcardType.class, new CSharpASTNodeWriter<WildcardType>(this) {
             @Override
             public void write(WildcardType wildcardType) {
                 ArrayList<WildcardType> wildcardTypes = getContext().getMethodWildcardTypes();
@@ -210,7 +223,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Array type
-        addWriter(ArrayType.class, new CSharpASTWriter<ArrayType>(this) {
+        addWriter(ArrayType.class, new CSharpASTNodeWriter<ArrayType>(this) {
             @Override
             public void write(ArrayType arrayType) {
                 writeNode(arrayType.getElementType());
@@ -229,7 +242,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Primitive type
-        addWriter(PrimitiveType.class, new CSharpASTWriter<PrimitiveType>(this) {
+        addWriter(PrimitiveType.class, new CSharpASTNodeWriter<PrimitiveType>(this) {
             @Override
             public void write(PrimitiveType primitiveType) {
                 PrimitiveType.Code code = primitiveType.getPrimitiveTypeCode();
@@ -257,7 +270,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Array initializer
-        addWriter(ArrayInitializer.class, new CSharpASTWriter<ArrayInitializer>(this) {
+        addWriter(ArrayInitializer.class, new CSharpASTNodeWriter<ArrayInitializer>(this) {
             @Override
             public void write(ArrayInitializer arrayInitializer) {
                 matchAndWrite("{");
@@ -278,7 +291,7 @@ public class CSharpASTWriters extends ASTWriters {
     private void addStatementWriters() {
         // TODO: Implement this
         // Block
-        addWriter(Block.class, new CSharpASTWriter<Block>(this) {
+        addWriter(Block.class, new CSharpASTNodeWriter<Block>(this) {
             @Override
             public void write(Block block) {
                 matchAndWrite("{");
@@ -292,7 +305,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Empty statement (";")
-        addWriter(EmptyStatement.class, new CSharpASTWriter<EmptyStatement>(this) {
+        addWriter(EmptyStatement.class, new CSharpASTNodeWriter<EmptyStatement>(this) {
             @Override
             public void write(EmptyStatement emptyStatement) {
                 matchAndWrite(";");
@@ -301,7 +314,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Expression statement
-        addWriter(ExpressionStatement.class, new CSharpASTWriter<ExpressionStatement>(this) {
+        addWriter(ExpressionStatement.class, new CSharpASTNodeWriter<ExpressionStatement>(this) {
             @Override
             public void write(ExpressionStatement expressionStatement) {
                 writeNode(expressionStatement.getExpression());
@@ -312,7 +325,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // If statement
-        addWriter(IfStatement.class, new CSharpASTWriter<IfStatement>(this) {
+        addWriter(IfStatement.class, new CSharpASTNodeWriter<IfStatement>(this) {
             @Override
             public void write(IfStatement ifStatement) {
                 matchAndWrite("if");
@@ -342,7 +355,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // While statement
-        addWriter(WhileStatement.class, new CSharpASTWriter<WhileStatement>(this) {
+        addWriter(WhileStatement.class, new CSharpASTNodeWriter<WhileStatement>(this) {
             @Override
             public void write(WhileStatement whileStatement) {
                 matchAndWrite("while");
@@ -362,7 +375,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Do while statement
-        addWriter(DoStatement.class, new CSharpASTWriter<DoStatement>(this) {
+        addWriter(DoStatement.class, new CSharpASTNodeWriter<DoStatement>(this) {
             @Override
             public void write(DoStatement doStatement) {
                 matchAndWrite("do");
@@ -389,7 +402,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Continue statement
-        addWriter(ContinueStatement.class, new CSharpASTWriter<ContinueStatement>(this) {
+        addWriter(ContinueStatement.class, new CSharpASTNodeWriter<ContinueStatement>(this) {
             @Override
             public void write(ContinueStatement continueStatement) {
                 if (continueStatement.getLabel() != null)
@@ -404,7 +417,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Break statement
-        addWriter(BreakStatement.class, new CSharpASTWriter<BreakStatement>(this) {
+        addWriter(BreakStatement.class, new CSharpASTNodeWriter<BreakStatement>(this) {
             @Override
             public void write(BreakStatement breakStatement) {
                 if (breakStatement.getLabel() != null)
@@ -421,7 +434,7 @@ public class CSharpASTWriters extends ASTWriters {
         // For statement
         addWriter(ForStatement.class, new ForStatementWriter(this));
 
-        addWriter(EnhancedForStatement.class, new CSharpASTWriter<EnhancedForStatement>(this) {
+        addWriter(EnhancedForStatement.class, new CSharpASTNodeWriter<EnhancedForStatement>(this) {
             @Override
             public void write(EnhancedForStatement enhancedForStatement) {
                 matchAndWrite("for", "foreach");
@@ -453,7 +466,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Return statement
-        addWriter(ReturnStatement.class, new CSharpASTWriter<ReturnStatement>(this) {
+        addWriter(ReturnStatement.class, new CSharpASTNodeWriter<ReturnStatement>(this) {
             @Override
             public void write(ReturnStatement returnStatement) {
                 matchAndWrite("return");
@@ -470,7 +483,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Local variable declaration statement
-        addWriter(VariableDeclarationStatement.class, new CSharpASTWriter<VariableDeclarationStatement>(this) {
+        addWriter(VariableDeclarationStatement.class, new CSharpASTNodeWriter<VariableDeclarationStatement>(this) {
             @Override
             public void write(VariableDeclarationStatement variableDeclarationStatement) {
                 writeVariableDeclaration(variableDeclarationStatement.modifiers(),
@@ -487,7 +500,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Throw statement
-        addWriter(ThrowStatement.class, new CSharpASTWriter<ThrowStatement>(this) {
+        addWriter(ThrowStatement.class, new CSharpASTNodeWriter<ThrowStatement>(this) {
             @Override
             public void write(ThrowStatement throwStatement) {
                 matchAndWrite("throw");
@@ -502,14 +515,14 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Delegating constructor invocation
-        addWriter(ConstructorInvocation.class, new CSharpASTWriter(this) {
+        addWriter(ConstructorInvocation.class, new CSharpASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 throw sourceNotSupported("Delegating constructors aren't currently supported; for now you have to change the code to not use them (e.g. by adding an init method)");
             }
         });
 
-        addWriter(AssertStatement.class, new CSharpASTWriter<AssertStatement>(this) {
+        addWriter(AssertStatement.class, new CSharpASTNodeWriter<AssertStatement>(this) {
             @Override
             public void write(AssertStatement assertStatement) {
                 matchAndWrite("assert", "Debug.Assert(");
@@ -533,7 +546,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Throw statement
-        addWriter(SynchronizedStatement.class, new CSharpASTWriter<SynchronizedStatement>(this) {
+        addWriter(SynchronizedStatement.class, new CSharpASTNodeWriter<SynchronizedStatement>(this) {
             @Override
             public void write(SynchronizedStatement synchronizedStatement) {
                 matchAndWrite("synchronized", "lock");
@@ -579,7 +592,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Variable declaration expression (used in a for statement)
-        addWriter(VariableDeclarationExpression.class, new CSharpASTWriter<VariableDeclarationExpression>(this) {
+        addWriter(VariableDeclarationExpression.class, new CSharpASTNodeWriter<VariableDeclarationExpression>(this) {
             @Override
             public void write(VariableDeclarationExpression variableDeclarationExpression) {
                 writeVariableDeclaration(variableDeclarationExpression.modifiers(),
@@ -593,7 +606,7 @@ public class CSharpASTWriters extends ASTWriters {
         addWriter(InfixExpression.class, new InfixExpressionWriter(this));
 
         // Prefix expression
-        addWriter(PrefixExpression.class, new CSharpASTWriter<PrefixExpression>(this) {
+        addWriter(PrefixExpression.class, new CSharpASTNodeWriter<PrefixExpression>(this) {
             @Override
             public void write(PrefixExpression prefixExpression) {
                 PrefixExpression.Operator operator = prefixExpression.getOperator();
@@ -620,7 +633,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Postfix expression
-        addWriter(PostfixExpression.class, new CSharpASTWriter<PostfixExpression>(this) {
+        addWriter(PostfixExpression.class, new CSharpASTNodeWriter<PostfixExpression>(this) {
             @Override
             public void write(PostfixExpression postfixExpression) {
                 writeNode(postfixExpression.getOperand());
@@ -639,7 +652,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // instanceof expression
-        addWriter(InstanceofExpression.class, new CSharpASTWriter<InstanceofExpression>(this) {
+        addWriter(InstanceofExpression.class, new CSharpASTNodeWriter<InstanceofExpression>(this) {
             @Override
             public void write(InstanceofExpression instanceofExpression) {
                 Expression expression = instanceofExpression.getLeftOperand();
@@ -655,7 +668,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // conditional expression
-        addWriter(ConditionalExpression.class, new CSharpASTWriter<ConditionalExpression>(this) {
+        addWriter(ConditionalExpression.class, new CSharpASTNodeWriter<ConditionalExpression>(this) {
             @Override
             public void write(ConditionalExpression conditionalExpression) {
                 writeNode(conditionalExpression.getExpression());
@@ -676,7 +689,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // this
-        addWriter(ThisExpression.class, new CSharpASTWriter<ThisExpression>(this) {
+        addWriter(ThisExpression.class, new CSharpASTNodeWriter<ThisExpression>(this) {
             @Override
             public void write(ThisExpression thisExpression) {
                 // TODO: Handle qualified this expressions; probably need to do from parent invoking
@@ -691,7 +704,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Field access
-        addWriter(FieldAccess.class, new CSharpASTWriter<FieldAccess>(this) {
+        addWriter(FieldAccess.class, new CSharpASTNodeWriter<FieldAccess>(this) {
             @Override
             public void write(FieldAccess fieldAccess) {
                 writeNode(fieldAccess.getExpression());
@@ -707,7 +720,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Array access
-        addWriter(ArrayAccess.class, new CSharpASTWriter<ArrayAccess>(this) {
+        addWriter(ArrayAccess.class, new CSharpASTNodeWriter<ArrayAccess>(this) {
             @Override
             public void write(ArrayAccess arrayAccess) {
                 writeNode(arrayAccess.getArray());
@@ -724,7 +737,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Qualified name
-        addWriter(QualifiedName.class, new CSharpASTWriter<QualifiedName>(this) {
+        addWriter(QualifiedName.class, new CSharpASTNodeWriter<QualifiedName>(this) {
             @Override
             public void write(QualifiedName qualifiedName) {
                 // TODO: Figure out the other cases where this can occur & make them all correct
@@ -743,7 +756,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Parenthesized expression
-        addWriter(ParenthesizedExpression.class, new CSharpASTWriter<ParenthesizedExpression>(this) {
+        addWriter(ParenthesizedExpression.class, new CSharpASTNodeWriter<ParenthesizedExpression>(this) {
             @Override
             public void write(ParenthesizedExpression parenthesizedExpression) {
                 matchAndWrite("(");
@@ -758,7 +771,7 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Cast expression
-        addWriter(CastExpression.class, new CSharpASTWriter<CastExpression>(this) {
+        addWriter(CastExpression.class, new CSharpASTNodeWriter<CastExpression>(this) {
             @Override
             public void write(CastExpression castExpression) {
                 matchAndWrite("(");
@@ -775,7 +788,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Number literal
-        addWriter(NumberLiteral.class, new CSharpASTWriter<NumberLiteral>(this) {
+        addWriter(NumberLiteral.class, new CSharpASTNodeWriter<NumberLiteral>(this) {
             @Override
             public void write(NumberLiteral numberLiteral) {
                 String token = numberLiteral.getToken();
@@ -800,7 +813,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Boolean literal
-        addWriter(BooleanLiteral.class, new CSharpASTWriter<BooleanLiteral>(this) {
+        addWriter(BooleanLiteral.class, new CSharpASTNodeWriter<BooleanLiteral>(this) {
             @Override
             public void write(BooleanLiteral booleanLiteral) {
                 matchAndWrite(booleanLiteral.booleanValue() ? "true" : "false");
@@ -808,7 +821,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Character literal
-        addWriter(CharacterLiteral.class, new CSharpASTWriter<CharacterLiteral>(this) {
+        addWriter(CharacterLiteral.class, new CSharpASTNodeWriter<CharacterLiteral>(this) {
             @Override
             public void write(CharacterLiteral characterLiteral) {
                 // TODO: Map character escape sequences
@@ -817,7 +830,7 @@ public class CSharpASTWriters extends ASTWriters {
         });
 
         // Null literal
-        addWriter(NullLiteral.class, new CSharpASTWriter(this) {
+        addWriter(NullLiteral.class, new CSharpASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 matchAndWrite("null");
@@ -826,17 +839,12 @@ public class CSharpASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // String literal
-        addWriter(StringLiteral.class, new CSharpASTWriter<StringLiteral>(this) {
+        addWriter(StringLiteral.class, new CSharpASTNodeWriter<StringLiteral>(this) {
             @Override
             public void write(StringLiteral stringLiteral) {
                 matchAndWrite(stringLiteral.getEscapedValue());
             }
         });
-    }
-
-    @Override
-    public CSharpTranslator getTranslator() {
-        return cSharpTranslator;
     }
 
     public HashSet<String> getCSharpReservedWords() {

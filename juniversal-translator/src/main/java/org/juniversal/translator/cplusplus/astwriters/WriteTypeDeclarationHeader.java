@@ -37,14 +37,14 @@ import org.eclipse.jdt.core.dom.TypeParameter;
 public class WriteTypeDeclarationHeader {
 	private final TypeDeclaration typeDeclaration;
 	private final Context context;
-	private final ASTWriters astWriters;
+	private final SourceFileWriter sourceFileWriter;
 	private final int typeIndent;
 	private boolean outputSomethingForType;
 
-	public WriteTypeDeclarationHeader(TypeDeclaration typeDeclaration, Context context, ASTWriters astWriters) {
+	public WriteTypeDeclarationHeader(TypeDeclaration typeDeclaration, Context context, SourceFileWriter sourceFileWriter) {
 		this.typeDeclaration = typeDeclaration;
 		this.context = context;
-		this.astWriters = astWriters;
+		this.sourceFileWriter = sourceFileWriter;
 
 		// Skip the modifiers and the space/comments following them
 		context.skipModifiers(typeDeclaration.modifiers());
@@ -117,7 +117,7 @@ public class WriteTypeDeclarationHeader {
             context.matchAndWrite("extends", ": public");
 
             context.copySpaceAndComments();
-			astWriters.writeNode(superclassType);
+			sourceFileWriter.writeNode(superclassType);
 		}
 
 		// Write out the super interfaces, if any
@@ -140,7 +140,7 @@ public class WriteTypeDeclarationHeader {
 			if (context.getPosition() == originalPosition)
                 context.write(" ");
 
-			astWriters.writeNode(superInterfaceType);
+			sourceFileWriter.writeNode(superInterfaceType);
 			firstInterface = false;
 		}
 	}
@@ -187,7 +187,7 @@ public class WriteTypeDeclarationHeader {
 			context.setPositionToStartOfNodeSpaceAndComments(nestedTypeDeclaration);
             context.copySpaceAndComments();
 
-			astWriters.writeNode(nestedTypeDeclaration);
+			sourceFileWriter.writeNode(nestedTypeDeclaration);
 
 			// Copy any trailing comment associated with the class, on the same line as the closing
 			// brace; rare but possible
@@ -271,7 +271,7 @@ public class WriteTypeDeclarationHeader {
 				context.skipSpacesAndTabs();
 			}
 
-			astWriters.writeNode(methodDeclaration);
+			sourceFileWriter.writeNode(methodDeclaration);
 
 			// Copy any trailing comment associated with the method; that's sometimes there for
 			// one-liners
@@ -295,7 +295,7 @@ public class WriteTypeDeclarationHeader {
 		Type superclassType = typeDeclaration.getSuperclassType();
 		if (superclassType == null)
             context.write("Object");
-		else astWriters.writeNodeAtDifferentPosition(superclassType, context);
+		else sourceFileWriter.writeNodeAtDifferentPosition(superclassType, context);
 
         context.writeln(" super;");
 	}
@@ -339,7 +339,7 @@ public class WriteTypeDeclarationHeader {
 				if (context.getSourceLogicalColumn() == 0)
                     context.writeSpaces(context.getPreferredIndent());
 
-				astWriters.writeNode(fieldDeclaration);
+				sourceFileWriter.writeNode(fieldDeclaration);
 
                 context.copySpaceAndCommentsUntilEOL();
                 context.writeln();

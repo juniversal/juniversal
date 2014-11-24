@@ -27,28 +27,30 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import java.util.HashMap;
 
-public abstract class ASTWriters {
-    private Context context;
-    private HashMap<Class<? extends ASTNode>, ASTWriter> m_visitors = new HashMap<>();
+public abstract class SourceFileWriter {
+    private SourceFile sourceFile;
+    private HashMap<Class<? extends ASTNode>, ASTNodeWriter> visitors = new HashMap<>();
 
-    protected ASTWriters(Context context) {
-        this.context = context;
+    protected SourceFileWriter(SourceFile sourceFile) {
+        this.sourceFile = sourceFile;
     }
 
-    public Context getContext() {
-        return context;
-    }
-
-    protected void addWriter(Class<? extends ASTNode> clazz, ASTWriter visitor) {
-        if (m_visitors.get(clazz) != null)
-            throw new JUniversalException("Writer for class " + clazz + " already added to ASTWriters");
-        m_visitors.put(clazz, visitor);
+    public SourceFile getSourceFile() {
+        return sourceFile;
     }
 
     public abstract Translator getTranslator();
 
-    public ASTWriter getVisitor(Class clazz) {
-        ASTWriter visitor = m_visitors.get(clazz);
+    public abstract Context getContext();
+
+    protected void addWriter(Class<? extends ASTNode> clazz, ASTNodeWriter visitor) {
+        if (visitors.get(clazz) != null)
+            throw new JUniversalException("Writer for class " + clazz + " already added to ASTWriters");
+        visitors.put(clazz, visitor);
+    }
+
+    public ASTNodeWriter getVisitor(Class clazz) {
+        ASTNodeWriter visitor = visitors.get(clazz);
         if (visitor == null)
             throw new JUniversalException("No visitor found for class " + clazz.getName());
         return visitor;
@@ -56,6 +58,8 @@ public abstract class ASTWriters {
 
     private static final boolean VALIDATE_CONTEXT_POSITION = true;
     public void writeNode(ASTNode node) {
+        Context context = getContext();
+
         int nodeStartPosition;
         if (VALIDATE_CONTEXT_POSITION) {
             nodeStartPosition = node.getStartPosition();
@@ -87,6 +91,7 @@ public abstract class ASTWriters {
 
     public void writeRootNode(ASTNode node) {
         try {
+            getContext().setPosition(node.getStartPosition());
             writeNode(node);
         }
         catch (UserViewableException e) {
@@ -97,7 +102,7 @@ public abstract class ASTWriters {
                 throw e;
             else
                 throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
-                                              + context.getPositionDescription(context.getPosition()), e);
+                        + getContext().getPositionDescription(getContext().getPosition()), e);
         }
     }
 

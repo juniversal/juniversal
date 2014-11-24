@@ -28,13 +28,11 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.juniversal.translator.core.*;
 import org.juniversal.translator.cplusplus.CPPProfile;
 import org.juniversal.translator.cplusplus.OutputType;
-import org.juniversal.translator.swift.astwriters.SwiftASTWriters;
+import org.juniversal.translator.swift.astwriters.SwiftSourceFileWriter;
 
 import java.io.*;
 
 public class SwiftTranslator extends Translator {
-    private CPPProfile cppProfile = new CPPProfile();
-
     @Override public void translateFile(SourceFile sourceFile) {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
@@ -45,11 +43,9 @@ public class SwiftTranslator extends Translator {
         File file = new File(getOutputDirectory(), fileName);
 
         try (FileWriter writer = new FileWriter(file)) {
-            TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
-            Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
-            SwiftASTWriters swiftASTWriters = new SwiftASTWriters(context, this);
+            SwiftSourceFileWriter swiftSourceFileWriter = new SwiftSourceFileWriter(this, sourceFile, writer);
 
-            swiftASTWriters.writeRootNode(compilationUnit);
+            swiftSourceFileWriter.writeRootNode(compilationUnit);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -57,11 +53,7 @@ public class SwiftTranslator extends Translator {
 
     @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
         try (StringWriter writer = new StringWriter()) {
-            TargetWriter targetWriter = new TargetWriter(writer, cppProfile);
-            Context context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
-
-            context.setPosition(astNode.getStartPosition());
-            SwiftASTWriters swiftASTWriters = new SwiftASTWriters(context, this);
+            SwiftSourceFileWriter swiftASTWriters = new SwiftSourceFileWriter(this, sourceFile, writer);
 
             swiftASTWriters.writeRootNode(astNode);
 

@@ -27,8 +27,8 @@ import org.eclipse.jdt.core.dom.SwitchCase;
 import org.eclipse.jdt.core.dom.SwitchStatement;
 
 
-public class SwitchStatementWriter extends CSharpASTWriter<SwitchStatement> {
-    public SwitchStatementWriter(CSharpASTWriters cSharpASTWriters) {
+public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> {
+    public SwitchStatementWriter(CSharpSourceFileWriter cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

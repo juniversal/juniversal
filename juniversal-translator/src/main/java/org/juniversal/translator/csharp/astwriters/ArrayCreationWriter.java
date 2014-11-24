@@ -30,8 +30,8 @@ import org.juniversal.translator.core.JUniversalException;
 import java.util.List;
 
 
-public class ArrayCreationWriter extends CSharpASTWriter<ArrayCreation> {
-    public ArrayCreationWriter(CSharpASTWriters cPlusPlusASTWriters) {
+public class ArrayCreationWriter extends CSharpASTNodeWriter<ArrayCreation> {
+    public ArrayCreationWriter(CSharpSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

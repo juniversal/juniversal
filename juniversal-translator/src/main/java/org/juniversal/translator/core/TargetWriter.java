@@ -22,8 +22,6 @@
 
 package org.juniversal.translator.core;
 
-import org.juniversal.translator.cplusplus.CPPProfile;
-
 import java.io.*;
 
 
@@ -35,38 +33,17 @@ public class TargetWriter {
     private Writer writer;
     // Additional amount to indent or (if negative) outdent
     private int additionalIndentation = 0;
-    private CPPProfile targetProfile;
     private int destTabStop = -1;
 
 
-    public TargetWriter(File file, CPPProfile targetProfile) {
-        try {
-            init(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "Cp1252")), targetProfile);
-        } catch (UnsupportedEncodingException e) {
-            throw new JUniversalException(e);
-        } catch (FileNotFoundException e) {
-            throw new UserViewableException("Ouptut file " + file.getAbsolutePath()
-                    + " could not be created");
-        }
-    }
-
-    public TargetWriter(Writer writer, CPPProfile targetProfile) {
-        init(writer, targetProfile);
-    }
-
-    private void init(Writer writer, CPPProfile cppProfile) {
+    public TargetWriter(Writer writer, int destTabStop) {
         this.writer = writer;
-        this.targetProfile = cppProfile;
-        destTabStop = cppProfile.getTabStop();
+        this.destTabStop = destTabStop;
 
         currLine = 1;
         currColumn = 0;
         accumulatingSpacesAtBeginningOfLine = true;
         spacesAtBeginningOfLine = 0;
-    }
-
-    public CPPProfile getCPPProfile() {
-        return targetProfile;
     }
 
     public int getCurrLine() {

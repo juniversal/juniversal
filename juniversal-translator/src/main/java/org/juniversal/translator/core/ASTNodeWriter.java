@@ -27,30 +27,30 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import java.util.List;
 
 
-public abstract class ASTWriter<T extends ASTNode> {
+public abstract class ASTNodeWriter<T extends ASTNode> {
     abstract public void write(T node);
 
     public boolean canProcessTrailingWhitespaceOrComments() {
         return false;
     }
     
-    protected abstract ASTWriters getASTWriters();
+    protected abstract SourceFileWriter getSourceFileWriter();
 
     protected void writeNode(ASTNode node) {
-        getASTWriters().writeNode(node);
+        getSourceFileWriter().writeNode(node);
     }
 
     protected void writeNodeFromOtherPosition(ASTNode node) {
         int savedPosition = getPosition();
 
         setPositionToStartOfNode(node);
-        getASTWriters().writeNode(node);
+        getSourceFileWriter().writeNode(node);
 
         setPosition(savedPosition);
     }
 
     protected void writeNodeAtDifferentPosition(ASTNode node) {
-        getASTWriters().writeNodeAtDifferentPosition(node, getContext());
+        getSourceFileWriter().writeNodeAtDifferentPosition(node, getContext());
     }
 
     public <TElmt> void writeCommaDelimitedNodes(List list, ASTUtil.IProcessListElmt<TElmt> processList) {
@@ -94,7 +94,7 @@ public abstract class ASTWriter<T extends ASTNode> {
         }
     }
 
-    public Context getContext() { return getASTWriters().getContext(); }
+    public Context getContext() { return getSourceFileWriter().getContext(); }
 
     public SourceNotSupportedException sourceNotSupported(String baseMessage) {
         return getContext().sourceNotSupported(baseMessage);

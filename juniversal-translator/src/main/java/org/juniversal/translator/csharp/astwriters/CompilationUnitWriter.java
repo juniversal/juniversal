@@ -31,8 +31,8 @@ import org.jetbrains.annotations.Nullable;
 
 // TODO: Finish this
 
-class CompilationUnitWriter extends CSharpASTWriter<CompilationUnit> {
-    CompilationUnitWriter(CSharpASTWriters cSharpASTWriters) {
+class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
+    CompilationUnitWriter(CSharpSourceFileWriter cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

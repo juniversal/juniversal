@@ -34,10 +34,10 @@ import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
-public class MethodInvocationWriter extends CPlusPlusASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
+public class MethodInvocationWriter extends CPlusPlusASTNodeWriter {
+    private CPlusPlusSourceFileWriter cPlusPlusASTWriters;
 
-    public MethodInvocationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+    public MethodInvocationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

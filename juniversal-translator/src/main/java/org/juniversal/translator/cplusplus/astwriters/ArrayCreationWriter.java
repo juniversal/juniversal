@@ -32,8 +32,8 @@ import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.Expression;
 
 
-public class ArrayCreationWriter extends CPlusPlusASTWriter<ArrayCreation> {
-    public ArrayCreationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+public class ArrayCreationWriter extends CPlusPlusASTNodeWriter<ArrayCreation> {
+    public ArrayCreationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

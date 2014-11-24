@@ -30,12 +30,12 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
 
 
-public class InfixExpressionWriter extends CPlusPlusASTWriter {
-    private CPlusPlusASTWriters cPlusPlusASTWriters;
+public class InfixExpressionWriter extends CPlusPlusASTNodeWriter {
+    private CPlusPlusSourceFileWriter cPlusPlusASTWriters;
 	private HashMap<InfixExpression.Operator, String> equivalentOperators;  // Operators that have the same token in both Java & C++
 
 
-	public InfixExpressionWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+	public InfixExpressionWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
 		super(cPlusPlusASTWriters);
 
 		equivalentOperators = new HashMap<>();

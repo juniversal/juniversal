@@ -31,8 +31,8 @@ import java.util.List;
 
 
 // TODO: Finish this
-public class FieldDeclarationWriter extends CSharpASTWriter<FieldDeclaration> {
-    public FieldDeclarationWriter(CSharpASTWriters cSharpASTWriters) {
+public class FieldDeclarationWriter extends CSharpASTNodeWriter<FieldDeclaration> {
+    public FieldDeclarationWriter(CSharpSourceFileWriter cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

@@ -34,12 +34,12 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class WriteTypeDeclarationSource {
-	private final CPlusPlusASTWriters astWriters;
+	private final CPlusPlusSourceFileWriter astWriters;
 	private final Context context;
 	private boolean outputSomething;
 
 	@SuppressWarnings("unchecked")
-	public WriteTypeDeclarationSource(TypeDeclaration typeDeclaration, CPlusPlusASTWriters astWriters, Context context) {
+	public WriteTypeDeclarationSource(TypeDeclaration typeDeclaration, CPlusPlusSourceFileWriter astWriters, Context context) {
 		this.astWriters = astWriters;
 		this.context = context;
 		outputSomething = false;
@@ -80,7 +80,7 @@ public class WriteTypeDeclarationSource {
 		context.setPosition(ASTUtil.getEndPosition(typeDeclaration));
 	}
 
-	private void writeNestedType(CPlusPlusASTWriters astWriters, Context context, TypeDeclaration nestedTypeDeclaration) {
+	private void writeNestedType(CPlusPlusSourceFileWriter astWriters, Context context, TypeDeclaration nestedTypeDeclaration) {
 		if (outputSomething)
             context.writeln(2);
 

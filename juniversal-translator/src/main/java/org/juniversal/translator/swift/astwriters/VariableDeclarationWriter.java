@@ -28,8 +28,8 @@ import org.juniversal.translator.core.ASTUtil;
 import java.util.List;
 
 
-public class VariableDeclarationWriter extends SwiftASTWriter {
-    public VariableDeclarationWriter(SwiftASTWriters swiftASTWriters) {
+public class VariableDeclarationWriter extends SwiftASTNodeWriter {
+    public VariableDeclarationWriter(SwiftSourceFileWriter swiftASTWriters) {
         super(swiftASTWriters);
     }
 

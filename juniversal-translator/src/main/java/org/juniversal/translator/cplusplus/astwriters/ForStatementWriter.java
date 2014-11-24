@@ -27,8 +27,8 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ForStatement;
 
 
-public class ForStatementWriter extends CPlusPlusASTWriter {
-    public ForStatementWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+public class ForStatementWriter extends CPlusPlusASTNodeWriter {
+    public ForStatementWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

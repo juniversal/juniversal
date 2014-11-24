@@ -28,8 +28,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 
-public class TryStatementWriter extends CSharpASTWriter<TryStatement> {
-    public TryStatementWriter(CSharpASTWriters cSharpASTWriters) {
+public class TryStatementWriter extends CSharpASTNodeWriter<TryStatement> {
+    public TryStatementWriter(CSharpSourceFileWriter cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

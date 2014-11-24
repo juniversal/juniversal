@@ -24,18 +24,23 @@ package org.juniversal.translator.swift.astwriters;
 
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.*;
+import org.juniversal.translator.cplusplus.OutputType;
 import org.juniversal.translator.swift.SwiftTranslator;
 
+import java.io.Writer;
 import java.util.List;
 
 
-public class SwiftASTWriters extends ASTWriters {
+public class SwiftSourceFileWriter extends SourceFileWriter {
     private SwiftTranslator swiftTranslator;
+    private Context context;
 
-    public SwiftASTWriters(Context context, SwiftTranslator swiftTranslator) {
-        super(context);
+    public SwiftSourceFileWriter(SwiftTranslator swiftTranslator, SourceFile sourceFile, Writer writer) {
+        super(sourceFile);
 
         this.swiftTranslator = swiftTranslator;
+        TargetWriter targetWriter = new TargetWriter(writer, swiftTranslator.getDestTabStop());
+        this.context = new Context(sourceFile, targetWriter, OutputType.SOURCE);
 
         addDeclarationWriters();
 
@@ -44,7 +49,7 @@ public class SwiftASTWriters extends ASTWriters {
         addExpressionWriters();
 
         // Simple name
-        addWriter(SimpleName.class, new SwiftASTWriter(this) {
+        addWriter(SimpleName.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 SimpleName simpleName = (SimpleName) node;
@@ -52,6 +57,17 @@ public class SwiftASTWriters extends ASTWriters {
                 matchAndWrite(simpleName.getIdentifier());
             }
         });
+    }
+
+
+    @Override
+    public SwiftTranslator getTranslator() {
+        return swiftTranslator;
+    }
+
+    @Override
+    public Context getContext() {
+        return getContext();
     }
 
     /**
@@ -78,7 +94,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Variable declaration fragment
-        addWriter(VariableDeclarationFragment.class, new SwiftASTWriter(this) {
+        addWriter(VariableDeclarationFragment.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) node;
@@ -102,7 +118,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Single variable declaration (used in parameter list & catch clauses)
-        addWriter(SingleVariableDeclaration.class, new SwiftASTWriter(this) {
+        addWriter(SingleVariableDeclaration.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) node;
@@ -135,7 +151,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Simple type
-        addWriter(SimpleType.class, new SwiftASTWriter(this) {
+        addWriter(SimpleType.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 SimpleType simpleType = (SimpleType) node;
@@ -160,7 +176,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Parameterized type
-        addWriter(ParameterizedType.class, new SwiftASTWriter(this) {
+        addWriter(ParameterizedType.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ParameterizedType parameterizedType = (ParameterizedType) node;
@@ -192,7 +208,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Array type
-        addWriter(ArrayType.class, new SwiftASTWriter(this) {
+        addWriter(ArrayType.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ArrayType arrayType = (ArrayType) node;
@@ -210,7 +226,7 @@ public class SwiftASTWriters extends ASTWriters {
         });
 
         // Primitive type
-        addWriter(PrimitiveType.class, new SwiftASTWriter(this) {
+        addWriter(PrimitiveType.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 PrimitiveType primitiveType = (PrimitiveType) node;
@@ -248,7 +264,7 @@ public class SwiftASTWriters extends ASTWriters {
     private void addStatementWriters() {
         // TODO: Implement this
         // Block
-        addWriter(Block.class, new SwiftASTWriter(this) {
+        addWriter(Block.class, new SwiftASTNodeWriter(this) {
             @SuppressWarnings("unchecked")
             @Override
             public void write(ASTNode node) {
@@ -279,7 +295,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Empty statement (";")
-        addWriter(EmptyStatement.class, new SwiftASTWriter(this) {
+        addWriter(EmptyStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 matchAndWrite(";");
@@ -288,7 +304,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Expression statement
-        addWriter(ExpressionStatement.class, new SwiftASTWriter(this) {
+        addWriter(ExpressionStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ExpressionStatement expressionStatement = (ExpressionStatement) node;
@@ -301,7 +317,7 @@ public class SwiftASTWriters extends ASTWriters {
         });
 
         // If statement
-        addWriter(IfStatement.class, new SwiftASTWriter(this) {
+        addWriter(IfStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 IfStatement ifStatement = (IfStatement) node;
@@ -326,7 +342,7 @@ public class SwiftASTWriters extends ASTWriters {
         });
 
         // While statement
-        addWriter(WhileStatement.class, new SwiftASTWriter(this) {
+        addWriter(WhileStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 WhileStatement whileStatement = (WhileStatement) node;
@@ -343,7 +359,7 @@ public class SwiftASTWriters extends ASTWriters {
         });
 
         // Do while statement
-        addWriter(DoStatement.class, new SwiftASTWriter(this) {
+        addWriter(DoStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 DoStatement doStatement = (DoStatement) node;
@@ -366,7 +382,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Continue statement
-        addWriter(ContinueStatement.class, new SwiftASTWriter(this) {
+        addWriter(ContinueStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ContinueStatement continueStatement = (ContinueStatement) node;
@@ -383,7 +399,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Break statement
-        addWriter(BreakStatement.class, new SwiftASTWriter(this) {
+        addWriter(BreakStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 BreakStatement breakStatement = (BreakStatement) node;
@@ -406,7 +422,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Return statement
-        addWriter(ReturnStatement.class, new SwiftASTWriter(this) {
+        addWriter(ReturnStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ReturnStatement returnStatement = (ReturnStatement) node;
@@ -430,7 +446,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Throw statement
-        addWriter(ThrowStatement.class, new SwiftASTWriter(this) {
+        addWriter(ThrowStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ThrowStatement throwStatement = (ThrowStatement) node;
@@ -447,7 +463,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Delegating constructor invocation
-        addWriter(ConstructorInvocation.class, new SwiftASTWriter(this) {
+        addWriter(ConstructorInvocation.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 throw sourceNotSupported("Delegating constructors aren't currently supported; for now you have to change the code to not use them (e.g. by adding an init method)");
@@ -492,7 +508,7 @@ public class SwiftASTWriters extends ASTWriters {
         addWriter(InfixExpression.class, new InfixExpressionWriter(this));
 
         // Prefix expression
-        addWriter(PrefixExpression.class, new SwiftASTWriter(this) {
+        addWriter(PrefixExpression.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 PrefixExpression prefixExpression = (PrefixExpression) node;
@@ -521,7 +537,7 @@ public class SwiftASTWriters extends ASTWriters {
         });
 
         // Postfix expression
-        addWriter(PostfixExpression.class, new SwiftASTWriter(this) {
+        addWriter(PostfixExpression.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 PostfixExpression postfixExpression = (PostfixExpression) node;
@@ -543,7 +559,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // instanceof expression
-        addWriter(InstanceofExpression.class, new SwiftASTWriter(this) {
+        addWriter(InstanceofExpression.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 InstanceofExpression instanceofExpression = (InstanceofExpression) node;
@@ -565,7 +581,7 @@ public class SwiftASTWriters extends ASTWriters {
         });
 
         // conditional expression
-        addWriter(ConditionalExpression.class, new SwiftASTWriter(this) {
+        addWriter(ConditionalExpression.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ConditionalExpression conditionalExpression = (ConditionalExpression) node;
@@ -588,7 +604,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // this
-        addWriter(ThisExpression.class, new SwiftASTWriter(this) {
+        addWriter(ThisExpression.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ThisExpression thisExpression = (ThisExpression) node;
@@ -606,7 +622,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Field access
-        addWriter(FieldAccess.class, new SwiftASTWriter(this) {
+        addWriter(FieldAccess.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 FieldAccess fieldAccess = (FieldAccess) node;
@@ -622,7 +638,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Array access
-        addWriter(ArrayAccess.class, new SwiftASTWriter(this) {
+        addWriter(ArrayAccess.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ArrayAccess arrayAccess = (ArrayAccess) node;
@@ -642,7 +658,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Qualified name
-        addWriter(QualifiedName.class, new SwiftASTWriter(this) {
+        addWriter(QualifiedName.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 QualifiedName qualifiedName = (QualifiedName) node;
@@ -663,7 +679,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Parenthesized expression
-        addWriter(ParenthesizedExpression.class, new SwiftASTWriter(this) {
+        addWriter(ParenthesizedExpression.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 ParenthesizedExpression parenthesizedExpression = (ParenthesizedExpression) node;
@@ -680,7 +696,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // Cast expression
-        addWriter(CastExpression.class, new SwiftASTWriter(this) {
+        addWriter(CastExpression.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 CastExpression castExpression = (CastExpression) node;
@@ -710,7 +726,7 @@ public class SwiftASTWriters extends ASTWriters {
         });
 
         // Number literal
-        addWriter(NumberLiteral.class, new SwiftASTWriter(this) {
+        addWriter(NumberLiteral.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 NumberLiteral numberLiteral = (NumberLiteral) node;
@@ -735,7 +751,7 @@ public class SwiftASTWriters extends ASTWriters {
         });
 
         // Boolean literal
-        addWriter(BooleanLiteral.class, new SwiftASTWriter(this) {
+        addWriter(BooleanLiteral.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 BooleanLiteral booleanLiteral = (BooleanLiteral) node;
@@ -744,7 +760,7 @@ public class SwiftASTWriters extends ASTWriters {
         });
 
         // Character literal
-        addWriter(CharacterLiteral.class, new SwiftASTWriter(this) {
+        addWriter(CharacterLiteral.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 CharacterLiteral characterLiteral = (CharacterLiteral) node;
@@ -758,7 +774,7 @@ public class SwiftASTWriters extends ASTWriters {
         });
 
         // Null literal
-        addWriter(NullLiteral.class, new SwiftASTWriter(this) {
+        addWriter(NullLiteral.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 matchAndWrite("null", "nil");
@@ -767,7 +783,7 @@ public class SwiftASTWriters extends ASTWriters {
 
         // TODO: Implement this
         // String literal
-        addWriter(StringLiteral.class, new SwiftASTWriter(this) {
+        addWriter(StringLiteral.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 StringLiteral stringLiteral = (StringLiteral) node;
@@ -776,10 +792,5 @@ public class SwiftASTWriters extends ASTWriters {
                 match(stringLiteral.getEscapedValue());
             }
         });
-    }
-
-    @Override
-    public SwiftTranslator getTranslator() {
-        return swiftTranslator;
     }
 }

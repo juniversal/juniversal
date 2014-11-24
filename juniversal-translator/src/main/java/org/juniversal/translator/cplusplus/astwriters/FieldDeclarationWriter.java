@@ -31,8 +31,8 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 
-public class FieldDeclarationWriter extends CPlusPlusASTWriter {
-    public FieldDeclarationWriter(CPlusPlusASTWriters cPlusPlusASTWriters) {
+public class FieldDeclarationWriter extends CPlusPlusASTNodeWriter {
+    public FieldDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

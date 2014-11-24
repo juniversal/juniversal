@@ -26,8 +26,8 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ForStatement;
 
 
-public class ForStatementWriter extends CSharpASTWriter<ForStatement> {
-    public ForStatementWriter(CSharpASTWriters cSharpASTWriters) {
+public class ForStatementWriter extends CSharpASTNodeWriter<ForStatement> {
+    public ForStatementWriter(CSharpSourceFileWriter cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

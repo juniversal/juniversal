@@ -25,13 +25,12 @@ package org.juniversal.translator.swift.astwriters;
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.ASTUtil;
 import org.juniversal.translator.core.Context;
-import org.juniversal.translator.cplusplus.OutputType;
 
 
-public class CompilationUnitWriter extends SwiftASTWriter {
-    private SwiftASTWriters swiftASTWriters;
+public class CompilationUnitWriter extends SwiftASTNodeWriter {
+    private SwiftSourceFileWriter swiftASTWriters;
 
-    public CompilationUnitWriter(SwiftASTWriters swiftASTWriters) {
+    public CompilationUnitWriter(SwiftSourceFileWriter swiftASTWriters) {
         super(swiftASTWriters);
     }
     

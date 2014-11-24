@@ -29,10 +29,10 @@ import org.juniversal.translator.core.Context;
 import java.util.List;
 
 
-public class MethodDeclarationWriter extends SwiftASTWriter {
-    private SwiftASTWriters swiftASTWriters;
+public class MethodDeclarationWriter extends SwiftASTNodeWriter {
+    private SwiftSourceFileWriter swiftASTWriters;
 
-    public MethodDeclarationWriter(SwiftASTWriters swiftASTWriters) {
+    public MethodDeclarationWriter(SwiftSourceFileWriter swiftASTWriters) {
         super(swiftASTWriters);
     }
 

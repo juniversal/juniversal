@@ -30,10 +30,10 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class InfixExpressionWriter extends CSharpASTWriter {
+public class InfixExpressionWriter extends CSharpASTNodeWriter {
     private HashMap<InfixExpression.Operator, String> equivalentOperators;  // Operators that have the same token in both Java & C#
 
-    public InfixExpressionWriter(CSharpASTWriters cSharpASTWriters) {
+    public InfixExpressionWriter(CSharpSourceFileWriter cSharpASTWriters) {
         super(cSharpASTWriters);
 
         /*

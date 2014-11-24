@@ -24,13 +24,8 @@ package org.juniversal.translator.cplusplus;
 
 import org.eclipse.jdt.core.dom.*;
 import org.junit.Test;
-import org.juniversal.translator.core.Context;
 import org.juniversal.translator.core.SourceFile;
 import org.juniversal.translator.core.SourceNotSupportedException;
-import org.juniversal.translator.core.TargetWriter;
-import org.juniversal.translator.cplusplus.astwriters.CPlusPlusASTWriters;
-
-import java.io.StringWriter;
 
 import static org.junit.Assert.*;
 
