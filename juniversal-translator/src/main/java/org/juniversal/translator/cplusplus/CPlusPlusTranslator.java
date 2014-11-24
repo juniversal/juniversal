@@ -28,7 +28,6 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.juniversal.translator.core.ASTUtil;
 import org.juniversal.translator.core.SourceFile;
 import org.juniversal.translator.core.Translator;
-import org.juniversal.translator.cplusplus.astwriters.CPlusPlusSourceFileWriter;
 
 import java.io.File;
 import java.io.FileWriter;

@@ -26,9 +26,6 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.juniversal.translator.core.*;
-import org.juniversal.translator.cplusplus.CPPProfile;
-import org.juniversal.translator.cplusplus.OutputType;
-import org.juniversal.translator.swift.astwriters.SwiftSourceFileWriter;
 
 import java.io.*;
 
