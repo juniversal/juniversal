@@ -43,6 +43,7 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         TypeDeclaration typeDeclaration = getContext().getTypeDeclaration();
         boolean isInterface = typeDeclaration.isInterface();
         boolean classIsFinal = isFinal(typeDeclaration);
+        boolean methodIsAbstract = isAbstract(methodDeclaration);
         boolean methodIsFinal = isFinal(methodDeclaration);
         boolean methodIsOverride = isOverride(methodDeclaration);
         boolean methodIsStatic = isStatic(methodDeclaration);
@@ -66,27 +67,35 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
 
         List<?> modifiers = methodDeclaration.modifiers();
 
-        // For C# interfaces, methods are always public and the access modifier isn't allowed
-        if (! isInterface)
+        // Write the access modifier.  For C# interfaces, methods are always public and the access modifier isn't allowed
+        if (!isInterface)
             writeAccessModifier(modifiers);
 
-        // In Java methods are virtual by default whereas in C# they aren't, so add the virtual keyword when appropriate.
-        // If the type is final nothing can be overridden whereas if it's an interface everything can be overridden; in
-        // both cases there's no need for virtual.   If the method is final or private or static it can't be overridden,
-        // so again no need for virtual.   If the method is an override, then it's already virtual (per the ancestor
-        // class), so once again there's no need for virtual.   But otherwise, mark as virtual
-        if ( !classIsFinal && !isInterface && !methodIsFinal && !methodIsOverride && !methodIsConstructor &&
-                !isPrivate(methodDeclaration) && !methodIsStatic)
-            writeModifier("virtual");
-
-        if (methodIsOverride) {
+        // Write the virtual/abstract/override/static/sealed modifiers, which, for lack of a better term, we'll call the
+        // "overridability" modifiers
+        if (methodIsStatic)
+            writeStaticModifier();
+        else if (isInterface || methodIsConstructor) {
+            // C# interface methods can't take any overridability modifiers--they are always implicitly abstract;
+            // constructors can't take modifiers
+        } else if (methodIsAbstract) {
+            // Java methods (as well as C# methods) can be both overrides & abstract; perhaps the method is redeclared
+            // here (thus the override) just to update its Javadoc.   Or perhaps a method with a default implementation
+            // (non-abstract) higher up in the inheritance tree is forced abstract here, so that subclasses need to
+            // supply their own implementations
+            if (methodIsOverride)
+                writeOverrideModifier();
+            writeAbstractModifier();
+        } else if (methodIsOverride) {
             writeOverrideModifier();
             if (methodIsFinal)
                 writeSealedModifier();
+        } else if (!classIsFinal && !methodIsFinal && !isPrivate(methodDeclaration)) {
+            // In Java methods are virtual by default whereas in C# they aren't, so add the virtual keyword when
+            // appropriate. If the type is final nothing can be overridden.   If the method is final or private it
+            // can't be overridden, so again no need for virtual.   Otherwise, mark as virtual
+            writeModifier("virtual");
         }
-
-        if (methodIsStatic)
-            writeStaticModifier();
 
         // Skip any modifiers & type parameters in the source
         setPositionToStartOfNode(returnType != null ? returnType : methodDeclaration.getName());
@@ -126,7 +135,7 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
 
         // TODO: Ignore thrown exceptions
         writeThrownExceptions(methodDeclaration);
-        
+
         if (methodDeclaration.isConstructor())
             writeOtherConstructorInvocation(methodDeclaration);
 
@@ -134,8 +143,6 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         if (body != null) {
             writeBody(body);
         } else {
-            if (! isInterface)
-                write(" = 0");
             copySpaceAndComments();
             matchAndWrite(";");
         }

@@ -44,7 +44,7 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
     private HashSet<String> cSharpReservedWords;
 
     public CSharpSourceFileWriter(CSharpTranslator cSharpTranslator, SourceFile sourceFile, Writer writer) {
-        super(sourceFile, new TargetWriter(writer, cSharpTranslator.getDestTabStop()));
+        super(cSharpTranslator, sourceFile, writer);
 
         this.cSharpTranslator = cSharpTranslator;
         this.context = new Context();
@@ -148,12 +148,10 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
                 } else writeNode(type);
 
                 copySpaceAndComments();
-                SimpleName name = singleVariableDeclaration.getName();
-                writeNode(name);
+                writeNode(singleVariableDeclaration.getName());
 
                 // TODO: Handle initializer
-                Expression initializer = singleVariableDeclaration.getInitializer();
-                if (initializer != null)
+                if (singleVariableDeclaration.getInitializer() != null)
                     throw new JUniversalException("Unexpected initializer present for SingleVariableDeclaration");
             }
         });

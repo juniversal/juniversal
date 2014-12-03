@@ -22,7 +22,6 @@
 
 package org.juniversal.translator.core;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class SourceCopier {
@@ -30,16 +29,16 @@ public class SourceCopier {
     private String source;
     private TargetWriter targetWriter;
 
-    public SourceCopier(SourceFile sourceFile, TargetWriter targetWriter) {
+    public SourceCopier(SourceFile sourceFile, String source, TargetWriter targetWriter) {
         this.sourceFile = sourceFile;
-        this.source = sourceFile.getSource();
+        this.source = source;
         this.targetWriter = targetWriter;
     }
 
     public int match(int startPosition, String match) {
         if (!source.startsWith(match, startPosition))
             throw new JUniversalException("Expected source to contain '" + match + "' at position " + startPosition
-                                          + ", but it doesn't");
+                    + ", but it doesn't");
         return startPosition + match.length();
     }
 
@@ -289,7 +288,7 @@ public class SourceCopier {
                 peekChar = getSourceCharAt(peekPosition);
 
                 if (peekChar == '/' && getSourceCharAt(peekPosition + 1) == '/' &&
-                    sourceFile.getSourceLogicalColumn(peekPosition) == commentStartSourceColumn) {
+                        sourceFile.getSourceLogicalColumn(peekPosition) == commentStartSourceColumn) {
                     position = peekPosition;
                     commentContinues = true;
                 }
@@ -338,7 +337,7 @@ public class SourceCopier {
                 // same amount, relative to the first of the comment, as they are in the
                 // source
                 targetWriter.writeSpacesUntilColumn(commentStartOutputColumn
-                                                    + (currSourceColumn - commentStartSourceColumn));
+                        + (currSourceColumn - commentStartSourceColumn));
             } else {
                 targetWriter.write((char) currChar);
                 ++position;

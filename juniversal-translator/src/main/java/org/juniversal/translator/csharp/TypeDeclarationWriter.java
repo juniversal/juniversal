@@ -58,8 +58,10 @@ public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> 
 
             writeAccessModifier(modifiers);
 
-            if (ASTUtil.containsFinal(modifiers))
+            if (isFinal(typeDeclaration))
                 writeSealedModifier();
+            else if (isAbstract(typeDeclaration))
+                writeAbstractModifier();
 
             // Skip the modifiers
             skipModifiers(modifiers);

@@ -24,7 +24,6 @@ package org.juniversal.translator.swift;
 
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.*;
-import org.juniversal.translator.cplusplus.OutputType;
 
 import java.io.Writer;
 import java.util.List;
@@ -35,7 +34,7 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
     private Context context;
 
     public SwiftSourceFileWriter(SwiftTranslator swiftTranslator, SourceFile sourceFile, Writer writer) {
-        super(sourceFile, new TargetWriter(writer, swiftTranslator.getDestTabStop()));
+        super(swiftTranslator, sourceFile, writer);
 
         this.swiftTranslator = swiftTranslator;
         this.context = new Context();
@@ -234,8 +233,8 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
                     matchAndWrite("short", "Int16");
                 else if (code == PrimitiveType.CHAR)
                     matchAndWrite("char", "Character");
-                // TODO: For now, map 32 bit Java int to Int type in Swift, which can be 32 or 64 bits.
-                // Later probably add @PreserveJavaIntSemantics annotation to force 32 bit + no overflow checking
+                    // TODO: For now, map 32 bit Java int to Int type in Swift, which can be 32 or 64 bits.
+                    // Later probably add @PreserveJavaIntSemantics annotation to force 32 bit + no overflow checking
                 else if (code == PrimitiveType.INT)
                     matchAndWrite("int", "Int");
                 else if (code == PrimitiveType.LONG) {

@@ -22,19 +22,16 @@
 
 package org.juniversal.translator.cplusplus;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 
 
-public class AssignmentWriter extends CPlusPlusASTNodeWriter {
+public class AssignmentWriter extends CPlusPlusASTNodeWriter<Assignment> {
     public AssignmentWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
     @Override
-    public void write(ASTNode node) {
-        Assignment assignment = (Assignment) node;
-
+    public void write(Assignment assignment) {
         Assignment.Operator operator = assignment.getOperator();
 
         if (operator == Assignment.Operator.RIGHT_SHIFT_UNSIGNED_ASSIGN) {

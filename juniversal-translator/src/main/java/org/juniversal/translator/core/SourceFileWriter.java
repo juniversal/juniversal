@@ -25,6 +25,7 @@ package org.juniversal.translator.core;
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.cplusplus.OutputType;
 
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.List;
 
@@ -34,6 +35,7 @@ import static org.juniversal.translator.core.ASTUtil.isFinal;
 public abstract class SourceFileWriter {
     private HashMap<Class<? extends ASTNode>, ASTNodeWriter> visitors = new HashMap<>();
     private SourceFile sourceFile;
+    private String source;
     private TargetWriter targetWriter;
     private SourceCopier sourceCopier;
     private int position;
@@ -42,14 +44,14 @@ public abstract class SourceFileWriter {
     private boolean knowinglyProcessedTrailingSpaceAndComments = false;
 
 
-    protected SourceFileWriter(SourceFile sourceFile, TargetWriter targetWriter) {
+    protected SourceFileWriter(Translator translator, SourceFile sourceFile, Writer writer) {
         this.sourceFile = sourceFile;
+        this.source = sourceFile.getSource();
 
-        this.targetWriter = targetWriter;
+        this.targetWriter = new TargetWriter(writer, translator.getDestTabStop());
         this.position = sourceFile.getCompilationUnit().getStartPosition();
 
-        sourceCopier = new SourceCopier(sourceFile, targetWriter);
-        position = sourceFile.getCompilationUnit().getStartPosition();
+        sourceCopier = new SourceCopier(this.sourceFile, source, targetWriter);
     }
 
     public SourceFile getSourceFile() {
@@ -74,6 +76,7 @@ public abstract class SourceFileWriter {
     }
 
     private static final boolean VALIDATE_CONTEXT_POSITION = true;
+
     public void writeNode(ASTNode node) {
         Context context = getContext();
 
@@ -87,9 +90,9 @@ public abstract class SourceFileWriter {
             // that rule is the CompilationUnit; as outermost node it handles any comments at the
             // beginning itself.
             if (sourceCopier.getSourceCharAt(nodeStartPosition) == '/'
-                && sourceCopier.getSourceCharAt(nodeStartPosition + 1) == '*'
-                && sourceCopier.getSourceCharAt(nodeStartPosition + 2) == '*'
-                && !(node instanceof CompilationUnit))
+                    && sourceCopier.getSourceCharAt(nodeStartPosition + 1) == '*'
+                    && sourceCopier.getSourceCharAt(nodeStartPosition + 2) == '*'
+                    && !(node instanceof CompilationUnit))
                 assertPositionIs(sourceCopier.skipSpaceAndComments(nodeStartPosition, false));
             else assertPositionIs(nodeStartPosition);
         }
@@ -109,11 +112,9 @@ public abstract class SourceFileWriter {
         try {
             setPosition(node.getStartPosition());
             writeNode(node);
-        }
-        catch (UserViewableException e) {
+        } catch (UserViewableException e) {
             throw e;
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             if (e instanceof ContextPositionMismatchException)
                 throw e;
             else
@@ -127,7 +128,7 @@ public abstract class SourceFileWriter {
      * position is restored to the original position when done. No comments before/after the node are written. This
      * method can be used to write a node multiple times.
      *
-     * @param node    node to write
+     * @param node node to write
      */
     public void writeNodeAtDifferentPosition(ASTNode node) {
         int originalPosition = getPosition();
@@ -135,29 +136,6 @@ public abstract class SourceFileWriter {
         writeNode(node);
         setPosition(originalPosition);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public CompilationUnit getCompilationUnit() {
         return sourceFile.getCompilationUnit();
@@ -399,6 +377,10 @@ public abstract class SourceFileWriter {
         targetWriter.write(string);
     }
 
+    public void write(BufferTargetWriter bufferTargetWriter) {
+        targetWriter.write(bufferTargetWriter);
+    }
+
     /**
      * /** Write the specified number of spaces to the output.
      *
@@ -433,14 +415,6 @@ public abstract class SourceFileWriter {
      */
     public void writeln() {
         targetWriter.write("\n");
-    }
-
-    /**
-     * Write specified number of newlines to the output.
-     */
-    public void writeln(int count) {
-        for (int i = 0; i < count; ++i)
-            targetWriter.write("\n");
     }
 
     /**
@@ -503,5 +477,24 @@ public abstract class SourceFileWriter {
         return targetWriter;
     }
 
+    public RestoreTargetWriter setTargetWriter(TargetWriter targetWriter) {
+        TargetWriter originalTargetWriter = this.targetWriter;
+        this.targetWriter = targetWriter;
+        sourceCopier = new SourceCopier(sourceFile, source, this.targetWriter);
+        return new RestoreTargetWriter(originalTargetWriter);
+    }
 
+    public class RestoreTargetWriter implements AutoCloseable {
+        private TargetWriter originalTargetWriter;
+
+        public RestoreTargetWriter(TargetWriter originalTargetWriter) {
+            this.originalTargetWriter = originalTargetWriter;
+        }
+
+        @Override
+        public void close() {
+            targetWriter = originalTargetWriter;
+            sourceCopier = new SourceCopier(sourceFile, source, targetWriter);
+        }
+    }
 }

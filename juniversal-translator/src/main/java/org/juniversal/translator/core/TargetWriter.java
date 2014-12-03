@@ -26,7 +26,6 @@ import java.io.*;
 
 
 public class TargetWriter {
-    private int currLine;                             // Current line (1 based)
     private int currColumn;                           // Current column on line (0 based)
     private boolean accumulatingSpacesAtBeginningOfLine;
     private int spacesAtBeginningOfLine;
@@ -40,14 +39,9 @@ public class TargetWriter {
         this.writer = writer;
         this.destTabStop = destTabStop;
 
-        currLine = 1;
         currColumn = 0;
         accumulatingSpacesAtBeginningOfLine = true;
         spacesAtBeginningOfLine = 0;
-    }
-
-    public int getCurrLine() {
-        return currLine;
     }
 
     /**
@@ -59,11 +53,27 @@ public class TargetWriter {
         return currColumn;
     }
 
+    public int getDestTabStop() {
+        return destTabStop;
+    }
+
+    public Writer getWriter() {
+        return writer;
+    }
+
     public void write(String string) {
         try {
             int length = string.length();
             for (int i = 0; i < length; ++i)
                 writeCharInternal(string.charAt(i));
+        } catch (IOException e) {
+            throw new JUniversalException(e);
+        }
+    }
+
+    public void write(BufferTargetWriter bufferTargetWriter) {
+        try {
+            writer.write(bufferTargetWriter.getBufferContents());
         } catch (IOException e) {
             throw new JUniversalException(e);
         }
@@ -109,7 +119,6 @@ public class TargetWriter {
             // If only whitespace on a line, don't write out indentation
 
             writer.write("\r\n");
-            ++currLine;
 
             accumulatingSpacesAtBeginningOfLine = true;
             spacesAtBeginningOfLine = additionalIndentation;

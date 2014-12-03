@@ -22,222 +22,196 @@
 
 package org.juniversal.translator.cplusplus;
 
-import java.util.List;
-
+import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.ASTUtil;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.TypeParameter;
+import java.util.List;
 
 
-public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter {
-    private CPlusPlusSourceFileWriter cPlusPlusASTWriters;
-
-    public MethodDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
-        super(cPlusPlusASTWriters);
+public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclaration> {
+    public MethodDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter) {
+        super(cPlusPlusSourceFileWriter);
     }
 
     @Override
-	public void write(ASTNode node) {
-		MethodDeclaration methodDeclaration = (MethodDeclaration) node;
+    public void write(MethodDeclaration methodDeclaration) {
+        TypeDeclaration typeDeclaration = getContext().getTypeDeclaration();
 
-		TypeDeclaration typeDeclaration = getContext().getTypeDeclaration();
+        // Get return type if present
+        @Nullable Type returnType = null;
+        if (!methodDeclaration.isConstructor())
+            returnType = methodDeclaration.getReturnType2();
 
-		// If we're writing the implementation of a generic method, include the "template<...>" prefix
-		@SuppressWarnings("unchecked")
-		List<TypeParameter> typeParameters = (List<TypeParameter>) typeDeclaration.typeParameters();
+        // If we're writing the implementation of a generic method, include the "template<...>" prefix
+        @SuppressWarnings("unchecked")
+        List<TypeParameter> typeParameters = (List<TypeParameter>) typeDeclaration.typeParameters();
 
-		boolean isGeneric = !typeParameters.isEmpty();
-		if (isGeneric && getContext().isWritingMethodImplementation()) {
-			write("template ");
-			writeTypeParameters(typeParameters, true);
-			writeln();
-		}
+        boolean isGeneric = !typeParameters.isEmpty();
+        if (isGeneric && getContext().isWritingMethodImplementation()) {
+            write("template ");
+            writeTypeParameters(typeParameters, true);
+            writeln();
+        }
 
-		// Writer static & virtual modifiers, in the class definition
-		if (! getContext().isWritingMethodImplementation()) {
-			if (ASTUtil.containsStatic(methodDeclaration.modifiers()))
-				write("static ");
-			else {
-				boolean isFinal = ASTUtil.containsFinal(typeDeclaration.modifiers())
-						|| ASTUtil.containsFinal(methodDeclaration.modifiers());
-	
-				if (! isFinal)
-					write("virtual ");
-			}
-		}
+        // Writer static & virtual modifiers, in the class definition
+        if (!getContext().isWritingMethodImplementation()) {
+            if (ASTUtil.containsStatic(methodDeclaration.modifiers()))
+                write("static ");
+            else {
+                boolean isFinal = ASTUtil.containsFinal(typeDeclaration.modifiers())
+                        || ASTUtil.containsFinal(methodDeclaration.modifiers());
 
-		skipModifiers(methodDeclaration.modifiers());
-		skipSpaceAndComments();
+                if (!isFinal)
+                    write("virtual ");
+            }
+        }
 
-		// TODO: Handle arrays with extra dimensions
+        // Skip any modifiers & type parameters in the source
+        setPositionToStartOfNode(returnType != null ? returnType : methodDeclaration.getName());
 
-		// Write return type if present
-		if (! methodDeclaration.isConstructor()) {
-			Type returnType = methodDeclaration.getReturnType2();
-			if (returnType == null)
-				matchAndWrite("void");
-			else writeType(returnType, false);
+        if (returnType != null)
+            writeNode(returnType);
 
-			copySpaceAndComments();
-		}
+        copySpaceAndComments();
 
-		if (getContext().isWritingMethodImplementation()) {
-			write(getContext().getTypeDeclaration().getName().getIdentifier());
+        // TODO: Handle arrays with extra dimensions
 
-			if (isGeneric)
-				writeTypeParameters(typeParameters, false);
+        if (getContext().isWritingMethodImplementation()) {
+            write(getContext().getTypeDeclaration().getName().getIdentifier());
 
-			write("::");
-		}
-		matchAndWrite(methodDeclaration.getName().getIdentifier());
-		copySpaceAndComments();
+            if (isGeneric)
+                writeTypeParameters(typeParameters, false);
 
-		writeParameterList(methodDeclaration);
-		writeThrownExceptions(methodDeclaration);
+            write("::");
+        }
+        matchAndWrite(methodDeclaration.getName().getIdentifier());
+        copySpaceAndComments();
 
-		if (getContext().isWritingMethodImplementation())
-			writeSuperConstructorInvocation(methodDeclaration);
+        writeParameterList(methodDeclaration);
+        writeThrownExceptions(methodDeclaration);
 
-		if (getContext().isWritingMethodImplementation()) {
-			copySpaceAndComments();
-			writeNode(methodDeclaration.getBody());
-		}
-		else {
-			if (methodDeclaration.getBody() == null) {
-				write(" = 0");
-				copySpaceAndComments();
-				matchAndWrite(";");
-			}
-			else {
-				skipSpaceAndComments();
-				write(";");
-				setPositionToEndOfNode(methodDeclaration);
-			}
-		}
-	}
+        if (getContext().isWritingMethodImplementation())
+            writeSuperConstructorInvocation(methodDeclaration);
 
-	private void writeParameterList(MethodDeclaration methodDeclaration) {
-		matchAndWrite("(");
-		copySpaceAndComments();
+        if (getContext().isWritingMethodImplementation()) {
+            copySpaceAndComments();
+            writeNode(methodDeclaration.getBody());
+        } else {
+            if (methodDeclaration.getBody() == null) {
+                write(" = 0");
+                copySpaceAndComments();
+                matchAndWrite(";");
+            } else {
+                skipSpaceAndComments();
+                write(";");
+                setPositionToEndOfNode(methodDeclaration);
+            }
+        }
+    }
 
-		List<?> parameters = methodDeclaration.parameters();
+    private void writeParameterList(MethodDeclaration methodDeclaration) {
+        int additionalIndent = getTargetColumn() - getSourceLogicalColumn();
+        int previousAdditionalIndent = getTargetWriter().setAdditionalIndentation(additionalIndent);
 
-		boolean first = true;
-		for (Object object : parameters) {
-			SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) object;
+        matchAndWrite("(");
 
-			if (! first) {
-				matchAndWrite(",");
-				copySpaceAndComments();
-			}
+        copySpaceAndComments();
+        writeCommaDelimitedNodes(methodDeclaration.parameters());
 
-			writeNode(singleVariableDeclaration);
-			copySpaceAndComments();
+        copySpaceAndComments();
+        matchAndWrite(")");
 
-			first = false;
-		}
+        getTargetWriter().setAdditionalIndentation(previousAdditionalIndent);
+    }
 
-		matchAndWrite(")");
-	}
+    private void writeThrownExceptions(MethodDeclaration methodDeclaration) {
+        // If there are any checked exceptions, output them just as a comment. We don't turn them
+        // into C++ checked exceptions because we don't declare runtime exceptions in the C++; since
+        // we don't declare all exceptions for C++ we can't declare any since we never want
+        // unexpected() to be called
+        List<?> thrownExceptionTypes = methodDeclaration.thrownExceptionTypes();
+        boolean first;
+        if (thrownExceptionTypes.size() > 0) {
+            copySpaceAndComments();
 
-	private void writeThrownExceptions(MethodDeclaration methodDeclaration) {
-		// If there are any checked exceptions, output them just as a comment. We don't turn them
-		// into C++ checked exceptions because we don't declare runtime exceptions in the C++; since
-		// we don't declare all exceptions for C++ we can't declare any since we never want
-		// unexpected() to be called
-		List<?> thrownExceptions = methodDeclaration.thrownExceptionTypes();
-		boolean first;
-		if (thrownExceptions.size() > 0) {
+            write("/* ");
+            matchAndWrite("throws");
 
-			copySpaceAndComments();
+            first = true;
+            for (Object exceptionTypeObject : thrownExceptionTypes) {
+                Type exceptionType = (Type) exceptionTypeObject;
 
-			write("/* ");
-			matchAndWrite("throws");
+                skipSpaceAndComments();
+                if (first)
+                    write(" ");
+                else {
+                    matchAndWrite(",");
 
-			first = true;
-			for (Object exceptionNameObject : thrownExceptions) {
-				Name exceptionName = (Name) exceptionNameObject;
+                    skipSpaceAndComments();
+                    write(" ");
+                }
 
-				skipSpaceAndComments();
-				if (first)
-					write(" ");
-				else {
-					matchAndWrite(",");
+                matchAndWrite(exceptionType.toString());
 
-					skipSpaceAndComments();
-					write(" ");
-				}
-	
-				matchAndWrite(exceptionName.toString());
-	
-				first = false;
-			}
-			write(" */");
-		}
-	}
+                first = false;
+            }
+            write(" */");
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	private void writeSuperConstructorInvocation(MethodDeclaration methodDeclaration) {
-		Block body = methodDeclaration.getBody();
-		if (body == null)
-			return;
+    @SuppressWarnings("unchecked")
+    private void writeSuperConstructorInvocation(MethodDeclaration methodDeclaration) {
+        Block body = methodDeclaration.getBody();
+        if (body == null)
+            return;
 
-		SuperConstructorInvocation superConstructorInvocation = null;
-		for (Statement statement : (List<Statement>) body.statements()) {
-			if (statement instanceof SuperConstructorInvocation)
-				superConstructorInvocation = (SuperConstructorInvocation) statement;
-			break;
-		}
+        SuperConstructorInvocation superConstructorInvocation = null;
+        for (Statement statement : (List<Statement>) body.statements()) {
+            if (statement instanceof SuperConstructorInvocation)
+                superConstructorInvocation = (SuperConstructorInvocation) statement;
+            break;
+        }
 
-		if (superConstructorInvocation == null)
-			return;
+        if (superConstructorInvocation == null)
+            return;
 
-		int originalPosition = getPosition();
-		setPositionToStartOfNode(superConstructorInvocation);
+        int originalPosition = getPosition();
+        setPositionToStartOfNode(superConstructorInvocation);
 
-		// TODO: Support <expression>.super
-		if (superConstructorInvocation.getExpression() != null)
-			throw sourceNotSupported("<expression>.super constructor invocation syntax not currently supported");
-		
-		// TODO: Support type arguments here
-		if (! superConstructorInvocation.typeArguments().isEmpty())
-			throw sourceNotSupported("super constructor invocation with type arguments not currently supported");
+        // TODO: Support <expression>.super
+        if (superConstructorInvocation.getExpression() != null)
+            throw sourceNotSupported("<expression>.super constructor invocation syntax not currently supported");
 
-		write(" : ");
-		matchAndWrite("super");
-		copySpaceAndComments();
-		matchAndWrite("(");
+        // TODO: Support type arguments here
+        if (!superConstructorInvocation.typeArguments().isEmpty())
+            throw sourceNotSupported("super constructor invocation with type arguments not currently supported");
 
-		List<?> arguments = superConstructorInvocation.arguments();
-	
-		boolean first = true;
-		for (Expression argument : (List<Expression>) arguments) {
-			if (! first) {
-				copySpaceAndComments();
-				matchAndWrite(",");
-			}
+        write(" : ");
+        matchAndWrite("super");
+        copySpaceAndComments();
+        matchAndWrite("(");
 
-			copySpaceAndComments();
-			writeNode(argument);
+        List<?> arguments = superConstructorInvocation.arguments();
 
-			first = false;
-		}
+        boolean first = true;
+        for (Expression argument : (List<Expression>) arguments) {
+            if (!first) {
+                copySpaceAndComments();
+                matchAndWrite(",");
+            }
 
-		copySpaceAndComments();
-		matchAndWrite(")");
+            copySpaceAndComments();
+            writeNode(argument);
 
-		write(" ");
+            first = false;
+        }
 
-		setPosition(originalPosition);
-	}
+        copySpaceAndComments();
+        matchAndWrite(")");
+
+        write(" ");
+
+        setPosition(originalPosition);
+    }
 }

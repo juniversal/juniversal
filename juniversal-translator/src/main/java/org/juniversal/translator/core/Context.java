@@ -32,33 +32,18 @@ import static org.juniversal.translator.core.ASTUtil.isAnnotation;
 import static org.juniversal.translator.core.ASTUtil.isFinal;
 
 public class Context {
+    private TypeDeclaration typeDeclaration;
     private ArrayList<WildcardType> methodWildcardTypes = null;
     private boolean writingVariableDeclarationNeedingStar;
     private boolean writingMethodImplementation;
-    private TypeDeclaration typeDeclaration;
 
-    public void setWritingMethodImplementation(boolean value) {
-        this.writingMethodImplementation = value;
-    }
 
-    public boolean isWritingMethodImplementation() {
-        return this.writingMethodImplementation;
-    }
-
-    public boolean isWritingVariableDeclarationNeedingStar() {
-        return writingVariableDeclarationNeedingStar;
-    }
-
-    public void setWritingVariableDeclarationNeedingStar(boolean value) {
-        this.writingVariableDeclarationNeedingStar = value;
+    public TypeDeclaration getTypeDeclaration() {
+        return typeDeclaration;
     }
 
     public void setTypeDeclaration(TypeDeclaration typeDeclaration) {
         this.typeDeclaration = typeDeclaration;
-    }
-
-    public TypeDeclaration getTypeDeclaration() {
-        return this.typeDeclaration;
     }
 
     public ArrayList<WildcardType> getMethodWildcardTypes() {
@@ -67,5 +52,21 @@ public class Context {
 
     public void setMethodWildcardTypes(ArrayList<WildcardType> methodWildcardTypes) {
         this.methodWildcardTypes = methodWildcardTypes;
+    }
+
+    public boolean isWritingVariableDeclarationNeedingStar() {
+        return writingVariableDeclarationNeedingStar;
+    }
+
+    public void setWritingVariableDeclarationNeedingStar(boolean writingVariableDeclarationNeedingStar) {
+        this.writingVariableDeclarationNeedingStar = writingVariableDeclarationNeedingStar;
+    }
+
+    public boolean isWritingMethodImplementation() {
+        return writingMethodImplementation;
+    }
+
+    public void setWritingMethodImplementation(boolean writingMethodImplementation) {
+        this.writingMethodImplementation = writingMethodImplementation;
     }
 }

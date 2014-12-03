@@ -32,14 +32,14 @@ import java.util.List;
 
 
 public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
-    private CPlusPlusSourceFileWriter cPlusPlusASTWriters;
+    private CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter;
 
-    protected CPlusPlusASTNodeWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
-        this.cPlusPlusASTWriters = cPlusPlusASTWriters;
+    protected CPlusPlusASTNodeWriter(CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter) {
+        this.cPlusPlusSourceFileWriter = cPlusPlusSourceFileWriter;
     }
 
     public CPPProfile getCPPProfile() {
-        return cPlusPlusASTWriters.getTranslator().getTargetProfile();
+        return cPlusPlusSourceFileWriter.getTranslator().getTargetProfile();
     }
 
     public OutputType getOutputType() {
@@ -48,7 +48,13 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
 
     @Override
     protected CPlusPlusSourceFileWriter getSourceFileWriter() {
-        return cPlusPlusASTWriters;
+        return cPlusPlusSourceFileWriter;
+    }
+
+    public void writeArrayOfType(Type elementType) {
+        write("array<");
+        writeNode(elementType);
+        write(">");
     }
 
     /**

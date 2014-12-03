@@ -52,8 +52,8 @@ public class CPlusPlusTranslator extends Translator {
         TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
 
         String typeName = mainTypeDeclaration.getName().getIdentifier();
-
         String fileName = outputType == OutputType.HEADER ? typeName + ".h" : typeName + ".cpp";
+
         File file = new File(getOutputDirectory(), fileName);
 
         try (FileWriter writer = new FileWriter(file)) {

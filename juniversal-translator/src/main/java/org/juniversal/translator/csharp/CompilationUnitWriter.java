@@ -24,6 +24,8 @@ package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
+import org.juniversal.translator.core.BufferTargetWriter;
+import org.juniversal.translator.core.SourceFileWriter;
 
 import static org.juniversal.translator.core.ASTUtil.isThisName;
 
@@ -38,12 +40,31 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
     public void write(CompilationUnit compilationUnit) {
         copySpaceAndComments();
 
-        // TODO: This results in an extra newline normally; distinguish between case where package is only thing on line & multiple things on that line
-        @Nullable PackageDeclaration packageDeclaration = compilationUnit.getPackage();
-        if (packageDeclaration != null) {
-            setPositionToEndOfNodeSpaceAndComments(packageDeclaration);
+        BufferTargetWriter bufferTargetWriter = new BufferTargetWriter(getSourceFileWriter().getTargetWriter());
+        try (SourceFileWriter.RestoreTargetWriter ignored = getSourceFileWriter().setTargetWriter(bufferTargetWriter)) {
+            writeNamespaceAndTypeDeclaration(compilationUnit);
         }
 
+        @Nullable PackageDeclaration packageDeclaration = compilationUnit.getPackage();
+        if (packageDeclaration != null) {
+            // TODO: This results in an extra newline normally; distinguish between case where package is only thing on line & multiple things on that line
+            setPositionToEndOfNodeSpaceAndComments(packageDeclaration);
+        }
+        else {
+            setPositionToStartOfNode(compilationUnit);
+            skipSpaceAndComments();
+        }
+
+        copySpaceAndComments();
+        writeUsingStatements(compilationUnit);
+
+        copySpaceAndComments();
+        write(bufferTargetWriter);
+
+        setPositionToEndOfNode(compilationUnit);
+    }
+
+    private void writeUsingStatements(CompilationUnit compilationUnit) {
         for (Object importDeclarationObject : compilationUnit.imports()) {
             ImportDeclaration importDeclaration = (ImportDeclaration) importDeclarationObject;
             Name importDeclarationName = importDeclaration.getName();
@@ -77,8 +98,10 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
             copySpaceAndComments();
             matchAndWrite(";");
         }
+    }
 
-        copySpaceAndComments();
+    private void writeNamespaceAndTypeDeclaration(CompilationUnit compilationUnit) {
+        @Nullable PackageDeclaration packageDeclaration = compilationUnit.getPackage();
 
         int previousIndent = 0;
         if (packageDeclaration != null) {
@@ -106,6 +129,7 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
         AbstractTypeDeclaration firstTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
 
         //copySpaceAndComments();
+        setPositionToStartOfNode(firstTypeDeclaration);
         writeNode(firstTypeDeclaration);
         copySpaceAndComments();
 

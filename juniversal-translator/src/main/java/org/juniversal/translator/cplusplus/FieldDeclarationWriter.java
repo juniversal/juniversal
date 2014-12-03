@@ -31,15 +31,13 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 
-public class FieldDeclarationWriter extends CPlusPlusASTNodeWriter {
+public class FieldDeclarationWriter extends CPlusPlusASTNodeWriter<FieldDeclaration> {
     public FieldDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node) {
-		FieldDeclaration fieldDeclaration = (FieldDeclaration) node;
-
+	public void write(FieldDeclaration fieldDeclaration) {
 		// TODO: Handle final/const
 
 		boolean isStatic = ASTUtil.containsStatic(fieldDeclaration.modifiers());

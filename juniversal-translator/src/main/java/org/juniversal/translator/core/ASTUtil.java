@@ -211,12 +211,24 @@ public class ASTUtil {
         return containsFinal(bodyDeclaration.modifiers());
     }
 
+    public static boolean isAbstract(BodyDeclaration bodyDeclaration) {
+        return containsAbstract(bodyDeclaration.modifiers());
+    }
+
     public static boolean isStatic(BodyDeclaration bodyDeclaration) {
         return containsStatic(bodyDeclaration.modifiers());
     }
 
     public static boolean isPrivate(BodyDeclaration bodyDeclaration) {
         return getAccessModifier(bodyDeclaration.modifiers()) == AccessLevel.PRIVATE;
+    }
+
+    public static boolean isFinal(TypeDeclaration typeDeclaration) {
+        return containsFinal(typeDeclaration.modifiers());
+    }
+
+    public static boolean isAbstract(TypeDeclaration typeDeclaration) {
+        return containsAbstract(typeDeclaration.modifiers());
     }
 
     public static boolean isOverride(MethodDeclaration methodDeclaration) {

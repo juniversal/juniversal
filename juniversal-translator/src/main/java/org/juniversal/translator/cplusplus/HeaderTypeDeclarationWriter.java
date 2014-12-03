@@ -34,24 +34,25 @@ import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeParameter;
 
-public class WriteTypeDeclarationHeader {
-	private final TypeDeclaration typeDeclaration;
-	private final SourceFileWriter sourceFileWriter;
-	private final int typeIndent;
+public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDeclaration> {
+	private TypeDeclaration typeDeclaration;
+	private int typeIndent;
 	private boolean outputSomethingForType;
 
-	public WriteTypeDeclarationHeader(TypeDeclaration typeDeclaration, SourceFileWriter sourceFileWriter) {
+	public HeaderTypeDeclarationWriter(CPlusPlusSourceFileWriter sourceFileWriter) {
+		super(sourceFileWriter);
+	}
+
+	public void write(TypeDeclaration typeDeclaration) {
 		this.typeDeclaration = typeDeclaration;
-		this.sourceFileWriter = sourceFileWriter;
 
 		// Skip the modifiers and the space/comments following them
-		sourceFileWriter.skipModifiers(typeDeclaration.modifiers());
-		sourceFileWriter.skipSpaceAndComments();
+		skipModifiers(typeDeclaration.modifiers());
+		skipSpaceAndComments();
 
-		// Remember how much the type is indented (typically only nested types are indented), so we
-		// can use that in determining the "natural" indent for some things inside the type
-		// declaration.
-		typeIndent = sourceFileWriter.getTargetWriter().getCurrColumn();
+		// Remember how much the type is indented (typically only nested types are indented), so we can use that in
+		// determining the "natural" indent for some things inside the type declaration.
+		typeIndent = getTargetWriter().getCurrColumn();
 
 		boolean isInterface = typeDeclaration.isInterface();
 
@@ -61,32 +62,32 @@ public class WriteTypeDeclarationHeader {
 		boolean isGeneric = !typeParameters.isEmpty();
 
 		if (isGeneric) {
-			sourceFileWriter.write("template ");
+			write("template ");
 			//sCPlusPlusASTWriter.writeTypeParameters(typeParameters, true);
-			sourceFileWriter.write(" ");
+			write(" ");
 		}
 
 		if (isInterface)
-			sourceFileWriter.matchAndWrite("interface", "class");
+			matchAndWrite("interface", "class");
 		else
-			sourceFileWriter.matchAndWrite("class");
+			matchAndWrite("class");
 
-		sourceFileWriter.copySpaceAndComments();
-		sourceFileWriter.matchAndWrite(typeDeclaration.getName().getIdentifier());
+		copySpaceAndComments();
+		matchAndWrite(typeDeclaration.getName().getIdentifier());
 
 		// Skip past the type parameters
 		if (isGeneric) {
-			sourceFileWriter.setPosition(ASTUtil.getEndPosition(typeParameters));
-            sourceFileWriter.skipSpaceAndComments();
-            sourceFileWriter.match(">");
+			setPosition(ASTUtil.getEndPosition(typeParameters));
+            skipSpaceAndComments();
+            match(">");
 		}
 
 		writeSuperClassAndInterfaces();
 
-        sourceFileWriter.copySpaceAndComments();
-        sourceFileWriter.matchAndWrite("{");
-        sourceFileWriter.copySpaceAndCommentsUntilEOL();
-        sourceFileWriter.writeln();
+        copySpaceAndComments();
+        matchAndWrite("{");
+        copySpaceAndCommentsUntilEOL();
+        writeln();
 
 		// sourceFileWriter.getTargetWriter().incrementByPreferredIndent();
 
@@ -96,10 +97,10 @@ public class WriteTypeDeclarationHeader {
 		writeSuperDefinition();
 		writeFields();
 
-        sourceFileWriter.writeSpaces(typeIndent);
-        sourceFileWriter.write("};");
+        writeSpaces(typeIndent);
+        write("};");
 
-		sourceFileWriter.setPosition(ASTUtil.getEndPosition(typeDeclaration));
+		setPosition(ASTUtil.getEndPosition(typeDeclaration));
 	}
 
 	private void writeSuperClassAndInterfaces() {
@@ -109,13 +110,13 @@ public class WriteTypeDeclarationHeader {
 		List<Type> superInterfaceTypes = (List<Type>) typeDeclaration.superInterfaceTypes();
 
 		if (superclassType == null)
-            sourceFileWriter.write(" : public Object");
+            write(" : public Object");
 		else {
-            sourceFileWriter.copySpaceAndComments();
-            sourceFileWriter.matchAndWrite("extends", ": public");
+            copySpaceAndComments();
+            matchAndWrite("extends", ": public");
 
-            sourceFileWriter.copySpaceAndComments();
-			sourceFileWriter.writeNode(superclassType);
+            copySpaceAndComments();
+			writeNode(superclassType);
 		}
 
 		// Write out the super interfaces, if any
@@ -124,21 +125,21 @@ public class WriteTypeDeclarationHeader {
 			Type superInterfaceType = (Type) superInterfaceTypeObject;
 
 			if (firstInterface) {
-                sourceFileWriter.skipSpaceAndComments();
-                sourceFileWriter.matchAndWrite("implements", ", public");
+                skipSpaceAndComments();
+                matchAndWrite("implements", ", public");
 			} else {
-                sourceFileWriter.copySpaceAndComments();
-                sourceFileWriter.matchAndWrite(",", ", public");
+                copySpaceAndComments();
+                matchAndWrite(",", ", public");
 			}
 
 			// Ensure there's at least a space after the "public" keyword (not required in Java
 			// which just has the comma there)
-			int originalPosition = sourceFileWriter.getPosition();
-            sourceFileWriter.copySpaceAndComments();
-			if (sourceFileWriter.getPosition() == originalPosition)
-                sourceFileWriter.write(" ");
+			int originalPosition = getPosition();
+            copySpaceAndComments();
+			if (getPosition() == originalPosition)
+                write(" ");
 
-			sourceFileWriter.writeNode(superInterfaceType);
+			writeNode(superInterfaceType);
 			firstInterface = false;
 		}
 	}
@@ -174,29 +175,28 @@ public class WriteTypeDeclarationHeader {
 
 		// If we've already output something for the class, add a blank line separator
 		if (outputSomethingForType)
-            sourceFileWriter.writeln();
+            writeln();
 
 		writeAccessLevelGroup(accessLevel, " // Nested class(es)");
 
 		outputSomethingForType = true;
 
 		for (TypeDeclaration nestedTypeDeclaration : typeDeclarations) {
+			setPositionToStartOfNodeSpaceAndComments(nestedTypeDeclaration);
+            copySpaceAndComments();
 
-			sourceFileWriter.setPositionToStartOfNodeSpaceAndComments(nestedTypeDeclaration);
-            sourceFileWriter.copySpaceAndComments();
-
-			sourceFileWriter.writeNode(nestedTypeDeclaration);
+			writeNode(nestedTypeDeclaration);
 
 			// Copy any trailing comment associated with the class, on the same line as the closing
 			// brace; rare but possible
-            sourceFileWriter.copySpaceAndCommentsUntilEOL();
+            copySpaceAndCommentsUntilEOL();
 
-            sourceFileWriter.writeln();
+            writeln();
 		}
 	}
 
 	private void writeAccessLevelGroup(AccessLevel accessLevel, String headerComment) {
-        sourceFileWriter.writeSpaces(typeIndent);
+        writeSpaces(typeIndent);
 		
 		String headerText;
 		if (accessLevel == AccessLevel.PUBLIC || accessLevel == AccessLevel.PACKAGE)
@@ -207,10 +207,10 @@ public class WriteTypeDeclarationHeader {
 			headerText = "private:";
 		else throw new JUniversalException("Unknown access level: " + accessLevel);
 
-        sourceFileWriter.write(headerText);
+        write(headerText);
 		if (headerComment != null)
-            sourceFileWriter.write(headerComment);
-        sourceFileWriter.writeln();
+            write(headerComment);
+        writeln();
 	}
 
 	private void writeMethods() {
@@ -244,7 +244,7 @@ public class WriteTypeDeclarationHeader {
 
 		// If we've already output something for the class, add a blank line separator
 		if (outputSomethingForType)
-            sourceFileWriter.writeln();
+            writeln();
 
 		writeAccessLevelGroup(accessLevel, null);
 
@@ -254,48 +254,48 @@ public class WriteTypeDeclarationHeader {
 
 			// When writing the class definition, don't include method comments. So skip over the
 			// Javadoc, which will just be by the implementation.
-			sourceFileWriter.setPositionToStartOfNode(methodDeclaration);
+			setPositionToStartOfNode(methodDeclaration);
 
 			// If there's nothing else on the line before the method declaration besides whitespace,
 			// then indent by that amount; that's the typical case. However, if there's something on
 			// the line before the method (e.g. a comment or previous declaration of something else
 			// in the class), then the source is in some odd format, so just ignore that and use the
 			// standard indent.
-			sourceFileWriter.skipSpacesAndTabsBackward();
-			if (sourceFileWriter.getSourceLogicalColumn() == 0)
-                sourceFileWriter.copySpaceAndComments();
+			skipSpacesAndTabsBackward();
+			if (getSourceLogicalColumn() == 0)
+                copySpaceAndComments();
 			else {
-                sourceFileWriter.writeSpaces(sourceFileWriter.getPreferredIndent());
-				sourceFileWriter.skipSpacesAndTabs();
+                writeSpaces(getPreferredIndent());
+				skipSpacesAndTabs();
 			}
 
-			sourceFileWriter.writeNode(methodDeclaration);
+			writeNode(methodDeclaration);
 
 			// Copy any trailing comment associated with the method; that's sometimes there for
 			// one-liners
-            sourceFileWriter.copySpaceAndCommentsUntilEOL();
+            copySpaceAndCommentsUntilEOL();
 
-            sourceFileWriter.writeln();
+            writeln();
 		}
 	}
 
 	private void writeSuperDefinition() {
 		// If we've already output something for the class, add a blank line separator
 		if (outputSomethingForType)
-            sourceFileWriter.writeln();
+            writeln();
 
 		writeAccessLevelGroup(AccessLevel.PRIVATE, null);
 
-        sourceFileWriter.writeSpaces(typeIndent + sourceFileWriter.getPreferredIndent());
+        writeSpaces(typeIndent + getPreferredIndent());
 
-        sourceFileWriter.write("typedef ");
+        write("typedef ");
 
 		Type superclassType = typeDeclaration.getSuperclassType();
 		if (superclassType == null)
-            sourceFileWriter.write("Object");
-		else sourceFileWriter.writeNodeAtDifferentPosition(superclassType);
+            write("Object");
+		else writeNodeAtDifferentPosition(superclassType);
 
-        sourceFileWriter.writeln(" super;");
+        writeln(" super;");
 	}
 
 	private void writeFields() {
@@ -314,33 +314,33 @@ public class WriteTypeDeclarationHeader {
 
 					// If we've already output something for the class, add a blank line separator
 					if (outputSomethingForType)
-                        sourceFileWriter.writeln();
+                        writeln();
 
 					writeAccessLevelGroup(accessLevel, " // Data");
 				}
 
 				// Skip back to the beginning of the comments, ignoring any comments associated with
 				// the previous node
-				sourceFileWriter.setPosition(fieldDeclaration.getStartPosition());
-                sourceFileWriter.skipSpaceAndCommentsBackward();
-                sourceFileWriter.skipSpaceAndCommentsUntilEOL();
-				sourceFileWriter.skipNewline();
+				setPosition(fieldDeclaration.getStartPosition());
+                skipSpaceAndCommentsBackward();
+                skipSpaceAndCommentsUntilEOL();
+				skipNewline();
 
 				if (firstItemForAccessLevel)
-					sourceFileWriter.skipBlankLines();
+					skipBlankLines();
 
-                sourceFileWriter.copySpaceAndComments();
+                copySpaceAndComments();
 
 				// If the member is on the same line as other members, for some unusual reason, then
 				// the above code won't indent it. So indent it here since in our output every
 				// member/method is on it's own line in the class definition.
-				if (sourceFileWriter.getSourceLogicalColumn() == 0)
-                    sourceFileWriter.writeSpaces(sourceFileWriter.getPreferredIndent());
+				if (getSourceLogicalColumn() == 0)
+                    writeSpaces(getPreferredIndent());
 
-				sourceFileWriter.writeNode(fieldDeclaration);
+				writeNode(fieldDeclaration);
 
-                sourceFileWriter.copySpaceAndCommentsUntilEOL();
-                sourceFileWriter.writeln();
+                copySpaceAndCommentsUntilEOL();
+                writeln();
 
 				outputSomethingForType = true;
 				lastAccessLevel = accessLevel;

@@ -39,9 +39,7 @@ public class CSharpTranslator extends Translator {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         AbstractTypeDeclaration mainTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
 
-        String packageName = mainTypeDeclaration.getName().getFullyQualifiedName();
         String typeName = mainTypeDeclaration.getName().getIdentifier();
-
         String fileName = typeName + ".cs";
 
         File file = new File(getPackageDirectory(mainTypeDeclaration), fileName);

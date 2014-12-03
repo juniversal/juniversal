@@ -22,26 +22,21 @@
 
 package org.juniversal.translator.cplusplus;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
-public class TypeDeclarationWriter extends CPlusPlusASTNodeWriter {
-    private CPlusPlusSourceFileWriter cPlusPlusASTWriters;
-
-    public TypeDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
-        super(cPlusPlusASTWriters);
+public class TypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDeclaration>  {
+    public TypeDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter) {
+        super(cPlusPlusSourceFileWriter);
     }
 
-    public void write(ASTNode node) {
-		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
-
+    public void write(TypeDeclaration typeDeclaration) {
 		TypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
 		getContext().setTypeDeclaration(typeDeclaration);
 
 		if (getSourceFileWriter().getOutputType() == OutputType.HEADER)
-			new WriteTypeDeclarationHeader(typeDeclaration, cPlusPlusASTWriters);
-		else new WriteTypeDeclarationSource(typeDeclaration, cPlusPlusASTWriters, getContext());
+			new HeaderTypeDeclarationWriter(getSourceFileWriter()).write(typeDeclaration);
+		else new SourceTypeDeclarationWriter(getSourceFileWriter()).write(typeDeclaration);
 
 		getContext().setTypeDeclaration(oldTypeDeclaration);
 	}

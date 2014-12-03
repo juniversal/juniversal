@@ -27,21 +27,19 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ForStatement;
 
 
-public class ForStatementWriter extends CPlusPlusASTNodeWriter {
+public class ForStatementWriter extends CPlusPlusASTNodeWriter<ForStatement> {
     public ForStatementWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
     @Override
-    public void write(ASTNode node) {
-        ForStatement forStatement = (ForStatement) node;
-
+    public void write(ForStatement forStatement) {
         matchAndWrite("for");
-        copySpaceAndComments();
 
+        copySpaceAndComments();
         matchAndWrite("(");
-        copySpaceAndComments();
 
+        copySpaceAndComments();
         boolean first = true;
         for (Object initializerExpressionObject : forStatement.initializers()) {
             Expression initializerExpression = (Expression) initializerExpressionObject;
@@ -58,8 +56,8 @@ public class ForStatementWriter extends CPlusPlusASTNodeWriter {
         }
 
         matchAndWrite(";");
-        copySpaceAndComments();
 
+        copySpaceAndComments();
         Expression forExpression = forStatement.getExpression();
         if (forExpression != null) {
             writeNode(forStatement.getExpression());
@@ -67,8 +65,8 @@ public class ForStatementWriter extends CPlusPlusASTNodeWriter {
         }
 
         matchAndWrite(";");
-        copySpaceAndComments();
 
+        copySpaceAndComments();
         first = true;
         for (Object updaterExpressionObject : forStatement.updaters()) {
             Expression updaterExpression = (Expression) updaterExpressionObject;
@@ -85,8 +83,8 @@ public class ForStatementWriter extends CPlusPlusASTNodeWriter {
         }
 
         matchAndWrite(")");
-        copySpaceAndComments();
 
+        copySpaceAndComments();
         writeNode(forStatement.getBody());
     }
 }

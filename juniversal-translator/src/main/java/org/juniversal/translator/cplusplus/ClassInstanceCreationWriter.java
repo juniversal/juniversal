@@ -29,15 +29,13 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 
 
-public class ClassInstanceCreationWriter extends CPlusPlusASTNodeWriter {
+public class ClassInstanceCreationWriter extends CPlusPlusASTNodeWriter<ClassInstanceCreation> {
     public ClassInstanceCreationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node) {
-		ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) node;
-
+	public void write(ClassInstanceCreation classInstanceCreation) {
 		//TODO: Handle type arguments
 		//TODO: Handle different reference operator used for stack objects
 

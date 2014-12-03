@@ -30,8 +30,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
 
 
-public class InfixExpressionWriter extends CPlusPlusASTNodeWriter {
-    private CPlusPlusSourceFileWriter cPlusPlusASTWriters;
+public class InfixExpressionWriter extends CPlusPlusASTNodeWriter<InfixExpression> {
 	private HashMap<InfixExpression.Operator, String> equivalentOperators;  // Operators that have the same token in both Java & C++
 
 
@@ -67,9 +66,7 @@ public class InfixExpressionWriter extends CPlusPlusASTNodeWriter {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public void write(ASTNode node) {
-		InfixExpression infixExpression = (InfixExpression) node;
-		
+	public void write(InfixExpression infixExpression) {
 		InfixExpression.Operator operator = infixExpression.getOperator();
 
 		if (operator == InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED) {

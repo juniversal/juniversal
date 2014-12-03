@@ -128,8 +128,28 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
         getSourceFileWriter().skipSpaceAndComments();
     }
 
+    public void skipSpaceAndCommentsBackward() {
+        getSourceFileWriter().skipSpaceAndCommentsBackward();
+    }
+
+    public void skipSpaceAndCommentsUntilEOL() {
+        getSourceFileWriter().skipSpaceAndCommentsUntilEOL();
+    }
+
     public void skipSpacesAndTabs() {
         getSourceFileWriter().skipSpacesAndTabs();
+    }
+
+    public void skipSpacesAndTabsBackward() {
+        getSourceFileWriter().skipSpacesAndTabsBackward();
+    }
+
+    public void skipNewline() {
+        getSourceFileWriter().skipNewline();
+    }
+
+    public void skipBlankLines() {
+        getSourceFileWriter().skipBlankLines();
     }
 
     public void setKnowinglyProcessedTrailingSpaceAndComments(boolean knowinglyProcessedTrailingSpaceAndComments) {
@@ -150,6 +170,10 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
 
     public void write(String string) {
         getSourceFileWriter().write(string);
+    }
+
+    public void write(BufferTargetWriter bufferTargetWriter) {
+        getSourceFileWriter().write(bufferTargetWriter);
     }
 
     public void writeSpaces(int count) {
@@ -176,8 +200,16 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
         return getSourceFileWriter().getPosition();
     }
 
+    public int getSourceLogicalColumn() {
+        return getSourceFileWriter().getSourceLogicalColumn();
+    }
+
     public void setPositionToStartOfNode(ASTNode node) {
         getSourceFileWriter().setPositionToStartOfNode(node);
+    }
+
+    public void setPositionToStartOfNodeSpaceAndComments(ASTNode node) {
+        getSourceFileWriter().setPositionToStartOfNodeSpaceAndComments(node);
     }
 
     public void setPositionToEndOfNode(ASTNode node) {

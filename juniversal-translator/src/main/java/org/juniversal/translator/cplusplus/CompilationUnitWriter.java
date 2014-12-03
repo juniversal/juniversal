@@ -26,14 +26,12 @@ import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.ASTUtil;
 
 
-public class CompilationUnitWriter extends CPlusPlusASTNodeWriter {
+public class CompilationUnitWriter extends CPlusPlusASTNodeWriter<CompilationUnit> {
     public CompilationUnitWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
-    public void write(ASTNode node) {
-        CompilationUnit compilationUnit = (CompilationUnit) node;
-
+    public void write(CompilationUnit compilationUnit) {
         TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
 
         setPosition(mainTypeDeclaration.getStartPosition());
