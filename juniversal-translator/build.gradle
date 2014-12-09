@@ -20,8 +20,6 @@
  * THE SOFTWARE.
  */
 
-
-
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'signing'
@@ -78,12 +76,16 @@ uploadArchives {
             repository(url: uri('../repo'))
 */
 
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
+            // To publish translator updates to our Maven Central repo, ossrhUsername and ossrhPassword should
+            // be defined in ~/.gradle/gradle.properties, with our credential info.   Do the hasProperty
+            if (hasProperty('ossrhUsername') && hasProperty('ossrhPassword')) {
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: ext.ossrhUsername, password: ext.ossrhPassword)
+                }
 
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
             }
 
             pom.project {
