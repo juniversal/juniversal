@@ -87,6 +87,10 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
         addWriter(CompilationUnit.class, new CompilationUnitWriter(this));
 
         // TODO: Implement this
+        // Javadoc comment
+        addWriter(Javadoc.class, new JavadocCommentWriter(this));
+
+        // TODO: Implement this
         // Type (class/interface) declaration
         addWriter(TypeDeclaration.class, new TypeDeclarationWriter(this));
 

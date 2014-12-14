@@ -229,6 +229,22 @@ public class TranslateNodeTest {
                 expectedSwiftMethod);
     }
 
+    protected void testTranslateJavadocComment(String javadocComment, @Nullable String expectedCSharpComment,
+                                               @Nullable String expectedSwiftMethod) {
+        String javaClass = javadocComment + "\nclass TestClass{ void testMethod() {} }";
+
+        CompilationUnit compilationUnit = parseCompilationUnit(javaClass);
+
+        int numComments = compilationUnit.getCommentList().size();
+        Javadoc commentObj = getFirstJavadoc(compilationUnit);
+        testTranslateNode(commentObj, javaClass, javadocComment, compilationUnit, expectedCSharpComment,
+                expectedCSharpComment);
+    }
+
+    public static Javadoc getFirstJavadoc(CompilationUnit compilationUnit) {
+        return (Javadoc)compilationUnit.getCommentList().get(0);
+    }
+
     protected void testTranslateNode(ASTNode node, String javaFullSource, String javaNodeSource,
                                      CompilationUnit compilationUnit, @Nullable String expectedCSharp,
                                      @Nullable String expectedSwift) {

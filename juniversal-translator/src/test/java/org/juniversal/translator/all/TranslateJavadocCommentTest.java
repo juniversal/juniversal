@@ -25,16 +25,22 @@ package org.juniversal.translator.all;
 import org.junit.Test;
 import org.juniversal.translator.TranslateNodeTest;
 
-public class TranslatePrimitiveTypeTest extends TranslateNodeTest {
+/**
+ * Created by cingram on 12/11/2014.
+ */
+public class TranslateJavadocCommentTest extends TranslateNodeTest {
     @Test
-    public void testTranslatePrimitiveTypes() {
-        testTranslateStatement("byte foo;", "sbyte foo;", "FILL IN");
-        testTranslateStatement("short foo;", null, "FILL IN");
-        testTranslateStatement("char foo;", null, "FILL IN");
-        testTranslateStatement("int foo;", null, "FILL IN");
-        testTranslateStatement("long foo;", null, "FILL IN");
-        testTranslateStatement("float foo;", null, "FILL IN");
-        testTranslateStatement("double foo;", null, "FILL IN");
-        testTranslateStatement("boolean foo;", "bool foo;", "FILL IN");
+    public void testTranslateJavadocComment() {
+        String javadoc =
+                  "/**" +
+                "\n * A method that does blah." +
+                "\n *" +
+                "\n * @param p1 The first parameter" +
+                "\n * @param p2 The second parameter" +
+                "\n * @returns int Description of return value" +
+                "\n * @since 1.0" +
+                "\n * @author cingram" +
+                "\n */";
+        testTranslateJavadocComment(javadoc, null, null);
     }
 }

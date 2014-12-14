@@ -84,6 +84,7 @@ public abstract class SourceFileWriter {
         if (VALIDATE_CONTEXT_POSITION) {
             nodeStartPosition = node.getStartPosition();
 
+            /* BROKEN AND I THINK UNNEEDED!
             // If the node starts with Javadoc (true for method declarations with Javadoc before
             // them), then skip past it; the caller is always expected to handle any comments,
             // Javadoc or not, coming before the start of code proper for the node. The exception to
@@ -95,6 +96,7 @@ public abstract class SourceFileWriter {
                     && !(node instanceof CompilationUnit))
                 assertPositionIs(sourceCopier.skipSpaceAndComments(nodeStartPosition, false));
             else assertPositionIs(nodeStartPosition);
+            */
         }
 
         getVisitor(node.getClass()).write(node);
