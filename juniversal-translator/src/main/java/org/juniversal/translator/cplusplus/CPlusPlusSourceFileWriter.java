@@ -35,7 +35,7 @@ import java.util.List;
 
 public class CPlusPlusSourceFileWriter extends SourceFileWriter {
     private CPlusPlusTranslator cPlusPlusTranslator;
-    private Context context;
+    private CPlusPlusContext context;
     private OutputType outputType;
 
     public CPlusPlusSourceFileWriter(CPlusPlusTranslator cPlusPlusTranslator, SourceFile sourceFile, Writer writer,
@@ -44,7 +44,7 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
 
         this.cPlusPlusTranslator = cPlusPlusTranslator;
         this.outputType = outputType;
-        this.context = new Context();
+        this.context = new CPlusPlusContext();
 
         addDeclarationWriters();
         addStatementWriters();
@@ -65,7 +65,7 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
     }
 
     @Override
-    public Context getContext() {
+    public CPlusPlusContext getContext() {
         return context;
     }
 

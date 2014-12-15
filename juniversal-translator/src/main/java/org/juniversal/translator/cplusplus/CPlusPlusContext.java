@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, Microsoft Mobile
+ * Copyright (c) 2012-2014, Microsoft Mobile
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,18 @@
  * THE SOFTWARE.
  */
 
-// rootProject.name = 'juniversal-translator'
-include 'juniversal-translator'
-include 'translator-tests'
+package org.juniversal.translator.cplusplus;
+
+import org.juniversal.translator.core.Context;
+
+public class CPlusPlusContext extends Context {
+    private boolean writingVariableDeclarationNeedingStar;
+
+    public boolean isWritingVariableDeclarationNeedingStar() {
+        return writingVariableDeclarationNeedingStar;
+    }
+
+    public void setWritingVariableDeclarationNeedingStar(boolean writingVariableDeclarationNeedingStar) {
+        this.writingVariableDeclarationNeedingStar = writingVariableDeclarationNeedingStar;
+    }
+}

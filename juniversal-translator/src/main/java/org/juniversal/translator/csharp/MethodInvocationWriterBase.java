@@ -59,7 +59,10 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
             copySpaceAndComments();
         }
 
-        ITypeBinding objectType = methodBinding.getDeclaringClass();
+        ITypeBinding objectType;
+        if (expression != null)
+            objectType = expression.resolveTypeBinding();
+        else objectType = methodBinding.getDeclaringClass();
 
         // If it's a standard Object method (toString, equals, etc.), handle that first
         if (writeMappedObjectMethod(methodInvocationNode, methodName, args, methodBinding))
@@ -205,6 +208,8 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
 
                 case "endsWith":
                     verifyArgCount(args, 1);
+
+                    getContext().addExtraUsing("System");
                     writeMappedMethod("EndsWith", args.get(0), "StringComparison.Ordinal");
                     break;
 
@@ -245,6 +250,8 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
 
                 case "startsWith":
                     verifyArgCount(args, 1);
+
+                    getContext().addExtraUsing("System");
                     writeMappedMethod("StartsWith", args.get(0), "StringComparison.Ordinal");
                     break;
 

@@ -45,6 +45,8 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
         return cSharpASTWriters;
     }
 
+    public CSharpContext getContext() { return getSourceFileWriter().getContext(); }
+
     public void writeAccessModifier(List<?> modifiers) {
         AccessLevel accessLevel = getAccessModifier(modifiers);
 
@@ -119,19 +121,25 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
         for (Object typeParameterObject : typeParameters) {
             TypeParameter typeParameter = (TypeParameter) typeParameterObject;
 
-            boolean firstBound = true;
+            boolean encounteredBound = false;
             for (Object typeBoundObject : typeParameter.typeBounds()) {
                 Type typeBound = (Type) typeBoundObject;
 
-                if (firstBound) {
+                if (! encounteredBound) {
                     write(" where ");
                     write(typeParameter.getName().getIdentifier());
-                    write(" : ");
+                    write(" : class, ");
                 } else write(", ");
 
                 writeNodeFromOtherPosition(typeBound);
 
-                firstBound = false;
+                encounteredBound = true;
+            }
+
+            if (! encounteredBound) {
+                write(" where ");
+                write(typeParameter.getName().getIdentifier());
+                write(" : class");
             }
         }
     }
@@ -178,14 +186,10 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
     */
 
     public static String getNamespaceNameForPackageName(Name packageName) {
-        if (packageName == null)
-            return getNamespaceNameForPackageName((String) null);
-        else return getNamespaceNameForPackageName(packageName.getFullyQualifiedName());
+        return packageName.getFullyQualifiedName();
     }
 
     public static String getNamespaceNameForPackageName(String packageName) {
-        if (packageName == null)
-            return "unnamed";
-        else return packageName.replace('.', '_');
+        return packageName;
     }
 }

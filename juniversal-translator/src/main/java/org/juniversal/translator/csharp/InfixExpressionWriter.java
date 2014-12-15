@@ -24,13 +24,14 @@ package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.InfixExpression;
 
 import java.util.HashMap;
 import java.util.List;
 
 
-public class InfixExpressionWriter extends CSharpASTNodeWriter {
+public class InfixExpressionWriter extends CSharpASTNodeWriter<InfixExpression> {
     private HashMap<InfixExpression.Operator, String> equivalentOperators;  // Operators that have the same token in both Java & C#
 
     public InfixExpressionWriter(CSharpSourceFileWriter cSharpASTWriters) {
@@ -118,30 +119,28 @@ public class InfixExpressionWriter extends CSharpASTNodeWriter {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void write(ASTNode node) {
-        InfixExpression infixExpression = (InfixExpression) node;
-
+    public void write(InfixExpression infixExpression) {
         InfixExpression.Operator operator = infixExpression.getOperator();
 
+        // TODO: Handle >>>
         if (operator == InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED) {
-            // TODO: Handle >>>
+            write("/* TODO: Handle >>> */ ");
 
-            write("rightShiftUnsigned(");
             writeNode(infixExpression.getLeftOperand());
 
-            // Skip spaces before the >>> but if there's a newline (or comments) there, copy them
-            skipSpacesAndTabs();
             copySpaceAndComments();
-            matchAndWrite(">>>", ",");
+            matchAndWrite(">>>", ">>");
 
             copySpaceAndComments();
             writeNode(infixExpression.getRightOperand());
-            write(")");
+
+            if (infixExpression.hasExtendedOperands())
+                throw sourceNotSupported(">>> extended operands not currently supported; nor is >>> implemented correctly currently for that matter");
         } else {
             writeNode(infixExpression.getLeftOperand());
 
             copySpaceAndComments();
-            String operatorToken = this.equivalentOperators.get(infixExpression.getOperator());
+            String operatorToken = this.equivalentOperators.get(operator);
             matchAndWrite(operatorToken);
 
             copySpaceAndComments();

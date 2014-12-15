@@ -40,14 +40,14 @@ import static org.juniversal.translator.core.ASTUtil.isType;
 
 public class CSharpSourceFileWriter extends SourceFileWriter {
     private CSharpTranslator cSharpTranslator;
-    private Context context;
+    private CSharpContext context;
     private HashSet<String> cSharpReservedWords;
 
     public CSharpSourceFileWriter(CSharpTranslator cSharpTranslator, SourceFile sourceFile, Writer writer) {
         super(cSharpTranslator, sourceFile, writer);
 
         this.cSharpTranslator = cSharpTranslator;
-        this.context = new Context();
+        this.context = new CSharpContext();
 
         addDeclarationWriters();
         addStatementWriters();
@@ -74,7 +74,7 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
     }
 
     @Override
-    public Context getContext() {
+    public CSharpContext getContext() {
         return context;
     }
 
@@ -104,6 +104,9 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
 
         // Field declaration
         addWriter(FieldDeclaration.class, new FieldDeclarationWriter(this));
+
+        // Simple type
+        addWriter(SimpleType.class, new SimpleTypeWriter(this));
 
         // TODO: Implement this
         // Variable declaration fragment
@@ -157,41 +160,6 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
                 // TODO: Handle initializer
                 if (singleVariableDeclaration.getInitializer() != null)
                     throw new JUniversalException("Unexpected initializer present for SingleVariableDeclaration");
-            }
-        });
-
-        // TODO: Implement this
-        // Simple type
-        addWriter(SimpleType.class, new CSharpASTNodeWriter<SimpleType>(this) {
-            @Override
-            public void write(SimpleType simpleType) {
-                Name name = simpleType.getName();
-
-                if (isType(simpleType, "java.lang.Object")) {
-                    write("object");
-                    setPositionToEndOfNode(name);
-                } else if (isType(simpleType, "java.lang.String")) {
-                    write("string");
-                    setPositionToEndOfNode(name);
-                } else if (isType(simpleType, "java.lang.StringBuilder")) {
-                    write("StringBuilder");
-                    setPositionToEndOfNode(name);
-                } else if (isType(simpleType, "java.lang.Throwable")) {
-                    write("Exception");
-                    setPositionToEndOfNode(name);
-                } else if (name instanceof QualifiedName) {
-                    QualifiedName qualifiedName = (QualifiedName) name;
-
-                    write(getNamespaceNameForPackageName(qualifiedName.getQualifier()));
-                    setPositionToEndOfNode(qualifiedName.getQualifier());
-
-                    copySpaceAndComments();
-                    matchAndWrite(".", "::");
-                    matchAndWrite(qualifiedName.getName().getIdentifier());
-                } else {
-                    SimpleName simpleName = (SimpleName) name;
-                    matchAndWrite(simpleName.getIdentifier());
-                }
             }
         });
 
@@ -538,9 +506,11 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
         addWriter(AssertStatement.class, new CSharpASTNodeWriter<AssertStatement>(this) {
             @Override
             public void write(AssertStatement assertStatement) {
+                getContext().addExtraUsing("System.Diagnostics");
+
                 matchAndWrite("assert", "Debug.Assert(");
 
-                copySpaceAndComments();
+                skipSpaceAndComments();
                 writeNode(assertStatement.getExpression());
 
                 @Nullable Expression message = assertStatement.getMessage();

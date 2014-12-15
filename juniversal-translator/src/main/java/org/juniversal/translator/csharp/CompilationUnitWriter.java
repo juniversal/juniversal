@@ -40,6 +40,9 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
     public void write(CompilationUnit compilationUnit) {
         copySpaceAndComments();
 
+        // First visit & write out the guts of the class, using a BufferTargetWriter to capture all output.   We do
+        // this first to capture the usage of anything that needs an explicit "using" statement in C# but doesn't
+        // have an import in Java.   The top of the file, with the "using" statements, is written later, down below
         BufferTargetWriter bufferTargetWriter = new BufferTargetWriter(getSourceFileWriter().getTargetWriter());
         try (SourceFileWriter.RestoreTargetWriter ignored = getSourceFileWriter().setTargetWriter(bufferTargetWriter)) {
             writeNamespaceAndTypeDeclaration(compilationUnit);
@@ -55,6 +58,7 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
             skipSpaceAndComments();
         }
 
+        // Write
         copySpaceAndComments();
         writeUsingStatements(compilationUnit);
 
@@ -97,6 +101,12 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
 
             copySpaceAndComments();
             matchAndWrite(";");
+        }
+
+        for (String extraUsing : getContext().getExtraUsings()) {
+            write("using ");
+            write(extraUsing);
+            writeln(";");
         }
     }
 

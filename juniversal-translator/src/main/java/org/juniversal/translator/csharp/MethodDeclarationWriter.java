@@ -123,6 +123,9 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
             addWildcardTypes(parameter.getType(), wildcardTypes);
         }
 
+        if (methodIsConstructor && !wildcardTypes.isEmpty())
+            throw sourceNotSupported("C# constructors can't take arguments that use generic wildcard types; consider replacing this constructor with a static create method instead, taking the same generic arguments");
+
         writeTypeParameters(methodDeclaration, wildcardTypes);
 
         copySpaceAndComments();
@@ -131,7 +134,11 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         writeParameterList(methodDeclaration);
         getContext().setMethodWildcardTypes(null);
 
-        writeTypeConstraints(methodDeclaration, wildcardTypes);
+        // Write the generic type constraints, unless the method is an override in which case C# (for some reason)
+        // requires the type constraints to only be specified on the top level method, disallowing them being repeated
+        // on overrides
+        if (!methodIsOverride)
+            writeTypeConstraints(methodDeclaration, wildcardTypes);
 
         // TODO: Ignore thrown exceptions
         writeThrownExceptions(methodDeclaration);
@@ -178,18 +185,24 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         writeTypeParameterConstraints(methodDeclaration.typeParameters());
 
         for (WildcardType wildcardType : wildcardTypes) {
-            @Nullable Type bound = wildcardType.getBound();
-            if (bound == null)
-                continue;
-
             write(" where ");
             writeWildcardTypeSyntheticName(wildcardTypes, wildcardType);
             write(" : ");
 
-            if (!wildcardType.isUpperBound())
-                throw new JUniversalException("Wildcard lower bounds ('? super') aren't supported; only upper bounds ('? extends') are supported");
+            @Nullable Type bound = wildcardType.getBound();
+            if (bound == null) {
+                write("class ");
+            }
+            else {
+                // TODO: Fix this isSimpleType check; should only include parameterized types
+                if (bound.isSimpleType())
+                    write("class, ");
 
-            writeNodeFromOtherPosition(bound);
+                if (!wildcardType.isUpperBound())
+                    throw new JUniversalException("Wildcard lower bounds ('? super') aren't supported; only upper bounds ('? extends') are supported");
+
+                writeNodeFromOtherPosition(bound);
+            }
         }
     }
 

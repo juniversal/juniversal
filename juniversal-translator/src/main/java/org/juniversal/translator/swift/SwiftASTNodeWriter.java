@@ -24,6 +24,7 @@ package org.juniversal.translator.swift;
 
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.ASTNodeWriter;
+import org.juniversal.translator.core.Context;
 
 import java.util.List;
 
@@ -142,4 +143,6 @@ public abstract class SwiftASTNodeWriter<T extends ASTNode> extends ASTNodeWrite
 
         write(">");
     }
+
+    public Context getContext() { return getSourceFileWriter().getContext(); }
 }

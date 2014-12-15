@@ -94,8 +94,6 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
         }
     }
 
-    public Context getContext() { return getSourceFileWriter().getContext(); }
-
     public SourceNotSupportedException sourceNotSupported(String baseMessage) {
         return getSourceFileWriter().sourceNotSupported(baseMessage);
     }
@@ -162,6 +160,11 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
 
     public void matchAndWrite(String match, String write) {
         getSourceFileWriter().matchAndWrite(match, write);
+    }
+
+    public void matchNodeAndWrite(ASTNode node, String string) {
+        setPositionToEndOfNode(node);
+        write(string);
     }
 
     public void match(String match) {

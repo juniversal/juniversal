@@ -26,6 +26,8 @@ import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.cplusplus.OutputType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.juniversal.translator.core.ASTUtil.isAnnotation;
@@ -34,7 +36,6 @@ import static org.juniversal.translator.core.ASTUtil.isFinal;
 public class Context {
     private TypeDeclaration typeDeclaration;
     private ArrayList<WildcardType> methodWildcardTypes = null;
-    private boolean writingVariableDeclarationNeedingStar;
     private boolean writingMethodImplementation;
 
 
@@ -52,14 +53,6 @@ public class Context {
 
     public void setMethodWildcardTypes(ArrayList<WildcardType> methodWildcardTypes) {
         this.methodWildcardTypes = methodWildcardTypes;
-    }
-
-    public boolean isWritingVariableDeclarationNeedingStar() {
-        return writingVariableDeclarationNeedingStar;
-    }
-
-    public void setWritingVariableDeclarationNeedingStar(boolean writingVariableDeclarationNeedingStar) {
-        this.writingVariableDeclarationNeedingStar = writingVariableDeclarationNeedingStar;
     }
 
     public boolean isWritingMethodImplementation() {

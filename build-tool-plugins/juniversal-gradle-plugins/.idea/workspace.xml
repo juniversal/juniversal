@@ -1,7 +1,143 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="4b32978f-5c3b-4255-bece-5b8cfe95edec" name="Default" comment="" />
+    <list default="true" id="4b32978f-5c3b-4255-bece-5b8cfe95edec" name="Default" comment="Added copyright to Gradle plugin files">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../translator-tests/src/test/java/method_tests/TestGenerics.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../translator-tests/translator-tests.iml" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\README" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\AST View.htm" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\cpplib\.cproject" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\cpplib\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\cpplib\src\Array.h" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\cpplib\src\Test.cpp" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\cpplib\src\java\lang\Object.h" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\cpplib\src\java\lang\String.h" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\cpplib\src\juniversal.h" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\cpplib\src\juniversal_defs.h" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang-system\.classpath" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang-system\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang-system\.settings\org.eclipse.jdt.core.prefs" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang-system\orginalsrc\java\lang\Deprecated.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang-system\orginalsrc\java\lang\Override.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang-system\orginalsrc\java\lang\SuppressWarnings.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang-system\orginalsrc\java\lang\io\IOException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang-system\src\java\lang\Deprecated.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang-system\src\java\lang\Override.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang-system\src\java\lang\SuppressWarnings.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\.classpath" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\.settings\org.eclipse.jdt.core.prefs" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\.settings\org.eclipse.jdt.ui.prefs" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\juniversal-lang.jardesc" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\io\IOException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\AbstractStringBuilder.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Appendable.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\ArrayIndexOutOfBoundsException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Byte.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\CharSequence.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Character.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\CloneNotSupportedException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Comparable.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Deprecated.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Exception.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\FloatingPointParser.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\IllegalArgumentException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\IllegalStateException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\IndexOutOfBoundsException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Integer.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Long.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Math.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\NegativeArraySizeException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\NullPointerException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Number.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\NumberConverter.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\NumberFormatException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Object.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Override.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\RuntimeException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Short.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\String.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\StringBuilder.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\StringIndexOutOfBoundsException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\SuppressWarnings.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\System.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\Throwable.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\lang\UnsupportedOperationException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\java\util\Iterator.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\originalsrc\javaio" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\io\IOException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\AbstractStringBuilder.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Appendable.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\ArrayIndexOutOfBoundsException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Byte.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\CharSequence.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Character.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\CloneNotSupportedException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Comparable.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Exception.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\IllegalArgumentException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\IllegalStateException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\IndexOutOfBoundsException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Integer.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\JUniversalHelper.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Long.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Math.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\NegativeArraySizeException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\NullPointerException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Number.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\NumberFormatException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Object.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\RuntimeException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Short.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\String.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\StringBuilder.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\StringIndexOutOfBoundsException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\Throwable.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\lang\UnsupportedOperationException.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib-lang\src\java\util\Iterator.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\.classpath" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\.settings\org.eclipse.jdt.core.prefs" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\.settings\org.eclipse.jdt.ui.prefs" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\cpp-actual\.cproject" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\cpp-actual\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\cpp\.cproject" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\cpp\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\originalsrc\java\util\AbstractMap.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\originalsrc\java\util\HashMap.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\originalsrc\java\util\Map.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\originalsrc\java\util\MapEntry.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\src\ju\util\AbstractMap.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\src\ju\util\HashMap.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\src\ju\util\Map.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\javalib\src\ju\util\MapEntry.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\smarterphone\cpp-actual\.cproject" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\smarterphone\cpp-actual\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\smarterphone\java\.classpath" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\smarterphone\java\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\smarterphone\java\smarterphone\AppointmentInfo.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\smarterphone\java\smarterphone\AppointmentToken.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\smarterphone\java\smarterphone\CalendarManager.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\smarterphone\java\smarterphone\ContactField.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\test1\.classpath" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\test1\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\test1\.settings\org.eclipse.jdt.ui.prefs" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\test1\cpp-actual\.cproject" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\test1\cpp-actual\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\test1\java\.classpath" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\test1\java\.project" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\testdata\test1\java\Test.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\cpp-archive\todo.txt" afterPath="" />
+      <change type="DELETED" beforePath="C:\Dropbox\projects\juniversal\translator-test-cases\translator-test-cases.iml" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../.idea/libraries/Gradle__junit_junit_4_11.xml" afterPath="$PROJECT_DIR$/../../.idea/libraries/Gradle__junit_junit_4_11.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../.idea/libraries/Gradle__org_hamcrest_hamcrest_core_1_3.xml" afterPath="$PROJECT_DIR$/../../.idea/libraries/Gradle__org_hamcrest_hamcrest_core_1_3.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../README.md" afterPath="$PROJECT_DIR$/../../README.md" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../juniversal-translator/build.gradle" afterPath="$PROJECT_DIR$/../../juniversal-translator/build.gradle" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../.idea/gradle.xml" afterPath="$PROJECT_DIR$/../../.idea/gradle.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../.idea/modules.xml" afterPath="$PROJECT_DIR$/../../.idea/modules.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../settings.gradle" afterPath="$PROJECT_DIR$/../../settings.gradle" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+    </list>
     <ignored path="juniversal-gradle-plugins.iws" />
     <ignored path=".idea/workspace.xml" />
     <ignored path="$PROJECT_DIR$/.gradle/" />
@@ -34,8 +170,8 @@
       <file leaf-file-name="CommonProject.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/common/support/CommonProject.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="488" max-vertical-offset="1411">
-              <caret line="49" column="28" selection-start-line="49" selection-start-column="28" selection-end-line="49" selection-end-column="28" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="1207" max-vertical-offset="1853">
+              <caret line="71" column="28" selection-start-line="71" selection-start-column="28" selection-end-line="71" selection-end-column="28" />
               <folding />
             </state>
           </provider>
@@ -44,7 +180,7 @@
       <file leaf-file-name="GradleProject.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/support/GradleProject.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2023">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2057">
               <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
@@ -54,8 +190,8 @@
       <file leaf-file-name="JavaToCSharpTangibleTask.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JavaToCSharpTangibleTask.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="748">
-              <caret line="30" column="15" selection-start-line="30" selection-start-column="15" selection-end-line="30" selection-end-column="15" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="442" max-vertical-offset="782">
+              <caret line="52" column="15" selection-start-line="52" selection-start-column="15" selection-end-line="52" selection-end-column="15" />
               <folding />
             </state>
           </provider>
@@ -64,8 +200,8 @@
       <file leaf-file-name="JavaToObjectiveCPlugin.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JavaToObjectiveCPlugin.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="289">
-              <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="153" max-vertical-offset="323">
+              <caret line="30" column="13" selection-start-line="30" selection-start-column="13" selection-end-line="30" selection-end-column="13" />
               <folding />
             </state>
           </provider>
@@ -74,8 +210,8 @@
       <file leaf-file-name="JavaToObjectiveCTask.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JavaToObjectiveCTask.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="748">
-              <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="306" max-vertical-offset="782">
+              <caret line="38" column="0" selection-start-line="38" selection-start-column="0" selection-end-line="38" selection-end-column="0" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -86,8 +222,8 @@
       <file leaf-file-name="JUniversalTranslatorTask.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JUniversalTranslatorTask.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="340">
-              <caret line="14" column="19" selection-start-line="14" selection-start-column="19" selection-end-line="14" selection-end-column="19" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="204" max-vertical-offset="374">
+              <caret line="36" column="19" selection-start-line="36" selection-start-column="19" selection-end-line="36" selection-end-column="19" />
               <folding />
             </state>
           </provider>
@@ -96,9 +232,11 @@
       <file leaf-file-name="TranslatorTask.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/TranslatorTask.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.3383758" vertical-offset="0" max-vertical-offset="1256">
-              <caret line="29" column="62" selection-start-line="29" selection-start-column="62" selection-end-line="29" selection-end-column="62" />
-              <folding />
+            <state vertical-scroll-proportion="0.51282054" vertical-offset="169" max-vertical-offset="1088">
+              <caret line="41" column="83" selection-start-line="41" selection-start-column="83" selection-end-line="41" selection-end-column="83" />
+              <folding>
+                <element signature="e#0#2609#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -108,34 +246,7 @@
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0" vertical-offset="36397" max-vertical-offset="37230">
               <caret line="2227" column="16" selection-start-line="2227" selection-start-column="16" selection-end-line="2227" selection-end-column="16" />
-              <folding>
-                <element signature="e#0#95358#0" expanded="false" />
-                <element signature="imports" expanded="false" />
-                <element signature="e#8262#8263#0" expanded="false" />
-                <element signature="e#8297#8298#0" expanded="false" />
-                <element signature="e#21135#21136#0" expanded="false" />
-                <element signature="e#21162#21163#0" expanded="false" />
-                <element signature="e#21752#21753#0" expanded="false" />
-                <element signature="e#21794#21795#0" expanded="false" />
-                <element signature="e#23018#23019#0" expanded="false" />
-                <element signature="e#23057#23058#0" expanded="false" />
-                <element signature="e#64751#64752#0" expanded="false" />
-                <element signature="e#64801#64802#0" expanded="false" />
-                <element signature="e#68391#68392#0" expanded="false" />
-                <element signature="e#68441#68442#0" expanded="false" />
-                <element signature="e#72099#72100#0" expanded="false" />
-                <element signature="e#72153#72154#0" expanded="false" />
-                <element signature="e#75713#75714#0" expanded="false" />
-                <element signature="e#75750#75751#0" expanded="false" />
-                <element signature="e#80745#80746#0" expanded="false" />
-                <element signature="e#80782#80783#0" expanded="false" />
-                <element signature="e#89537#89538#0" expanded="false" />
-                <element signature="e#89586#89587#0" expanded="false" />
-                <element signature="e#91257#91258#0" expanded="false" />
-                <element signature="e#91297#91298#0" expanded="false" />
-                <element signature="e#91558#91559#0" expanded="false" />
-                <element signature="e#91590#91591#0" expanded="false" />
-              </folding>
+              <folding />
             </state>
           </provider>
         </entry>
@@ -145,16 +256,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0" vertical-offset="221" max-vertical-offset="493">
               <caret line="21" column="14" selection-start-line="21" selection-start-column="14" selection-end-line="21" selection-end-column="14" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Translator.class" pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.juniversal/juniversal-translator/0.7-SNAPSHOT/e7b62a3da137189df23b1c4a7c6ecaedd6d02bd1/juniversal-translator-0.7-SNAPSHOT.jar!/org/juniversal/translator/core/Translator.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="2346" max-vertical-offset="3468">
-              <caret line="164" column="16" selection-start-line="164" selection-start-column="16" selection-end-line="164" selection-end-column="16" />
               <folding />
             </state>
           </provider>
@@ -691,7 +792,6 @@
         <option value="$PROJECT_DIR$/src/main/java/org/juniversal/common/JavaToCSharpTangible.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/juniversal/gradle/support/GradleJavaExec.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/juniversal/common/JavaToObjectiveC.java" />
-        <option value="$PROJECT_DIR$/src/main/java/org/juniversal/gradle/TranslatorTask.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JUniversalTranslatorTask.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JavaToCSharpTask.java" />
         <option value="$PROJECT_DIR$/build.gradle" />
@@ -699,6 +799,7 @@
         <option value="$PROJECT_DIR$/src/main/java/org/juniversal/common/JUniversalTranslator.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/juniversal/common/support/CommonProject.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/juniversal/gradle/support/GradleProject.java" />
+        <option value="$PROJECT_DIR$/src/main/java/org/juniversal/gradle/TranslatorTask.java" />
       </list>
     </option>
   </component>
@@ -708,8 +809,8 @@
   <component name="ProjectFrameBounds">
     <option name="x" value="-8" />
     <option name="y" value="-8" />
-    <option name="width" value="2576" />
-    <option name="height" value="1416" />
+    <option name="width" value="1936" />
+    <option name="height" value="1056" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <OptionsSetting value="true" id="Add" />
@@ -734,8 +835,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -746,102 +845,6 @@
             <PATH_ELEMENT>
               <option name="myItemId" value="External Libraries" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="juniversal-gradle-plugins" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Gradle: org.juniversal:juniversal-translator:0.7-SNAPSHOT" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="juniversal-translator-0.7-SNAPSHOT.jar" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="juniversal-gradle-plugins" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Gradle: org.juniversal:juniversal-translator:0.7-SNAPSHOT" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="juniversal-translator-0.7-SNAPSHOT.jar" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="org" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="juniversal-gradle-plugins" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Gradle: org.juniversal:juniversal-translator:0.7-SNAPSHOT" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="juniversal-translator-0.7-SNAPSHOT.jar" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="org" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="translator" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="juniversal-gradle-plugins" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Gradle: org.juniversal:juniversal-translator:0.7-SNAPSHOT" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="juniversal-translator-0.7-SNAPSHOT.jar" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="org" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="translator" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="core" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
@@ -1256,6 +1259,8 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -1270,7 +1275,7 @@
     <property name="OverrideImplement.combined" value="true" />
     <property name="OverrideImplement.overriding.sorted" value="false" />
     <property name="LayoutCode.rearrangeEntriesJava" value="false" />
-    <property name="options.lastSelected" value="reference.settings.project.maven.repository.indices" />
+    <property name="options.lastSelected" value="copyright" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="FullScreen" value="false" />
@@ -1573,17 +1578,22 @@
       <option name="project" value="LOCAL" />
       <updated>1416582081731</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Added copyright to Gradle plugin files">
+      <created>1416812472547</created>
+      <option name="number" value="00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1416812472547</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="2576" height="1416" extended-state="6" />
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32943925" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.2881558" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
@@ -1593,7 +1603,8 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.16613673" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32943925" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.16577825" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -1602,9 +1613,9 @@
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32943925" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32943925" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32943925" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -1623,7 +1634,8 @@
       <TodoPanelSettings />
     </option>
     <MESSAGE value="Some Gradle plugin updates" />
-    <option name="LAST_COMMIT_MESSAGE" value="Some Gradle plugin updates" />
+    <MESSAGE value="Added copyright to Gradle plugin files" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added copyright to Gradle plugin files" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -1634,6 +1646,14 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
+    <entry file="jar://$USER_HOME$/.gradle/wrapper/dists/gradle-2.1-bin/2pk0g2l49n2sbne636fhtlet6a/gradle-2.1/lib/gradle-core-2.1.jar!/org/gradle/api/file/SourceDirectorySet.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="221" max-vertical-offset="493">
+          <caret line="21" column="14" selection-start-line="21" selection-start-column="14" selection-end-line="21" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JavaToCSharpTangiblePlugin.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="119" max-vertical-offset="323">
@@ -1910,8 +1930,8 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="306">
           <caret line="9" column="29" selection-start-line="9" selection-start-column="29" selection-end-line="9" selection-end-column="29" />
           <folding>
-            <element signature="e#239#240#0" expanded="false" />
-            <element signature="e#275#276#0" expanded="false" />
+            <element signature="e#1367#1368#0" expanded="false" />
+            <element signature="e#1403#1404#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1953,54 +1973,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="5520" max-vertical-offset="23749">
           <caret line="374" column="20" selection-start-line="374" selection-start-column="20" selection-end-line="374" selection-end-column="20" />
-          <folding>
-            <element signature="e#0#54151#0" expanded="false" />
-            <element signature="imports" expanded="false" />
-            <element signature="e#6252#6253#0" expanded="false" />
-            <element signature="e#6320#6321#0" expanded="false" />
-            <element signature="e#10189#10190#0" expanded="false" />
-            <element signature="e#10216#10217#0" expanded="false" />
-            <element signature="e#10398#10399#0" expanded="false" />
-            <element signature="e#10430#10431#0" expanded="false" />
-            <element signature="e#10907#10908#0" expanded="false" />
-            <element signature="e#10945#10946#0" expanded="false" />
-            <element signature="e#15414#15415#0" expanded="false" />
-            <element signature="e#15459#15460#0" expanded="false" />
-            <element signature="e#24549#24550#0" expanded="false" />
-            <element signature="e#24603#24604#0" expanded="false" />
-            <element signature="e#30347#30348#0" expanded="false" />
-            <element signature="e#30384#30385#0" expanded="false" />
-            <element signature="e#30684#30685#0" expanded="false" />
-            <element signature="e#30716#30717#0" expanded="false" />
-            <element signature="e#31041#31042#0" expanded="false" />
-            <element signature="e#31086#31087#0" expanded="false" />
-            <element signature="e#33262#33263#0" expanded="false" />
-            <element signature="e#33304#33305#0" expanded="false" />
-            <element signature="e#33338#33339#0" expanded="false" />
-            <element signature="e#33375#33376#0" expanded="false" />
-            <element signature="e#33413#33414#0" expanded="false" />
-            <element signature="e#33454#33455#0" expanded="false" />
-            <element signature="e#38943#38944#0" expanded="false" />
-            <element signature="e#38994#38995#0" expanded="false" />
-            <element signature="e#39436#39437#0" expanded="false" />
-            <element signature="e#39481#39482#0" expanded="false" />
-            <element signature="e#39886#39887#0" expanded="false" />
-            <element signature="e#39960#39961#0" expanded="false" />
-            <element signature="e#40600#40601#0" expanded="false" />
-            <element signature="e#40658#40659#0" expanded="false" />
-            <element signature="e#42227#42228#0" expanded="false" />
-            <element signature="e#42280#42281#0" expanded="false" />
-            <element signature="e#42326#42327#0" expanded="false" />
-            <element signature="e#42383#42384#0" expanded="false" />
-            <element signature="e#44775#44776#0" expanded="false" />
-            <element signature="e#44842#44843#0" expanded="false" />
-            <element signature="e#46390#46391#0" expanded="false" />
-            <element signature="e#46455#46456#0" expanded="false" />
-            <element signature="e#51499#51500#0" expanded="false" />
-            <element signature="e#51557#51558#0" expanded="false" />
-            <element signature="e#51597#51598#0" expanded="false" />
-            <element signature="e#51690#51691#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2011,14 +1983,6 @@
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.juniversal/juniversal-translator/0.7-SNAPSHOT/e7b62a3da137189df23b1c4a7c6ecaedd6d02bd1/juniversal-translator-0.7-SNAPSHOT.jar!/org/juniversal/translator/core/Translator.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="2346" max-vertical-offset="3468">
-          <caret line="164" column="16" selection-start-line="164" selection-start-column="16" selection-end-line="164" selection-end-column="16" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2034,41 +1998,14 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="36397" max-vertical-offset="37230">
           <caret line="2227" column="16" selection-start-line="2227" selection-start-column="16" selection-end-line="2227" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#95358#0" expanded="false" />
-            <element signature="imports" expanded="false" />
-            <element signature="e#8262#8263#0" expanded="false" />
-            <element signature="e#8297#8298#0" expanded="false" />
-            <element signature="e#21135#21136#0" expanded="false" />
-            <element signature="e#21162#21163#0" expanded="false" />
-            <element signature="e#21752#21753#0" expanded="false" />
-            <element signature="e#21794#21795#0" expanded="false" />
-            <element signature="e#23018#23019#0" expanded="false" />
-            <element signature="e#23057#23058#0" expanded="false" />
-            <element signature="e#64751#64752#0" expanded="false" />
-            <element signature="e#64801#64802#0" expanded="false" />
-            <element signature="e#68391#68392#0" expanded="false" />
-            <element signature="e#68441#68442#0" expanded="false" />
-            <element signature="e#72099#72100#0" expanded="false" />
-            <element signature="e#72153#72154#0" expanded="false" />
-            <element signature="e#75713#75714#0" expanded="false" />
-            <element signature="e#75750#75751#0" expanded="false" />
-            <element signature="e#80745#80746#0" expanded="false" />
-            <element signature="e#80782#80783#0" expanded="false" />
-            <element signature="e#89537#89538#0" expanded="false" />
-            <element signature="e#89586#89587#0" expanded="false" />
-            <element signature="e#91257#91258#0" expanded="false" />
-            <element signature="e#91297#91298#0" expanded="false" />
-            <element signature="e#91558#91559#0" expanded="false" />
-            <element signature="e#91590#91591#0" expanded="false" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/common/support/CommonProject.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="488" max-vertical-offset="1411">
-          <caret line="49" column="28" selection-start-line="49" selection-start-column="28" selection-end-line="49" selection-end-column="28" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="862" max-vertical-offset="1785">
+          <caret line="71" column="28" selection-start-line="71" selection-start-column="28" selection-end-line="71" selection-end-column="28" />
           <folding />
         </state>
       </provider>
@@ -2083,24 +2020,24 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JavaToCSharpTangibleTask.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="748">
-          <caret line="30" column="15" selection-start-line="30" selection-start-column="15" selection-end-line="30" selection-end-column="15" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="782" max-vertical-offset="1122">
+          <caret line="52" column="15" selection-start-line="52" selection-start-column="15" selection-end-line="52" selection-end-column="15" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JavaToObjectiveCPlugin.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="289">
-          <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="493" max-vertical-offset="663">
+          <caret line="30" column="13" selection-start-line="30" selection-start-column="13" selection-end-line="30" selection-end-column="13" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JavaToObjectiveCTask.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="748">
-          <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="646" max-vertical-offset="1122">
+          <caret line="38" column="0" selection-start-line="38" selection-start-column="0" selection-end-line="38" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -2109,19 +2046,49 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/JUniversalTranslatorTask.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="340">
-          <caret line="14" column="19" selection-start-line="14" selection-start-column="19" selection-end-line="14" selection-end-column="19" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="544" max-vertical-offset="714">
+          <caret line="36" column="19" selection-start-line="36" selection-start-column="19" selection-end-line="36" selection-end-column="19" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/juniversal/gradle/TranslatorTask.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3383758" vertical-offset="0" max-vertical-offset="1256">
-          <caret line="29" column="62" selection-start-line="29" selection-start-column="62" selection-end-line="29" selection-end-column="62" />
-          <folding />
+        <state vertical-scroll-proportion="0.51282054" vertical-offset="169" max-vertical-offset="1088">
+          <caret line="41" column="83" selection-start-line="41" selection-start-column="83" selection-end-line="41" selection-end-column="83" />
+          <folding>
+            <element signature="e#0#2609#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="Copyright.UI">
+        <settings>
+          <last-edited>Default copyright</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectJDKs.UI">
+        <settings>
+          <last-edited>1.8</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
   </component>
 </project>
