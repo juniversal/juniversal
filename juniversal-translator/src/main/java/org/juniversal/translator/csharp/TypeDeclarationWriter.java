@@ -24,7 +24,6 @@ package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.ASTUtil;
 
 import java.util.List;
 
@@ -99,7 +98,11 @@ public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> 
             copySpaceAndComments();
             matchAndWrite("{");
 
-            writeNodes(typeDeclaration.bodyDeclarations());
+            for (Object astNodeObject : typeDeclaration.bodyDeclarations()) {
+                BodyDeclaration bodyDeclaration = (BodyDeclaration) astNodeObject;
+                copySpaceAndCommentsTranslatingJavadoc(bodyDeclaration.getJavadoc());
+                writeNode(bodyDeclaration);
+            }
 
             copySpaceAndComments();
             matchAndWrite("}");

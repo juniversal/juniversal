@@ -53,12 +53,12 @@ public class SourceCopier {
      *                      stops at the first EOL or code character after that
      * @return ending position--position of character following space and comments
      */
-    public int copySpaceAndComments(int startPosition, boolean justUntilEOL) {
+    public int copySpaceAndComments(int startPosition, boolean justUntilEOL, int justUntilPosition) {
         int position = startPosition;
         while (true) {
             int currChar = getSourceCharAt(position);
 
-            if (currChar == -1)
+            if (currChar == -1 || (justUntilPosition != -1 && position >= justUntilPosition))
                 return position;
             else if (currChar == ' ' || currChar == '\t')
                 position = copySpacesAndTabs(position);

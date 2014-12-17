@@ -78,13 +78,10 @@ public abstract class SourceFileWriter {
     private static final boolean VALIDATE_CONTEXT_POSITION = true;
 
     public void writeNode(ASTNode node) {
-        Context context = getContext();
-
         int nodeStartPosition;
         if (VALIDATE_CONTEXT_POSITION) {
             nodeStartPosition = node.getStartPosition();
 
-            /* BROKEN AND I THINK UNNEEDED!
             // If the node starts with Javadoc (true for method declarations with Javadoc before
             // them), then skip past it; the caller is always expected to handle any comments,
             // Javadoc or not, coming before the start of code proper for the node. The exception to
@@ -93,10 +90,9 @@ public abstract class SourceFileWriter {
             if (sourceCopier.getSourceCharAt(nodeStartPosition) == '/'
                     && sourceCopier.getSourceCharAt(nodeStartPosition + 1) == '*'
                     && sourceCopier.getSourceCharAt(nodeStartPosition + 2) == '*'
-                    && !(node instanceof CompilationUnit))
+                    && !(node instanceof CompilationUnit || node instanceof Javadoc))
                 assertPositionIs(sourceCopier.skipSpaceAndComments(nodeStartPosition, false));
             else assertPositionIs(nodeStartPosition);
-            */
         }
 
         getVisitor(node.getClass()).write(node);
@@ -293,7 +289,20 @@ public abstract class SourceFileWriter {
      */
     public boolean copySpaceAndComments() {
         int startingPosition = position;
-        position = sourceCopier.copySpaceAndComments(position, false);
+        position = sourceCopier.copySpaceAndComments(position, false, -1);
+        return position != startingPosition;
+    }
+
+    /**
+     * Copy whitespace and/or comments, from the Java source to the target language.   Copying stops at the end of the
+     * space/comments or when reaching the specified position, whatever comes first.   This method is typically used to
+     * copy regular comments but stop at Javadoc comments that will be translated separately.
+     *
+     * @return true if something was copied, false if there was no whitespace/comments
+     */
+    public boolean copySpaceAndCommentsUntilPosition(int justUntilPosition) {
+        int startingPosition = position;
+        position = sourceCopier.copySpaceAndComments(position, false, justUntilPosition);
         return position != startingPosition;
     }
 
@@ -307,7 +316,7 @@ public abstract class SourceFileWriter {
     }
 
     public void copySpaceAndCommentsUntilEOL() {
-        position = sourceCopier.copySpaceAndComments(position, true);
+        position = sourceCopier.copySpaceAndComments(position, true, -1);
     }
 
     public void skipSpaceAndComments() {

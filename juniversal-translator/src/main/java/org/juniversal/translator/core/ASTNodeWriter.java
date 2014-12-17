@@ -23,6 +23,8 @@
 package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Javadoc;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -112,6 +114,19 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
 
     public void copySpaceAndComments() {
         getSourceFileWriter().copySpaceAndComments();
+    }
+
+    public void copySpaceAndCommentsTranslatingJavadoc(@Nullable Javadoc javadoc) {
+        if (javadoc != null) {
+            copySpaceAndCommentsUntilPosition(javadoc.getStartPosition());
+            writeNode(javadoc);
+            copySpaceAndComments();
+        }
+        else copySpaceAndComments();
+    }
+
+    public void copySpaceAndCommentsUntilPosition(int justUntilPosition) {
+        getSourceFileWriter().copySpaceAndCommentsUntilPosition(justUntilPosition);
     }
 
     public void copySpaceAndCommentsEnsuringDelimiter() {
