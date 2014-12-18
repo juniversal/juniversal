@@ -230,8 +230,8 @@ public class TranslateNodeTest {
     }
 
     protected void testTranslateJavadocComment(String javadocComment, @Nullable String expectedCSharpComment,
-                                               @Nullable String expectedSwiftMethod) {
-        String javaClass = javadocComment + "\nclass TestClass{ void testMethod() {} }";
+                                               @Nullable String expectedSwiftComment) {
+        String javaClass =  "class TestClass{\n" + javadocComment + "\n  void testMethod() {\n  }\n}";
 
         CompilationUnit compilationUnit = parseCompilationUnit(javaClass);
 

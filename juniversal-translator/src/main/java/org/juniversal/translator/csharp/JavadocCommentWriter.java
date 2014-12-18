@@ -22,9 +22,10 @@
 
 package org.juniversal.translator.csharp;
 
-import org.eclipse.jdt.core.dom.Javadoc;
-import org.eclipse.jdt.core.dom.TagElement;
+import org.eclipse.jdt.core.dom.*;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,38 +41,39 @@ public class JavadocCommentWriter extends CSharpASTNodeWriter<Javadoc> {
     public void write(Javadoc javadoc) {
         boolean bWroteSummary = false;
         int tagCount = 0;
+        int tagFragCount = 0;
+
         for (Object tagObj: javadoc.tags()) {
             TagElement tag = (TagElement)tagObj;
             String tagName = tag.getTagName();
-            String tagString = stripLeadingTrailingWhitespaceAndLeadingAsterisk(tag.toString());
-            String prefix = tagCount++ == 0 ? "/// " : "\n/// ";
+            int position = tag.getStartPosition();
+            int lineNumber = getSourceFileWriter().getSourceLineNumber(position);
+            //String prefix = tagCount++ == 0 ? "/// " : "\n/// ";
+            StringBuffer output = new StringBuffer();
+
             if (tagName == null) {
                 if (!bWroteSummary) {
-                    write(prefix + "<summary>" + tagString + "</summary>");
+                    writeSummaryTag(lineNumber, tag);
                     bWroteSummary = true;
                 }
                 else
-                    write(prefix + "<remarks>" + tagString + "</remarks>");
+                    writeRemarksTag(lineNumber, tag);
             } else {
-                String tagAfterName = tagString.split("\\s+", 2)[1];
                 switch (tagName) {
                     case "@param":
-                        String split[] = tagAfterName.split("\\s+", 2);
-                        String name = split.length > 0 ? split[0] : "";
-                        String desc = split.length > 1 ? split[1] : "";
-                        write(prefix + "<param name=\"" + name + "\">" + desc + "</param>");
+                        writeParamTag(lineNumber, tag);
                         break;
                     case "@returns":
-                        write(prefix + "<returns>" + tagAfterName + "</returns>");
+                        writeReturnsTag(lineNumber, tag);
                         break;
                     case "@since":
-                        write(prefix + "<remarks> Since: " + tagAfterName + "</remarks>");
+                        writeSinceTag(lineNumber, tag);
                         break;
                     case "@author":
-                        write(prefix + "<remarks> Author: " + tagAfterName + "</remarks>");
+                        writeAuthorTag(lineNumber, tag);
                         break;
                     default:
-                        write(prefix + "<remarks>" + tagName + ": " + tagAfterName + "</remarks>");
+                        writeRemarksTag(lineNumber, tag);
                         break;
                 }
             }
@@ -79,15 +81,117 @@ public class JavadocCommentWriter extends CSharpASTNodeWriter<Javadoc> {
         setPositionToEndOfNode(javadoc);
     }
 
-    private static Pattern REGEX_LEADING_WHITESPACE_AND_ASTERISK = Pattern.compile("\\A\\s*\\*?\\s*");
-    private static Pattern REGEX_TRAILING_WHITESPACE = Pattern.compile("\\s*\\Z");
-
-    public static String stripLeadingTrailingWhitespaceAndLeadingAsterisk(String s) {
-        String ret = s;
-        Matcher m = REGEX_LEADING_WHITESPACE_AND_ASTERISK.matcher(ret);
-        ret = m.find() ? m.replaceFirst("") : ret;
-        m = REGEX_TRAILING_WHITESPACE.matcher(ret);
-        ret = m.matches() ? m.replaceFirst("") : ret;
-        return ret;
+    private void writeLineBreaks(int howMany) {
+        for (int i=0; i < howMany; i++)
+            write("\n/// ");
     }
+    private int writeFragments(int previousLineNumber, List<ASTNode> fragments) {
+        int lineNumber = previousLineNumber;
+        for (ASTNode fragment: fragments) {
+            lineNumber = writeFragment(previousLineNumber, fragment);
+            previousLineNumber = lineNumber;
+        }
+        return lineNumber;
+    }
+
+    private int writeFragment(int previousLineNumber, ASTNode fragment) {
+        int lineNumber = getSourceFileWriter().getSourceLineNumber(fragment.getStartPosition());
+        int lineNumberDiff = lineNumber - previousLineNumber;
+        writeLineBreaks(lineNumberDiff);
+        if (fragment instanceof TagElement) {
+            TagElement tagElement = (TagElement) fragment;
+            switch (tagElement.getTagName()) {
+                case "@code":
+                    lineNumber = writeInlineCodeTag(lineNumber, tagElement);
+                    break;
+                default:
+                    write("{" + tagElement.getTagName() + " ");
+                    stripLeadingSingleSpaceFromFirstFragment(tagElement.fragments());
+                    lineNumber = writeFragments(lineNumber, tagElement.fragments());
+                    write("}");
+                    break;
+            }
+        } else if (fragment instanceof TextElement) {
+            TextElement textElement = (TextElement) fragment;
+            String text = textElement.getText();
+            write(text);
+        } else if (fragment instanceof Name) {
+            Name name = (Name) fragment;
+            String text = name.getFullyQualifiedName();
+            write(text);
+        } else if (fragment instanceof MethodRef) {
+            MethodRef methodRef = (MethodRef) fragment;
+            // TODO: Probably need to do something different here.
+            String methodRefStr = methodRef.toString();
+            write(methodRefStr);
+        } else if (fragment instanceof MemberRef) {
+            MemberRef memberRef = (MemberRef) fragment;
+            // TODO: Probably need to do something different here.
+            String memberRefStr = memberRef.toString();
+            write(memberRefStr);
+        }
+        return lineNumber;
+    }
+
+    private void writeSummaryTag(int lineNumber, TagElement tag) {
+        write("/// <summary>\n");
+        write("/// ");
+        writeFragments(lineNumber, tag.fragments());
+        write("\n/// </summary>\n");
+    }
+
+    private void writeRemarksTag(int lineNumber, TagElement tag) {
+        write("/// <remarks>");
+        writeFragments(lineNumber, tag.fragments());
+        write("</remarks>\n");
+    }
+
+    private void writeParamTag(int lineNumber, TagElement tag) {
+        List<ASTNode> tagFrags = tag.fragments();
+        String name = tagFrags.size() >= 1 ? tagFrags.get(0).toString() : "";
+        tagFrags = tagFrags.subList(1, tagFrags.size());
+        write("/// <param name=\"" + name + "\">");
+        stripLeadingSingleSpaceFromFirstFragment(tagFrags);
+        writeFragments(lineNumber, tagFrags);
+        write("</param>\n");
+    }
+
+    private void writeReturnsTag(int lineNumber, TagElement tag) {
+        write("/// <returns>");
+        writeFragments(lineNumber, tag.fragments());
+        write("</returns>\n");
+    }
+
+    private void writeSinceTag(int lineNumber, TagElement tag) {
+        TextElement firstFragment = (TextElement)tag.fragments().get(0);
+        firstFragment.setText("Since:" + firstFragment.getText());
+        writeRemarksTag(lineNumber, tag);
+    }
+
+    private void writeAuthorTag(int lineNumber, TagElement tag) {
+        TextElement firstFragment = (TextElement)tag.fragments().get(0);
+        firstFragment.setText("Author:" + firstFragment.getText());
+        writeRemarksTag(lineNumber, tag);
+    }
+
+    private int writeInlineCodeTag(int lineNumber, TagElement tag) {
+        write("<c>");
+        stripLeadingSingleSpaceFromFirstFragment(tag.fragments());
+        lineNumber = writeFragments(lineNumber, tag.fragments());
+        write("</c>");
+        return lineNumber;
+    }
+
+    private void stripLeadingSingleSpaceFromFirstFragment(List<ASTNode> fragments) {
+        if (fragments.size() > 0) {
+            ASTNode firstFragment = fragments.get(0);
+            if (firstFragment instanceof TextElement) {
+                TextElement textElement = (TextElement)firstFragment;
+                String text = textElement.getText();
+                text = text.startsWith(" ") ? text.substring(1) : text;
+                textElement.setText(text);
+            }
+        }
+    }
+
 }
