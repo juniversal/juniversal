@@ -22,12 +22,13 @@
 
 package org.juniversal.translator.csharp;
 
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.CatchClause;
+import org.eclipse.jdt.core.dom.TryStatement;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.csharp.CSharpASTNodeWriter;
-import org.juniversal.translator.csharp.CSharpSourceFileWriter;
 
-import java.util.List;
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public class TryStatementWriter extends CSharpASTNodeWriter<TryStatement> {
@@ -40,17 +41,14 @@ public class TryStatementWriter extends CSharpASTNodeWriter<TryStatement> {
     @Override
     public void write(TryStatement tryStatement) {
         if (tryStatement.resources().size() > 0)
-                writeTryWithResources(tryStatement);
+            writeTryWithResources(tryStatement);
         else {
             matchAndWrite("try");
 
             copySpaceAndComments();
             writeNode(tryStatement.getBody());
 
-            List<?> catchClauses = tryStatement.catchClauses();
-            for (Object catchClauseObject : catchClauses) {
-                CatchClause catchClause = (CatchClause) catchClauseObject;
-
+            forEach(tryStatement.catchClauses(), (CatchClause catchClause) -> {
                 copySpaceAndComments();
                 matchAndWrite("catch");
 
@@ -65,7 +63,7 @@ public class TryStatementWriter extends CSharpASTNodeWriter<TryStatement> {
 
                 copySpaceAndComments();
                 writeNode(catchClause.getBody());
-            }
+            });
 
             @Nullable Block finallyBlock = tryStatement.getFinally();
             if (finallyBlock != null) {
@@ -84,20 +82,15 @@ public class TryStatementWriter extends CSharpASTNodeWriter<TryStatement> {
         copySpaceAndComments();
         matchAndWrite("(");
 
-        boolean first = true;
-        for (Object resourceDeclarationObject : tryStatement.resources()) {
-            // TODO: Check handling multiple variables, with same type, included as part of single declaration
-            VariableDeclarationExpression resourceDeclaration = (VariableDeclarationExpression) resourceDeclarationObject;
-
-            if (! first) {
+        // TODO: Check handling multiple variables, with same type, included as part of single declaration
+        forEach(tryStatement.resources(), (VariableDeclarationExpression resourceDeclaration, boolean first) -> {
+            if (!first) {
                 copySpaceAndComments();
                 matchAndWrite(";", ",");
             }
 
             writeNode(resourceDeclaration);
-
-            first = false;
-        }
+        });
 
         copySpaceAndComments();
         matchAndWrite(")");

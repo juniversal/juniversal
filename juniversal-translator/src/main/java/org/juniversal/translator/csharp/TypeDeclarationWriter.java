@@ -40,6 +40,11 @@ public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> 
         getContext().setTypeDeclaration(typeDeclaration);
 
         try {
+            if (isFunctionalInterface(typeDeclaration))   {
+                writeFunctionalInterfaceAsDelegate(typeDeclaration);
+                return;
+            }
+
             List<?> modifiers = typeDeclaration.modifiers();
             if (outerTypeDeclaration != null) {
                 if (! containsStatic(modifiers))
@@ -98,17 +103,61 @@ public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> 
             copySpaceAndComments();
             matchAndWrite("{");
 
-            for (Object astNodeObject : typeDeclaration.bodyDeclarations()) {
-                BodyDeclaration bodyDeclaration = (BodyDeclaration) astNodeObject;
+            forEach(typeDeclaration.bodyDeclarations(), (BodyDeclaration bodyDeclaration) -> {
                 copySpaceAndCommentsTranslatingJavadoc(bodyDeclaration.getJavadoc());
                 writeNode(bodyDeclaration);
-            }
+            });
 
             copySpaceAndComments();
             matchAndWrite("}");
         } finally {
             getContext().setTypeDeclaration(outerTypeDeclaration);
         }
+    }
+
+    private void writeFunctionalInterfaceAsDelegate(TypeDeclaration typeDeclaration) {
+        MethodDeclaration functionalInterfaceMethod = getFunctionalInterfaceMethod(typeDeclaration);
+
+        List typeDeclarationModifiers = typeDeclaration.modifiers();
+        skipModifiers(typeDeclarationModifiers);
+        writeAccessModifier(typeDeclarationModifiers);
+
+        skipSpaceAndComments();
+        matchAndWrite("interface", "delegate");
+
+        copySpaceAndComments();
+
+        setPositionToStartOfNode(functionalInterfaceMethod);
+        skipModifiers(functionalInterfaceMethod.modifiers());
+        skipSpaceAndComments();
+        writeNode(functionalInterfaceMethod.getReturnType2());
+
+        copySpaceAndComments();
+        // Write the interface name, not the method name, as the name of the delegate
+        matchAndWrite(
+                functionalInterfaceMethod.getName().getIdentifier(),
+                typeDeclaration.getName().getIdentifier());
+
+        copySpaceAndComments();
+        matchAndWrite("(");
+
+        forEach(functionalInterfaceMethod.parameters(), (SingleVariableDeclaration singleVariableDeclaration, boolean first) -> {
+            if (!first) {
+                copySpaceAndComments();
+                matchAndWrite(",");
+            }
+
+            copySpaceAndComments();
+            writeNode(singleVariableDeclaration);
+        });
+
+        copySpaceAndComments();
+        matchAndWrite(")");
+
+        copySpaceAndComments();
+        matchAndWrite(";");
+
+        setPositionToEndOfNode(typeDeclaration);
     }
 
     private void writeSuperClassAndInterfaces(TypeDeclaration typeDeclaration) {

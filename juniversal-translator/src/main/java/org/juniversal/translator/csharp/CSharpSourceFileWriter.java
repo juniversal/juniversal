@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import static org.juniversal.translator.core.ASTUtil.forEach;
 import static org.juniversal.translator.core.ASTUtil.isArrayLengthField;
 import static org.juniversal.translator.core.ASTUtil.isType;
 
@@ -198,15 +199,13 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
             public void write(ArrayType arrayType) {
                 writeNode(arrayType.getElementType());
 
-                for (Object dimensionObject : arrayType.dimensions()) {
-                    Dimension dimension = (Dimension) dimensionObject;
-
+                forEach(arrayType.dimensions(), (Dimension dimension) -> {
                     copySpaceAndComments();
                     matchAndWrite("[");
 
                     copySpaceAndComments();
                     matchAndWrite("]");
-                }
+                });
             }
         });
 

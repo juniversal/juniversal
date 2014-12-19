@@ -120,6 +120,23 @@ public class ASTUtil {
     }
 
     /**
+     * Return true is the specified modifier is an @Nullable annotation.   Currently we don't care about, nor even
+     * support, fully qualified names for the @Nullable annotation.   Any non-qualified name that's @Nullable counts
+     * here, but fully qualified names currently never do currently.   The intention is that the programmer can pick
+     * between several different @Nullable annotations, though JSimple code currently uses the IntelliJ one.
+     *
+     * @param extendedModifier modifier in question
+     * @return true if modifier is an annotation for @Nullable, false otherwise
+     */
+    public static boolean isFunctionalInterface(IExtendedModifier extendedModifier) {
+        if (!(extendedModifier instanceof MarkerAnnotation))
+            return false;
+
+        Name typeName = ((MarkerAnnotation) extendedModifier).getTypeName();
+        return typeName.isSimpleName() && ((SimpleName) typeName).getIdentifier().equals("FunctionalInterface");
+    }
+
+    /**
      * Return true is the specified modifier is "final".
      *
      * @param extendedModifier modifier in question
@@ -363,6 +380,19 @@ public class ASTUtil {
         return false;
     }
 
+    public static boolean isFunctionalInterface(TypeDeclaration typeDeclaration) {
+        boolean hasAnnotation = false;
+        for (Object extendedModifierObject : typeDeclaration.modifiers()) {
+            IExtendedModifier extendedModifier = (IExtendedModifier) extendedModifierObject;
+            if (isFunctionalInterface(extendedModifier)) {
+                hasAnnotation = true;
+                break;
+            }
+        }
+
+        return hasAnnotation;
+    }
+
     public static boolean isFunctionalInterfaceImplementation(SourceFileWriter sourceFileWriter, Type type) {
         ITypeBinding typeBinding = sourceFileWriter.resolveTypeBinding(type);
 
@@ -371,6 +401,16 @@ public class ASTUtil {
 
         int methodCount = typeBinding.getDeclaredMethods().length;
         if (methodCount != 1)
+            return false;
+
+        boolean hasFunctionalInterfaceAnnotation = false;
+        typeBinding.getAnnotations();
+        for (IAnnotationBinding annotationBinding : typeBinding.getAnnotations()) {
+            annotationBinding.getAnnotationType().getQualifiedName().equals("java.lang.FunctionalInterface");
+            hasFunctionalInterfaceAnnotation = true;
+        }
+        
+        if (! hasFunctionalInterfaceAnnotation)
             return false;
 
         // TODO: Ensure no default implementation (I think) nor constants defined for the interface
@@ -393,7 +433,7 @@ public class ASTUtil {
     public static void addWildcardTypes(Type type, ArrayList<WildcardType> wildcardTypes) {
         if (type.isParameterizedType()) {
             ParameterizedType parameterizedType = (ParameterizedType) type;
-            
+
             for (Object typeArgumentObject : parameterizedType.typeArguments()) {
                 Type typeArgument = (Type) typeArgumentObject;
                 addWildcardTypes(typeArgument, wildcardTypes);

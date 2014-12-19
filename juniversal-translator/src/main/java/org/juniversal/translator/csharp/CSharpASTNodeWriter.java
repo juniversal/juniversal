@@ -30,6 +30,7 @@ import org.juniversal.translator.core.JUniversalException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.juniversal.translator.core.ASTUtil.forEach;
 import static org.juniversal.translator.core.ASTUtil.getAccessModifier;
 
 
@@ -118,9 +119,7 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
     }
 
     public void writeTypeParameterConstraints(List typeParameters) {
-        for (Object typeParameterObject : typeParameters) {
-            TypeParameter typeParameter = (TypeParameter) typeParameterObject;
-
+        forEach(typeParameters, (TypeParameter typeParameter) -> {
             boolean encounteredBound = false;
             for (Object typeBoundObject : typeParameter.typeBounds()) {
                 Type typeBound = (Type) typeBoundObject;
@@ -141,7 +140,7 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
                 write(typeParameter.getName().getIdentifier());
                 write(" : class");
             }
-        }
+        });
     }
 
     public void writeWildcardTypeSyntheticName(ArrayList<WildcardType> wildcardTypes, WildcardType wildcardType) {

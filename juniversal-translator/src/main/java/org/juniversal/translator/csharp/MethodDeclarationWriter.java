@@ -118,10 +118,9 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         matchAndWrite(methodDeclaration.getName().getIdentifier(), mappedMethodName);
 
         ArrayList<WildcardType> wildcardTypes = new ArrayList<>();
-        for (Object parameterObject : methodDeclaration.parameters()) {
-            SingleVariableDeclaration parameter = (SingleVariableDeclaration) parameterObject;
+        forEach(methodDeclaration.parameters(), (SingleVariableDeclaration parameter) -> {
             addWildcardTypes(parameter.getType(), wildcardTypes);
-        }
+        });
 
         if (methodIsConstructor && !wildcardTypes.isEmpty())
             throw sourceNotSupported("C# constructors can't take arguments that use generic wildcard types; consider replacing this constructor with a static create method instead, taking the same generic arguments");
@@ -209,12 +208,7 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
     private void writeParameterList(MethodDeclaration methodDeclaration) {
         matchAndWrite("(");
 
-        List<?> parameters = methodDeclaration.parameters();
-
-        boolean first = true;
-        for (Object parameterObject : parameters) {
-            SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) parameterObject;
-
+        forEach(methodDeclaration.parameters(), (SingleVariableDeclaration singleVariableDeclaration, boolean first) -> {
             if (!first) {
                 copySpaceAndComments();
                 matchAndWrite(",");
@@ -222,9 +216,7 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
 
             copySpaceAndComments();
             writeNode(singleVariableDeclaration);
-
-            first = false;
-        }
+        });
 
         copySpaceAndComments();
         matchAndWrite(")");
@@ -236,16 +228,12 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         // we don't declare all exceptions for C++ we can't declare any since we never want
         // unexpected() to be called
         List<?> thrownExceptions = methodDeclaration.thrownExceptionTypes();
-        boolean first;
         if (thrownExceptions.size() > 0) {
             copySpaceAndComments();
             write("/* ");
             matchAndWrite("throws");
 
-            first = true;
-            for (Object exceptionTypeObject : thrownExceptions) {
-                Type exceptionType = (Type) exceptionTypeObject;
-
+            forEach(thrownExceptions, (Type exceptionType, boolean first) -> {
                 skipSpaceAndComments();
                 if (first)
                     write(" ");
@@ -257,9 +245,8 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
                 }
 
                 writeNode(exceptionType);
+            });
 
-                first = false;
-            }
             write(" */");
         }
     }
@@ -305,10 +292,7 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         copySpaceAndComments();
         matchAndWrite("{");
 
-        boolean first = true;
-        for (Object statementObject : (List<?>) body.statements()) {
-            Statement statement = (Statement) statementObject;
-
+        forEach(body.statements(), (Statement statement, boolean first) -> {
             // If the first statement is a super constructor invocation, we skip it since
             // it's included as part of the method declaration in C++. If a super
             // constructor invocation is a statement other than the first, which it should
@@ -319,9 +303,7 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
                 copySpaceAndComments();
                 writeNode(statement);
             }
-
-            first = false;
-        }
+        });
 
         copySpaceAndComments();
         matchAndWrite("}");

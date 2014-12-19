@@ -24,6 +24,8 @@ package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Javadoc;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -35,7 +37,7 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
     public boolean canProcessTrailingWhitespaceOrComments() {
         return false;
     }
-    
+
     protected abstract SourceFileWriter getSourceFileWriter();
 
     protected void writeNode(ASTNode node) {
@@ -96,6 +98,14 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
         }
     }
 
+    public <TElmt> void writeNodes(List list, ASTUtil.IProcessListElmt<TElmt> processList) {
+        boolean first = true;
+        for (Object elmtObject : list) {
+            TElmt elmt = (TElmt) elmtObject;
+            processList.process(elmt);
+        }
+    }
+
     public SourceNotSupportedException sourceNotSupported(String baseMessage) {
         return getSourceFileWriter().sourceNotSupported(baseMessage);
     }
@@ -121,8 +131,7 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
             copySpaceAndCommentsUntilPosition(javadoc.getStartPosition());
             writeNode(javadoc);
             copySpaceAndComments();
-        }
-        else copySpaceAndComments();
+        } else copySpaceAndComments();
     }
 
     public void copySpaceAndCommentsUntilPosition(int justUntilPosition) {
@@ -248,5 +257,17 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
 
     public int getPreferredIndent() {
         return getSourceFileWriter().getPreferredIndent();
+    }
+
+    public MethodDeclaration getFunctionalInterfaceMethod(TypeDeclaration typeDeclaration) {
+        if (!typeDeclaration.isInterface())
+            throw sourceNotSupported("Type has @FunctionalInterface annotation but isn't an interface");
+
+        MethodDeclaration[] methodDeclarations = typeDeclaration.getMethods();
+        int methodCount = methodDeclarations.length;
+        if (methodCount != 1)
+            throw sourceNotSupported("Interface has " + methodCount + " methods, when it should have exactly 1 method, to be a functional interface");
+
+        return methodDeclarations[0];
     }
 }

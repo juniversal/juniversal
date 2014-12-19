@@ -27,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.BufferTargetWriter;
 import org.juniversal.translator.core.SourceFileWriter;
 
+import static org.juniversal.translator.core.ASTUtil.forEach;
 import static org.juniversal.translator.core.ASTUtil.isThisName;
 
 
@@ -69,14 +70,13 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
     }
 
     private void writeUsingStatements(CompilationUnit compilationUnit) {
-        for (Object importDeclarationObject : compilationUnit.imports()) {
-            ImportDeclaration importDeclaration = (ImportDeclaration) importDeclarationObject;
+        forEach(compilationUnit.imports(), (ImportDeclaration importDeclaration) -> {
             Name importDeclarationName = importDeclaration.getName();
 
             // Skip imports for the Nullable annotation
             if (isThisName(importDeclarationName, "org.jetbrains.annotations.Nullable")) {
                 setPositionToEndOfNode(importDeclaration);
-                continue;
+                return;
             }
 
             if (importDeclaration.isStatic())
@@ -101,7 +101,7 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
 
             copySpaceAndComments();
             matchAndWrite(";");
-        }
+        });
 
         for (String extraUsing : getContext().getExtraUsings()) {
             write("using ");

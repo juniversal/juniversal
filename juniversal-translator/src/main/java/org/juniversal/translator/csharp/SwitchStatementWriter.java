@@ -25,6 +25,9 @@ package org.juniversal.translator.csharp;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SwitchCase;
 import org.eclipse.jdt.core.dom.SwitchStatement;
+import org.juniversal.translator.core.ASTUtil;
+
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> {
@@ -50,9 +53,7 @@ public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> 
         copySpaceAndComments();
         matchAndWrite("{");
 
-        for (Object statementObject : switchStatement.statements()) {
-            Statement statement = (Statement) statementObject;
-
+        forEach(switchStatement.statements(), (Statement statement, boolean first) -> {
             if (statement instanceof SwitchCase) {
                 copySpaceAndComments();
                 writeSwitchCase((SwitchCase) statement);
@@ -60,7 +61,7 @@ public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> 
                 copySpaceAndComments();
                 writeNode(statement);
             }
-        }
+        });
 
         copySpaceAndComments();
         matchAndWrite("}");
