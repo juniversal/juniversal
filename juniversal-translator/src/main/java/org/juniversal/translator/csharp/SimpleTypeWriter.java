@@ -36,13 +36,13 @@ public class SimpleTypeWriter extends CSharpASTNodeWriter<SimpleType> {
 
         primitiveWrapperClassMapping = new HashMap<>();
         primitiveWrapperClassMapping.put("java.lang.Byte", "Byte?");
-        primitiveWrapperClassMapping.put("java.lang.Short", "Short?");
-        primitiveWrapperClassMapping.put("java.lang.Integer", "Integer?");
-        primitiveWrapperClassMapping.put("java.lang.Long", "Long?");
+        primitiveWrapperClassMapping.put("java.lang.Short", "Int16?");
+        primitiveWrapperClassMapping.put("java.lang.Integer", "Int32?");
+        primitiveWrapperClassMapping.put("java.lang.Long", "Int64?");
         primitiveWrapperClassMapping.put("java.lang.Float", "Single?");
         primitiveWrapperClassMapping.put("java.lang.Double", "Double?");
         primitiveWrapperClassMapping.put("java.lang.Character", "Char?");
-        primitiveWrapperClassMapping.put("java.lang.Boolean", "Bool?");
+        primitiveWrapperClassMapping.put("java.lang.Boolean", "Boolean?");
     }
 
     @Override
@@ -61,15 +61,13 @@ public class SimpleTypeWriter extends CSharpASTNodeWriter<SimpleType> {
         } else if (fullyQualifiedTypeName.equals("java.lang.String")) {
             matchNodeAndWrite(name, "string");
         } else if (fullyQualifiedTypeName.equals("java.lang.Cloneable")) {
-            matchNodeAndWrite(name, "ICloneable");
+            matchNodeAndWrite(name, nativeReference("System", "ICloneable"));
         } else if (mappedPrimitiveWrapper != null) {
-            matchNodeAndWrite(name, mappedPrimitiveWrapper);
+            matchNodeAndWrite(name, nativeReference("System", mappedPrimitiveWrapper));
         } else if (fullyQualifiedTypeName.equals("java.lang.StringBuilder")) {
-            getContext().addExtraUsing("System.Text");
-            matchNodeAndWrite(name, "StringBuilder");
+            matchNodeAndWrite(name, nativeReference("System.Text", "StringBuilder"));
         } else if (fullyQualifiedTypeName.equals("java.lang.Throwable")) {
-            getContext().addExtraUsing("System");
-            matchNodeAndWrite(name, "Exception");
+            matchNodeAndWrite(name, nativeReference("System", "Exception"));
         } else if (name instanceof QualifiedName) {
             QualifiedName qualifiedName = (QualifiedName) name;
 

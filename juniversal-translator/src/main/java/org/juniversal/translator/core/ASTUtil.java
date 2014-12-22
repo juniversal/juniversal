@@ -28,6 +28,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class ASTUtil {
 
@@ -393,6 +395,11 @@ public class ASTUtil {
         return hasAnnotation;
     }
 
+    public static boolean isGenericImport(ImportDeclaration importDeclaration) {
+        @Nullable IBinding binding = importDeclaration.resolveBinding();
+        return binding != null && binding instanceof ITypeBinding && ((ITypeBinding) binding).isGenericType();
+    }
+
     public static boolean isFunctionalInterfaceImplementation(SourceFileWriter sourceFileWriter, Type type) {
         ITypeBinding typeBinding = sourceFileWriter.resolveTypeBinding(type);
 
@@ -404,13 +411,12 @@ public class ASTUtil {
             return false;
 
         boolean hasFunctionalInterfaceAnnotation = false;
-        typeBinding.getAnnotations();
         for (IAnnotationBinding annotationBinding : typeBinding.getAnnotations()) {
             annotationBinding.getAnnotationType().getQualifiedName().equals("java.lang.FunctionalInterface");
             hasFunctionalInterfaceAnnotation = true;
         }
-        
-        if (! hasFunctionalInterfaceAnnotation)
+
+        if (!hasFunctionalInterfaceAnnotation)
             return false;
 
         // TODO: Ensure no default implementation (I think) nor constants defined for the interface
@@ -434,10 +440,9 @@ public class ASTUtil {
         if (type.isParameterizedType()) {
             ParameterizedType parameterizedType = (ParameterizedType) type;
 
-            for (Object typeArgumentObject : parameterizedType.typeArguments()) {
-                Type typeArgument = (Type) typeArgumentObject;
+            forEach(parameterizedType.typeArguments(), (Type typeArgument) -> {
                 addWildcardTypes(typeArgument, wildcardTypes);
-            }
+            });
         } else if (type.isWildcardType()) {
             WildcardType wildcardType = (WildcardType) type;
 
@@ -450,28 +455,36 @@ public class ASTUtil {
     }
 
     @FunctionalInterface
-    public interface IProcessListElmt<T> {
-        public void process(T elmt);
+    public interface ConsumerWithFirst<T> {
+        public void accept(T elmt, boolean first);
     }
 
-    @FunctionalInterface
-    public interface IProcessListElmtWithFirst<T> {
-        public void process(T elmt, boolean first);
-    }
-
-    public static <T> void forEach(List list, IProcessListElmt<T> processList) {
+    public static <T> boolean forEach(List list, Consumer<T> consumer) {
+        boolean hasItem = false;
         for (Object elmtObject : list) {
             T elmt = (T) elmtObject;
-            processList.process(elmt);
+            consumer.accept(elmt);
+            hasItem = true;
         }
+        return hasItem;
     }
 
-    public static <T> void forEach(List list, IProcessListElmtWithFirst<T> listDo) {
+    public static <T> boolean forEach(List list, ConsumerWithFirst<T> consumerWithFirst) {
         boolean first = true;
         for (Object elmtObject : list) {
             T elmt = (T) elmtObject;
-            listDo.process(elmt, first);
+            consumerWithFirst.accept(elmt, first);
             first = false;
         }
+        return !first;
+    }
+
+    public static <T> boolean anyMatch(List list, Predicate<? super T> predicate) {
+        for (Object elmtObject : list) {
+            T elmt = (T) elmtObject;
+            if (predicate.test(elmt))
+                return true;
+        }
+        return false;
     }
 }

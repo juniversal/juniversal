@@ -26,8 +26,13 @@ import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.BufferTargetWriter;
 import org.juniversal.translator.core.SourceFileWriter;
+import org.juniversal.translator.core.Var;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
+import static org.juniversal.translator.core.ASTUtil.isGenericImport;
 import static org.juniversal.translator.core.ASTUtil.isThisName;
 
 
@@ -53,8 +58,7 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
         if (packageDeclaration != null) {
             // TODO: This results in an extra newline normally; distinguish between case where package is only thing on line & multiple things on that line
             setPositionToEndOfNodeSpaceAndComments(packageDeclaration);
-        }
-        else {
+        } else {
             setPositionToStartOfNode(compilationUnit);
             skipSpaceAndComments();
         }
@@ -70,6 +74,9 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
     }
 
     private void writeUsingStatements(CompilationUnit compilationUnit) {
+        Set<String> genericUsings = new HashSet<>();
+
+        Var<Boolean> wroteUsing = new Var<>(false);
         forEach(compilationUnit.imports(), (ImportDeclaration importDeclaration) -> {
             Name importDeclarationName = importDeclaration.getName();
 
@@ -82,26 +89,43 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
             if (importDeclaration.isStatic())
                 throw sourceNotSupported("Static imports aren't currently supported");
 
+            if (!(importDeclarationName instanceof QualifiedName))
+                throw sourceNotSupported("Class import is unexpectedly not a fully qualified name (with a '.' in it)");
+            QualifiedName qualifiedName = (QualifiedName) importDeclarationName;
+
+            @Nullable String namespaceToImportForGenericClass = null;
+            if (isGenericImport(importDeclaration)) {
+                namespaceToImportForGenericClass = qualifiedName.getQualifier().getFullyQualifiedName();
+                if (genericUsings.contains(namespaceToImportForGenericClass))
+                    return;
+            }
+
             copySpaceAndComments();
             matchAndWrite("import", "using");
 
+            copySpaceAndComments();
             if (importDeclaration.isOnDemand()) {
-                copySpaceAndComments();
                 writeNode(importDeclarationName);
             } else {
-                if (!(importDeclarationName instanceof QualifiedName))
-                    throw sourceNotSupported("Class import is unexpectedly not a fully qualified name (with a '.' in it)");
-                QualifiedName qualifiedName = (QualifiedName) importDeclarationName;
-
-                copySpaceAndComments();
-                writeNodeAtDifferentPosition(qualifiedName.getName());
-                write(" = ");
-                writeNode(qualifiedName);
+                if (namespaceToImportForGenericClass != null) {
+                    write(namespaceToImportForGenericClass);
+                    genericUsings.add(namespaceToImportForGenericClass);
+                    setPositionToEndOfNode(qualifiedName);
+                }
+                else {
+                    writeNodeAtDifferentPosition(qualifiedName.getName());
+                    write(" = ");
+                    writeNode(qualifiedName);
+                }
             }
 
             copySpaceAndComments();
             matchAndWrite(";");
+            wroteUsing.set(true);
         });
+
+        if (wroteUsing.get())
+            writeln();
 
         for (String extraUsing : getContext().getExtraUsings()) {
             write("using ");

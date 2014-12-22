@@ -208,9 +208,7 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
 
                 case "endsWith":
                     verifyArgCount(args, 1);
-
-                    getContext().addExtraUsing("System");
-                    writeMappedMethod("EndsWith", args.get(0), "StringComparison.Ordinal");
+                    writeMappedMethod("EndsWith", args.get(0), nativeReference("System", "StringComparison.Ordinal"));
                     break;
 
                 case "getChars":
@@ -251,8 +249,7 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
                 case "startsWith":
                     verifyArgCount(args, 1);
 
-                    getContext().addExtraUsing("System");
-                    writeMappedMethod("StartsWith", args.get(0), "StringComparison.Ordinal");
+                    writeMappedMethod("StartsWith", args.get(0), nativeReference("System", "StringComparison.Ordinal"));
                     break;
 
                 case "substring":

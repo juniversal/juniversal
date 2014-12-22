@@ -114,6 +114,10 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
         addWriter(VariableDeclarationFragment.class, new CSharpASTNodeWriter<VariableDeclarationFragment>(this) {
             @Override
             public void write(VariableDeclarationFragment variableDeclarationFragment) {
+                String name = variableDeclarationFragment.getName().getIdentifier();
+                if (getContext().getTypeMethodNames().contains(name))
+                    throw sourceNotSupported("Class also contains a method with name '" + name + "'; in C#, unlike Java, a class can't have a method and a variable with the same name, so rename one of them");
+
                 // TODO: Handle syntax with extra dimensions on array
                 if (variableDeclarationFragment.getExtraDimensions() > 0)
                     throw sourceNotSupported("\"int foo[]\" array type syntax not currently supported; use \"int[] foo\" instead");
@@ -505,9 +509,8 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
         addWriter(AssertStatement.class, new CSharpASTNodeWriter<AssertStatement>(this) {
             @Override
             public void write(AssertStatement assertStatement) {
-                getContext().addExtraUsing("System.Diagnostics");
-
-                matchAndWrite("assert", "Debug.Assert(");
+                matchAndWrite("assert", nativeReference("System.Diagnostics", "Debug.Assert"));
+                write("(");
 
                 skipSpaceAndComments();
                 writeNode(assertStatement.getExpression());

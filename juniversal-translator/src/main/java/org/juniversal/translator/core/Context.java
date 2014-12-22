@@ -23,18 +23,15 @@
 package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.cplusplus.OutputType;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-
-import static org.juniversal.translator.core.ASTUtil.isAnnotation;
-import static org.juniversal.translator.core.ASTUtil.isFinal;
+import java.util.Set;
 
 public class Context {
     private TypeDeclaration typeDeclaration;
+    private @Nullable Set<String> typeMethodNames = null;
     private ArrayList<WildcardType> methodWildcardTypes = null;
     private boolean writingMethodImplementation;
 
@@ -43,8 +40,29 @@ public class Context {
         return typeDeclaration;
     }
 
+    public Set<String> getTypeMethodNames() {
+        if (typeMethodNames != null)
+            return typeMethodNames;
+
+        typeMethodNames = new HashSet<>();
+
+        ITypeBinding typeBinding = typeDeclaration.resolveBinding();
+        while (typeBinding != null) {
+            for (IMethodBinding methodBinding : typeBinding.getDeclaredMethods()) {
+                typeMethodNames.add(methodBinding.getName());
+            }
+
+            typeBinding = typeBinding.getSuperclass();
+        }
+
+        return typeMethodNames;
+    }
+
     public void setTypeDeclaration(TypeDeclaration typeDeclaration) {
-        this.typeDeclaration = typeDeclaration;
+        if (typeDeclaration != this.typeDeclaration) {
+            this.typeDeclaration = typeDeclaration;
+            this.typeMethodNames = null;
+        }
     }
 
     public ArrayList<WildcardType> getMethodWildcardTypes() {

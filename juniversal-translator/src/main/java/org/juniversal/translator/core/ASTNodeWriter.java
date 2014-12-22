@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 
 public abstract class ASTNodeWriter<T extends ASTNode> {
@@ -57,7 +58,7 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
         getSourceFileWriter().writeNodeAtDifferentPosition(node);
     }
 
-    public <TElmt> void writeCommaDelimitedNodes(List list, ASTUtil.IProcessListElmt<TElmt> processList) {
+    public <TElmt> void writeCommaDelimitedNodes(List list, Consumer<TElmt> processList) {
         boolean first = true;
         for (Object elmtObject : list) {
             if (!first) {
@@ -66,7 +67,7 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
             }
 
             TElmt elmt = (TElmt) elmtObject;
-            processList.process(elmt);
+            processList.accept(elmt);
 
             first = false;
         }
@@ -98,11 +99,11 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
         }
     }
 
-    public <TElmt> void writeNodes(List list, ASTUtil.IProcessListElmt<TElmt> processList) {
+    public <TElmt> void writeNodes(List list, Consumer<TElmt> consumer) {
         boolean first = true;
         for (Object elmtObject : list) {
             TElmt elmt = (TElmt) elmtObject;
-            processList.process(elmt);
+            consumer.accept(elmt);
         }
     }
 
@@ -205,6 +206,18 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
 
     public void writeSpaces(int count) {
         getSourceFileWriter().writeSpaces(count);
+    }
+
+    /**
+     * Indent as required so the next output written will be at the specified target column.   If the target writer is
+     * already past that column, then nothing is output.
+     *
+     * @param column target column to indent to
+     */
+    public void indentToColumn(int column) {
+        int currentColumn = getTargetColumn();
+        if (currentColumn < column)
+            writeSpaces(column - currentColumn);
     }
 
     public void writeSpacesUntilColumn(int column) {

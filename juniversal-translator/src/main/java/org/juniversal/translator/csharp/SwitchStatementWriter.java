@@ -22,10 +22,9 @@
 
 package org.juniversal.translator.csharp;
 
-import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.SwitchCase;
-import org.eclipse.jdt.core.dom.SwitchStatement;
-import org.juniversal.translator.core.ASTUtil;
+import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.Nullable;
+import org.juniversal.translator.core.Var;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
 
@@ -37,7 +36,7 @@ public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> 
 
     @Override
     public void write(SwitchStatement switchStatement) {
-        // TODO: Handle string swtich statements
+        // TODO: Handle string switch statements
         // TODO: Check for fall through of cases (disallowed in C#)
 
         matchAndWrite("switch");
@@ -53,12 +52,36 @@ public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> 
         copySpaceAndComments();
         matchAndWrite("{");
 
+        Var<Statement> previousStatement = new Var<>();
+        Var<Integer> previousStatementIndent = new Var<>();
+
         forEach(switchStatement.statements(), (Statement statement, boolean first) -> {
             if (statement instanceof SwitchCase) {
+                SwitchCase switchCase = (SwitchCase) statement;
+
+                if (previousStatement.isSet() && !(previousStatement.get() instanceof BreakStatement ||
+                        previousStatement.get() instanceof ContinueStatement ||
+                        previousStatement.get() instanceof ReturnStatement)) {
+
+                    copySpaceAndCommentsUntilEOL();
+                    writeln();
+                    indentToColumn(previousStatementIndent.get());
+
+                    write("goto case ");
+                    writeCaseLabelAtOtherPosition(switchCase.getExpression());
+                    write(";");
+                }
+
                 copySpaceAndComments();
-                writeSwitchCase((SwitchCase) statement);
+                writeSwitchCase(switchCase);
+
+                previousStatement.clear();
             } else {
                 copySpaceAndComments();
+
+                previousStatement.set(statement);
+                previousStatementIndent.set(getTargetColumn());
+
                 writeNode(statement);
             }
         });
@@ -77,10 +100,41 @@ public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> 
             matchAndWrite("case");
 
             copySpaceAndComments();
-            writeNode(switchCase.getExpression());
+            writeCaseLabel(switchCase.getExpression());
 
             copySpaceAndComments();
             matchAndWrite(":");
         }
+    }
+
+    private void writeCaseLabelAtOtherPosition(Expression expression) {
+        int savedPosition = getPosition();
+        setPositionToStartOfNode(expression);
+        writeCaseLabel(expression);
+        setPosition(savedPosition);
+    }
+
+    /**
+     * Write the case label if it's an enum constant.  Enum constant switch labels in Java don't need to use a qualified
+     * name, including the enum type.   That is FOO is valid for a case label; you don't have to say EnumType.FOO.
+     * However, that's not the case in C#.   So map accordingly, writing the fully qualified name for enum constants.
+     *
+     * @param expression case label expression
+     */
+    private void writeCaseLabel(Expression expression) {
+        if (expression instanceof SimpleName) {
+            SimpleName simpleName = (SimpleName) expression;
+
+            @Nullable ITypeBinding typeBinding = simpleName.resolveTypeBinding();
+            if (typeBinding != null && typeBinding.isEnum()) {
+                // TODO: Add using statement if needed (test to verify this case exists)
+                write(typeBinding.getName() + ".");
+                writeNode(expression);
+
+                return;
+            }
+        }
+
+        writeNode(expression);
     }
 }

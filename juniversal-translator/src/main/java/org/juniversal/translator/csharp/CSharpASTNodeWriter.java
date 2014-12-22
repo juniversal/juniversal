@@ -191,4 +191,9 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
     public static String getNamespaceNameForPackageName(String packageName) {
         return packageName;
     }
+
+    public String nativeReference(String namespace, String name) {
+        getContext().addExtraUsing(namespace);
+        return name;
+    }
 }
