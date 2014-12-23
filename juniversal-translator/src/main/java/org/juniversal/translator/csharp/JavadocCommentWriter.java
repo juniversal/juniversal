@@ -24,13 +24,11 @@ package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.*;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
- * Created by cingram on 12/10/2014.
+ * @author Chris Ingram
+ * @since 12/10/2014
  */
 public class JavadocCommentWriter extends CSharpASTNodeWriter<Javadoc> {
     protected JavadocCommentWriter(CSharpSourceFileWriter cSharpASTWriters) {
@@ -39,24 +37,21 @@ public class JavadocCommentWriter extends CSharpASTNodeWriter<Javadoc> {
 
     @Override
     public void write(Javadoc javadoc) {
-        boolean bWroteSummary = false;
-        int tagCount = 0;
-        int tagFragCount = 0;
+        int previousAdditionalIndentation = getTargetWriter().setAdditionalIndentation(getTargetWriter().getCurrColumn());
 
-        for (Object tagObj: javadoc.tags()) {
-            TagElement tag = (TagElement)tagObj;
+        boolean wroteSummary = false;
+        for (Object tagObj : javadoc.tags()) {
+            TagElement tag = (TagElement) tagObj;
             String tagName = tag.getTagName();
             int position = tag.getStartPosition();
             int lineNumber = getSourceFileWriter().getSourceLineNumber(position);
             //String prefix = tagCount++ == 0 ? "/// " : "\n/// ";
-            StringBuffer output = new StringBuffer();
 
             if (tagName == null) {
-                if (!bWroteSummary) {
+                if (!wroteSummary) {
                     writeSummaryTag(lineNumber, tag);
-                    bWroteSummary = true;
-                }
-                else
+                    wroteSummary = true;
+                } else
                     writeRemarksTag(lineNumber, tag);
             } else {
                 switch (tagName) {
@@ -78,16 +73,19 @@ public class JavadocCommentWriter extends CSharpASTNodeWriter<Javadoc> {
                 }
             }
         }
+
+        getTargetWriter().setAdditionalIndentation(previousAdditionalIndentation);
         setPositionToEndOfNode(javadoc);
     }
 
     private void writeLineBreaks(int howMany) {
-        for (int i=0; i < howMany; i++)
+        for (int i = 0; i < howMany; i++)
             write("\n/// ");
     }
+
     private int writeFragments(int previousLineNumber, List<ASTNode> fragments) {
         int lineNumber = previousLineNumber;
-        for (ASTNode fragment: fragments) {
+        for (ASTNode fragment : fragments) {
             lineNumber = writeFragment(previousLineNumber, fragment);
             previousLineNumber = lineNumber;
         }
@@ -163,13 +161,13 @@ public class JavadocCommentWriter extends CSharpASTNodeWriter<Javadoc> {
     }
 
     private void writeSinceTag(int lineNumber, TagElement tag) {
-        TextElement firstFragment = (TextElement)tag.fragments().get(0);
+        TextElement firstFragment = (TextElement) tag.fragments().get(0);
         firstFragment.setText("Since:" + firstFragment.getText());
         writeRemarksTag(lineNumber, tag);
     }
 
     private void writeAuthorTag(int lineNumber, TagElement tag) {
-        TextElement firstFragment = (TextElement)tag.fragments().get(0);
+        TextElement firstFragment = (TextElement) tag.fragments().get(0);
         firstFragment.setText("Author:" + firstFragment.getText());
         writeRemarksTag(lineNumber, tag);
     }
@@ -186,12 +184,11 @@ public class JavadocCommentWriter extends CSharpASTNodeWriter<Javadoc> {
         if (fragments.size() > 0) {
             ASTNode firstFragment = fragments.get(0);
             if (firstFragment instanceof TextElement) {
-                TextElement textElement = (TextElement)firstFragment;
+                TextElement textElement = (TextElement) firstFragment;
                 String text = textElement.getText();
                 text = text.startsWith(" ") ? text.substring(1) : text;
                 textElement.setText(text);
             }
         }
     }
-
 }
