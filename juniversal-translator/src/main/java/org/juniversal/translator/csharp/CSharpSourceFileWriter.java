@@ -773,29 +773,7 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
         });
 
         // Number literal
-        addWriter(NumberLiteral.class, new CSharpASTNodeWriter<NumberLiteral>(this) {
-            @Override
-            public void write(NumberLiteral numberLiteral) {
-                String token = numberLiteral.getToken();
-
-                // Strip out any _ separators in the number, as those aren't supported in C# (at least not until the
-                // new C# 6 comes out)
-                String convertedToken = token.replace("_", "");
-
-                // TODO: Support binary (and octal) literals by converting to hex
-                if (token.length() >= 2 && token.startsWith("0")) {
-                    char secondChar = token.charAt(1);
-                    if (secondChar >= '0' && secondChar <= '7') {
-                        throw sourceNotSupported("Octal literals aren't currently supported; change the source to use hex instead");
-                    } else if ((secondChar == 'b') || (secondChar == 'B')) {
-                        throw sourceNotSupported("Binary literals aren't currently supported; change the source to use hex instead");
-                    }
-                }
-
-                write(convertedToken);
-                match(token);
-            }
-        });
+        addWriter(NumberLiteral.class, new NumberLiteralWriter(this));
 
         // Boolean literal
         addWriter(BooleanLiteral.class, new CSharpASTNodeWriter<BooleanLiteral>(this) {

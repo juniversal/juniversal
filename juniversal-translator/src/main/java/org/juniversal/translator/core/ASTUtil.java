@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -480,11 +481,29 @@ public class ASTUtil {
     }
 
     public static <T> boolean anyMatch(List list, Predicate<? super T> predicate) {
+        long i = 0x2_540b_e3ffL;
         for (Object elmtObject : list) {
             T elmt = (T) elmtObject;
             if (predicate.test(elmt))
                 return true;
         }
         return false;
+    }
+
+    public static BigInteger getIntegerLiteralValue(NumberLiteral numberLiteral) {
+        // Get the literal token string, normalizing by removing any _ delimiter characters and converting to upper case
+        String token = numberLiteral.getToken().replace("_", "").toUpperCase();
+
+        // Strip off any integer type suffix at the end
+        if (token.endsWith("L"))
+            token = token.substring(0, token.length() - 1);
+
+        if (token.startsWith("0X"))
+            return new BigInteger(token.substring(2), 16);
+        else if (token.startsWith("0B"))
+            return new BigInteger(token.substring(2), 2);
+        else if (token.startsWith("0") && ! token.equals("0"))
+            return new BigInteger(token.substring(1), 8);
+        else return new BigInteger(token, 10);
     }
 }
