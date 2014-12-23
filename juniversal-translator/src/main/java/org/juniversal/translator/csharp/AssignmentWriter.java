@@ -35,49 +35,35 @@ public class AssignmentWriter extends CSharpASTNodeWriter<Assignment> {
     public void write(Assignment assignment) {
         Assignment.Operator operator = assignment.getOperator();
 
-        if (operator == Assignment.Operator.RIGHT_SHIFT_UNSIGNED_ASSIGN) {
-            writeNode(assignment.getLeftHandSide());
+        writeNode(assignment.getLeftHandSide());
 
-            copySpaceAndComments();
-            matchAndWrite(">>>=", "=");
+        copySpaceAndComments();
+        if (operator == Assignment.Operator.ASSIGN)
+            matchAndWrite("=");
+        else if (operator == Assignment.Operator.PLUS_ASSIGN)
+            matchAndWrite("+=");
+        else if (operator == Assignment.Operator.MINUS_ASSIGN)
+            matchAndWrite("-=");
+        else if (operator == Assignment.Operator.TIMES_ASSIGN)
+            matchAndWrite("*=");
+        else if (operator == Assignment.Operator.DIVIDE_ASSIGN)
+            matchAndWrite("/=");
+        else if (operator == Assignment.Operator.BIT_AND_ASSIGN)
+            matchAndWrite("&=");
+        else if (operator == Assignment.Operator.BIT_OR_ASSIGN)
+            matchAndWrite("|=");
+        else if (operator == Assignment.Operator.BIT_XOR_ASSIGN)
+            matchAndWrite("^=");
+        else if (operator == Assignment.Operator.REMAINDER_ASSIGN)
+            matchAndWrite("%=");
+        else if (operator == Assignment.Operator.LEFT_SHIFT_ASSIGN)
+            matchAndWrite("<<=");
+        else if (operator == Assignment.Operator.RIGHT_SHIFT_SIGNED_ASSIGN)
+            matchAndWrite(">>=");
+        else if (operator == Assignment.Operator.RIGHT_SHIFT_UNSIGNED_ASSIGN)
+            throw sourceNotSupported(">>>= operator not supported; change Java of the form 'a >>>= b' to 'a = a >>> b' instead, which is supported");
 
-            copySpaceAndComments();
-            write("rightShiftUnsigned(");
-            writeNodeAtDifferentPosition(assignment.getLeftHandSide());
-            write(", ");
-            writeNode(assignment.getRightHandSide());
-            write(")");
-        } else {
-            writeNode(assignment.getLeftHandSide());
-
-            copySpaceAndComments();
-            if (operator == Assignment.Operator.ASSIGN)
-                matchAndWrite("=");
-            else if (operator == Assignment.Operator.PLUS_ASSIGN)
-                matchAndWrite("+=");
-            else if (operator == Assignment.Operator.MINUS_ASSIGN)
-                matchAndWrite("-=");
-            else if (operator == Assignment.Operator.TIMES_ASSIGN)
-                matchAndWrite("*=");
-            else if (operator == Assignment.Operator.DIVIDE_ASSIGN)
-                matchAndWrite("/=");
-            else if (operator == Assignment.Operator.BIT_AND_ASSIGN)
-                matchAndWrite("&=");
-            else if (operator == Assignment.Operator.BIT_OR_ASSIGN)
-                matchAndWrite("|=");
-            else if (operator == Assignment.Operator.BIT_XOR_ASSIGN)
-                matchAndWrite("^=");
-            else if (operator == Assignment.Operator.REMAINDER_ASSIGN)
-                matchAndWrite("%=");
-            else if (operator == Assignment.Operator.LEFT_SHIFT_ASSIGN)
-                matchAndWrite("<<=");
-            else if (operator == Assignment.Operator.RIGHT_SHIFT_SIGNED_ASSIGN)
-                matchAndWrite(">>=");
-            else if (operator == Assignment.Operator.RIGHT_SHIFT_UNSIGNED_ASSIGN)
-                matchAndWrite(">>>=");
-
-            copySpaceAndComments();
-            writeNode(assignment.getRightHandSide());
-        }
+        copySpaceAndComments();
+        writeNode(assignment.getRightHandSide());
     }
 }

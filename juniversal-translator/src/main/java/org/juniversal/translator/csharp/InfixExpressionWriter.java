@@ -22,13 +22,14 @@
 
 package org.juniversal.translator.csharp;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.InfixExpression;
+import org.juniversal.translator.core.JUniversalException;
 
 import java.util.HashMap;
-import java.util.List;
+
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public class InfixExpressionWriter extends CSharpASTNodeWriter<InfixExpression> {
@@ -117,25 +118,12 @@ public class InfixExpressionWriter extends CSharpASTNodeWriter<InfixExpression> 
         equivalentOperators.put(InfixExpression.Operator.CONDITIONAL_OR, "||");
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void write(InfixExpression infixExpression) {
         InfixExpression.Operator operator = infixExpression.getOperator();
 
-        // TODO: Handle >>>
         if (operator == InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED) {
-            write("/* TODO: Handle >>> */ ");
-
-            writeNode(infixExpression.getLeftOperand());
-
-            copySpaceAndComments();
-            matchAndWrite(">>>", ">>");
-
-            copySpaceAndComments();
-            writeNode(infixExpression.getRightOperand());
-
-            if (infixExpression.hasExtendedOperands())
-                throw sourceNotSupported(">>> extended operands not currently supported; nor is >>> implemented correctly currently for that matter");
+            writeRightShiftUnsigned(infixExpression);
         } else {
             writeNode(infixExpression.getLeftOperand());
 
@@ -147,15 +135,51 @@ public class InfixExpressionWriter extends CSharpASTNodeWriter<InfixExpression> 
             writeNode(infixExpression.getRightOperand());
 
             if (infixExpression.hasExtendedOperands()) {
-                for (Expression extendedOperand : (List<Expression>) infixExpression.extendedOperands()) {
-
+                forEach(infixExpression.extendedOperands(), (Expression extendedOperand) -> {
                     copySpaceAndComments();
                     matchAndWrite(operatorToken);
 
                     copySpaceAndComments();
                     writeNode(extendedOperand);
-                }
+                });
             }
         }
+    }
+
+    private void writeRightShiftUnsigned(InfixExpression infixExpression) {
+        ITypeBinding typeBinding = infixExpression.getLeftOperand().resolveTypeBinding();
+        String typeName = typeBinding.getName();
+
+        //TODO: Remove inner parens for left operand if it's a simple (single elmt) expression, not needing them
+        String cSharpTypeName;
+        String cSharpUnsignedTypeName;
+        if (typeBinding.getName().equals("long")) {
+            cSharpTypeName = "long";
+            cSharpUnsignedTypeName = "ulong";
+        } else if (typeBinding.getName().equals("int")) {
+            cSharpTypeName = "int";
+            cSharpUnsignedTypeName = "uint";
+        } else if (typeBinding.getName().equals("short")) {
+            cSharpTypeName = "short";
+            cSharpUnsignedTypeName = "ushort";
+        } else if (typeBinding.getName().equals("byte")) {
+            cSharpTypeName = "sbyte";
+            cSharpUnsignedTypeName = "byte";
+        }
+        else throw new JUniversalException("Unexpected >>> left operand type: " + typeName);
+
+        write("(" + cSharpTypeName + ")((" + cSharpUnsignedTypeName + ")(");
+        writeNode(infixExpression.getLeftOperand());
+        write(")");
+
+        copySpaceAndComments();
+        matchAndWrite(">>>", ">>");
+        copySpaceAndComments();
+
+        writeNode(infixExpression.getRightOperand());
+        write(")");
+
+        if (infixExpression.hasExtendedOperands())
+            throw sourceNotSupported(">>> extended operands (with multiple >>> operators in a row, like 'a >>> b >>> c') not currently supported");
     }
 }
