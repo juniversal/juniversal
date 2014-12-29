@@ -22,6 +22,7 @@
 
 package org.juniversal.translator.cplusplus;
 
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
@@ -31,7 +32,7 @@ public class TypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDeclaratio
     }
 
     public void write(TypeDeclaration typeDeclaration) {
-		TypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
+		AbstractTypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
 		getContext().setTypeDeclaration(typeDeclaration);
 
 		if (getSourceFileWriter().getOutputType() == OutputType.HEADER)

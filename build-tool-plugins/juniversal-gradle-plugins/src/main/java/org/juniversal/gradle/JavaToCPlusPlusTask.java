@@ -31,12 +31,10 @@ public class JavaToCPlusPlusTask extends JUniversalTranslatorTask {
         super("c++");
     }
 
-    @TaskAction
-    public void translate() {
+    @TaskAction public void translate() {
         JavaToCPlusPlus javaToCPlusPlus = new JavaToCPlusPlus(new GradleProject(getProject()));
         initTranslator(javaToCPlusPlus);
 
         javaToCPlusPlus.translate();
     }
-
 }

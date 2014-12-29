@@ -26,100 +26,93 @@ import org.junit.Test;
 import org.juniversal.translator.TranslateNodeTest;
 
 /**
- * Created by cingram on 12/11/2014.
+ * @author Chris Ingram
+ * @since 12/11/2014
  */
 public class TranslateJavadocCommentTest extends TranslateNodeTest {
-    @Test
-    public void testSimpleMethodJD() {
-        String javadoc =
-              "/**" +
-            "\n * A method that does blah" +
-            "\n *" +
-            "\n * @param p1 The first parameter" +
-            "\n * @param p2 The second parameter" +
-            "\n * @returns int Description of return value" +
-            "\n * @since 1.0" +
-            "\n * @author cingram" +
-            "\n */";
-        testTranslateJavadocComment(javadoc, null, null);
+    @Test public void testSimpleMethodJD() {
+        testTranslateJavadocComment(
+                "/**\n" +
+                " * A method that does blah\n" +
+                " *\n" +
+                " * @param p1 The first parameter\n" +
+                " * @param p2 The second parameter\n" +
+                " * @returns int Description of return value\n" +
+                " * @since 1.0\n" +
+                " * @author cingram\n" +
+                " */", null);
     }
 
-    @Test
-    public void testMultilineTextNoPeriodsJD() {
-        String javadoc =
-              "/**" +
-            "\n * A method that does blah" +
-            "\n * More about the method in question" +
-            "\n *" +
-            "\n * @param p1 The first parameter" +
-            "\n *        More detail about the first parameter" +
-            "\n * @param p2 The second parameter" +
-            "\n * @returns int Description of return value" +
-            "\n *          More about the return value" +
-            "\n * @since 1.0" +
-            "\n * @author cingram" +
-            "\n */";
-        testTranslateJavadocComment(javadoc, null, null);
+    /**
+     * Test method
+     */
+    @Test public void testMultilineTextNoPeriodsJD() {
+        testTranslateJavadocComment(
+                "/**\n" +
+                " * A method that does blah\n" +
+                " * More about the method in question\n" +
+                " *\n" +
+                " * @param p1 The first parameter\n" +
+                " *        More detail about the first parameter\n" +
+                " * @param p2 The second parameter\n" +
+                " * @returns int Description of return value\n" +
+                " *          More about the return value\n" +
+                " * @since 1.0\n" +
+                " * @author cingram\n" +
+                " */", null);
     }
 
-    @Test
-    public void testMultilineTextWithPeriodsJD() {
-        String javadoc =
-              "/**" +
-            "\n * A method that does blah." +
-            "\n * More about the method in question." +
-            "\n *" +
-            "\n * @param p1 The first parameter." +
-            "\n *        More detail about the first parameter." +
-            "\n * @param p2 The second parameter" +
-            "\n * @returns int Description of return value." +
-            "\n *          More about the return value." +
-            "\n * @since 1.0" +
-            "\n * @author cingram" +
-            "\n */";
-        testTranslateJavadocComment(javadoc, null, null);
+    @Test public void testMultilineTextWithPeriodsJD() {
+        testTranslateJavadocComment(
+                "/**\n" +
+                " * A method that does blah.\n" +
+                " * More about the method in question.\n" +
+                " *\n" +
+                " * @param p1 The first parameter.\n" +
+                " *        More detail about the first parameter.\n" +
+                " * @param p2 The second parameter\n" +
+                " * @returns int Description of return value.\n" +
+                " *          More about the return value.\n" +
+                " * @since 1.0\n" +
+                " * @author cingram\n" +
+                " */", null);
     }
 
-    @Test
-    public void testMultipleLongParagraphsNoPTagsJD() {
-        String javadoc =
-              "/**" +
-            "\n * A method that does blah." +
-            "\n * More about the method in question using very verbose and descriptive language such that the line" +
-            "\n * must be wrapped to be reasonable like this text right here." +
-            "\n *" +
-            "\n * This text represents a second paragraph but without any silly \"p\" tags cluttering things up.  Does this line which is fairly long need to be wrapped as well?" +
-            "\n *" +
-            "\n * @param p1 The first parameter." +
-            "\n *        More detail about the first parameter." +
-            "\n * @param p2 The second parameter" +
-            "\n * @returns int Description of return value." +
-            "\n *          More about the return value." +
-            "\n * @since 1.0" +
-            "\n * @author cingram" +
-            "\n */";
-        testTranslateJavadocComment(javadoc, null, null);
+    @Test public void testMultipleLongParagraphsNoPTagsJD() {
+        testTranslateJavadocComment(
+                "/**\n" +
+                " * A method that does blah.\n" +
+                " * More about the method in question using very verbose and descriptive language such that the line\n" +
+                " * must be wrapped to be reasonable like this text right here.\n" +
+                " *\n" +
+                " * This text represents a second paragraph but without any silly \"p\" tags cluttering things up.  Does this line which is fairly long need to be wrapped as well?\n" +
+                " *\n" +
+                " * @param p1 The first parameter.\n" +
+                " *        More detail about the first parameter.\n" +
+                " * @param p2 The second parameter\n" +
+                " * @returns int Description of return value.\n" +
+                " *          More about the return value.\n" +
+                " * @since 1.0\n" +
+                " * @author cingram\n" +
+                " */", null);
     }
 
-    @Test
-    public void testEmbeddedCodeTagJD() {
-        String javadoc =
-              "/**" +
-            "\n * Constructs a new {@code HashMap} instance with the specified capacity and load factor.  A method that does blah." +
-            "\n * More about the method {@see ABC} in question {@link DEF} using very verbose and descriptive language such that the line" +
-            "\n * must be wrapped to be reasonable like this text right here." +
-            "\n *" +
-            "\n * This text represents a second paragraph but without any silly \"p\" tags cluttering things up.  Does this line which is fairly long need to be wrapped as well?" +
-            "\n *" +
-            "\n * @param p1 The first parameter." +
-            "\n *        More detail about the first parameter." +
-            "\n * @param p2 The second parameter" +
-            "\n * @returns int Description of return value." +
-            "\n *          More about the return value." +
-            "\n * @since 1.0" +
-            "\n * @author cingram" +
-            "\n */";
-        testTranslateJavadocComment(javadoc, null, null);
-
+    @Test public void testEmbeddedCodeTagJD() {
+        testTranslateJavadocComment(
+                "/**\n" +
+                " * Constructs a new {@code HashMap} instance with the specified capacity and load factor.  A method that does blah.\n" +
+                " * More about the method {@see ABC} in question {@link DEF} using very verbose and descriptive language such that the line\n" +
+                " * must be wrapped to be reasonable like this text right here.\n" +
+                " *\n" +
+                " * This text represents a second paragraph but without any silly \"p\" tags cluttering things up.  Does this line which is fairly long need to be wrapped as well?\n" +
+                " *\n" +
+                " * @param p1 The first parameter.\n" +
+                " *        More detail about the first parameter.\n" +
+                " * @param p2 The second parameter\n" +
+                " * @returns int Description of return value.\n" +
+                " *          More about the return value.\n" +
+                " * @since 1.0\n" +
+                " * @author cingram\n" +
+                " */", null);
     }
 }

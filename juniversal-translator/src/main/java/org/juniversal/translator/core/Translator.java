@@ -40,7 +40,6 @@ import java.util.regex.Pattern;
 public abstract class Translator {
     private List<File> javaProjectDirectories;
     private File outputDirectory;
-    private int preferredIndent = 4;
     private int sourceTabStop = 4;
     private int destTabStop = -1;
     private String[] classpath;
@@ -48,18 +47,17 @@ public abstract class Translator {
 
     public static void main(String[] args) {
         try {
-            mainGuts(args);
+            translate(args);
         } catch (UserViewableException e) {
             System.err.println(e.getMessage());
             System.exit(1);
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             t.printStackTrace(System.err);
             System.exit(2);
         }
     }
 
-    private static void mainGuts(String[] args) {
+    public static void translate(String[] args) {
         @Nullable String targetLanguage = null;
 
         for (int i = 0; i < args.length; ++i) {
@@ -116,14 +114,14 @@ public abstract class Translator {
                         usageError();
                     arg = args[i];
 
-                    classpath = arg.split(Pattern.quote(File.pathSeparator));
+                    classpath = getPathArgument(arg, "-classpath");
                 } else if (arg.equals("-sourcepath")) {
                     ++i;
                     if (i >= args.length)
                         usageError();
                     arg = args[i];
 
-                    sourcepath = arg.split(Pattern.quote(File.pathSeparator));
+                    sourcepath = getPathArgument(arg, "-sourcepath");
                 } else
                     usageError();
             } else
@@ -133,6 +131,21 @@ public abstract class Translator {
         // Ensure that there's at least one input directory & the output directory is specified
         if (this.javaProjectDirectories.size() == 0 || this.outputDirectory == null)
             usageError();
+    }
+
+    private String[] getPathArgument(String arg, String pathType) {
+        ArrayList<String> pathEntries = new ArrayList<>();
+        for (String pathEntry : arg.split(Pattern.quote(File.pathSeparator))) {
+            File pathEntryFile = new File(pathEntry);
+
+            if (! pathEntryFile.exists())
+                System.err.println("Warning: " + pathType + " path entry " + pathEntry + " does not exist; ignoring");
+            else pathEntries.add(pathEntry);
+        }
+
+        String[] pathEntriesArray = new String[pathEntries.size()];
+        pathEntries.toArray(pathEntriesArray);
+        return pathEntriesArray;
     }
 
     public static void usageError() {
@@ -166,13 +179,13 @@ public abstract class Translator {
             directory = new File(directory, packageNameComponent);
         }
 
-        if (! directory.exists()) {
+        if (!directory.exists()) {
             if (!directory.mkdirs())
                 throw new JUniversalException("Unable to create directory for path: " + directory);
         }
 
         return directory;
-    }
+   }
 
     public void translate() {
         ASTParser parser = ASTParser.newParser(AST.JLS8);
@@ -244,14 +257,30 @@ public abstract class Translator {
 
     public abstract void translateFile(SourceFile sourceFile);
 
+    /**
+     * Translate a single node in the AST.   This method is normally just used for testing (unit tests); for production
+     * use whole files are always translated.
+     *
+     * @param sourceFile SourceFile containing node
+     * @param astNode    node to translate
+     * @return translated source for the node
+     */
     public abstract String translateNode(SourceFile sourceFile, ASTNode astNode);
 
     public int getSourceTabStop() {
         return sourceTabStop;
     }
 
+    public void setSourceTabStop(int sourceTabStop) {
+        this.sourceTabStop = sourceTabStop;
+    }
+
     public int getDestTabStop() {
         return destTabStop;
+    }
+
+    public void setDestTabStop(int destTabStop) {
+        this.destTabStop = destTabStop;
     }
 
     /**

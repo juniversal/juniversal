@@ -23,6 +23,7 @@
 package org.juniversal.translator.cplusplus;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.juniversal.translator.core.ASTUtil;
@@ -71,6 +72,10 @@ public class CPlusPlusTranslator extends Translator {
         try (StringWriter writer = new StringWriter()) {
             CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter = new CPlusPlusSourceFileWriter(this, sourceFile, writer,
                     OutputType.SOURCE);
+
+            // Set the type declaration part of the context
+            AbstractTypeDeclaration typeDeclaration = (AbstractTypeDeclaration) sourceFile.getCompilationUnit().types().get(0);
+            cPlusPlusSourceFileWriter.getContext().setTypeDeclaration(typeDeclaration);
 
             cPlusPlusSourceFileWriter.writeRootNode(astNode);
 

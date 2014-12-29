@@ -65,7 +65,7 @@ public class FileSet {
     public File getSingleElement() {
         if (files.size() != 1)
             throw new RuntimeException("FileSet unexpectedly has " + files.size() +
-                    " elements, when it should have exactly 1");
+                                       " elements, when it should have exactly 1");
         return files.get(0);
     }
 
@@ -79,6 +79,31 @@ public class FileSet {
         StringBuilder path = new StringBuilder();
 
         for (File file : files) {
+            if (path.length() > 0)
+                path.append(File.pathSeparator);
+            path.append(file.getPath());
+        }
+
+        return path.toString();
+    }
+
+    /**
+     * Get all the files (normally directories in this case) in this file set as a path string, using the platform's
+     * appropriate path delimiter, skipping but warning on any that don't exist.
+     *
+     * @param project     project (for logging warnings)
+     * @param fileSetType what kind of entries these are, used to prefix warning messages
+     * @return path string, listing all files/directories in this file set
+     */
+    public String getAsPathEnsureExists(CommonProject project, String fileSetType) {
+        StringBuilder path = new StringBuilder();
+
+        for (File file : files) {
+            if (!file.exists()) {
+                project.warn(fileSetType + " path entry does not exist: " + file.toString());
+                continue;
+            }
+
             if (path.length() > 0)
                 path.append(File.pathSeparator);
             path.append(file.getPath());

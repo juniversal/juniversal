@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.ASTUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -36,7 +37,7 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
 
     @Override
     public void write(MethodDeclaration methodDeclaration) {
-        TypeDeclaration typeDeclaration = getContext().getTypeDeclaration();
+        AbstractTypeDeclaration typeDeclaration = getContext().getTypeDeclaration();
 
         // Get return type if present
         @Nullable Type returnType = null;
@@ -44,8 +45,10 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
             returnType = methodDeclaration.getReturnType2();
 
         // If we're writing the implementation of a generic method, include the "template<...>" prefix
-        @SuppressWarnings("unchecked")
-        List<TypeParameter> typeParameters = (List<TypeParameter>) typeDeclaration.typeParameters();
+        List typeParameters = new ArrayList<>();
+        if (typeDeclaration instanceof TypeDeclaration) {
+            typeParameters = ((TypeDeclaration) typeDeclaration).typeParameters();
+        }
 
         boolean isGeneric = !typeParameters.isEmpty();
         if (isGeneric && getContext().isWritingMethodImplementation()) {

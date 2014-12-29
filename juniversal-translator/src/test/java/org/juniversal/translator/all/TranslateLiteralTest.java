@@ -26,8 +26,7 @@ import org.junit.Test;
 import org.juniversal.translator.TranslateNodeTest;
 
 public class TranslateLiteralTest extends TranslateNodeTest {
-    @Test
-    public void testTranslateIntegerLiterals() {
+    @Test public void testTranslateIntegerLiterals() {
         testTranslateIntExpression("3", null, null);
 
         // TODO: Fix this up when Swift fixes its bugs here
@@ -46,17 +45,15 @@ public class TranslateLiteralTest extends TranslateNodeTest {
 
         //testTranslateLongExpression("3L", "Int64(3)");
         //testTranslateLongExpression("3l", "Int64(3)");
-       }
+    }
 
-    @Test
-    public void testTranslateCharLiterals() {
+    @Test public void testTranslateCharLiterals() {
         // TODO: Handle escape sequences
 
         testTranslateCharExpression("'c'", "'c'", "Character(\"c\")");
     }
 
-    @Test
-    public void testTranslateOtherLiterals() {
+    @Test public void testTranslateOtherLiterals() {
         testTranslateStringExpression("null", null, "nil");
 
         testTranslateBooleanExpression("true", null, null);

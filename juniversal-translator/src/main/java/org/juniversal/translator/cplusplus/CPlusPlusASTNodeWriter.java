@@ -30,6 +30,8 @@ import org.juniversal.translator.core.ASTNodeWriter;
 
 import java.util.List;
 
+import static org.juniversal.translator.core.ASTUtil.forEach;
+
 
 public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
     private CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter;
@@ -106,22 +108,19 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
      * @param typeParameters      list of TypeParameter objects
      * @param includeClassKeyword if true, each parameter is prefixed with "class "
      */
-    public void writeTypeParameters(List<TypeParameter> typeParameters, boolean includeClassKeyword) {
+    public void writeTypeParameters(List typeParameters, boolean includeClassKeyword) {
         // If we're writing the implementation of a generic method, include the "template<...>" prefix
 
-        boolean first = true;
-
         write("<");
-        for (TypeParameter typeParameter : typeParameters) {
+
+        forEach(typeParameters, (TypeParameter typeParameter, boolean first) -> {
             if (!first)
                 write(", ");
 
             if (includeClassKeyword)
                 write("class ");
             write(typeParameter.getName().getIdentifier());
-
-            first = false;
-        }
+        });
 
         write(">");
     }

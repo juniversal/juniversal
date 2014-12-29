@@ -40,8 +40,8 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
 
     @Override
     public void write(MethodDeclaration methodDeclaration) {
-        TypeDeclaration typeDeclaration = getContext().getTypeDeclaration();
-        boolean isInterface = typeDeclaration.isInterface();
+        AbstractTypeDeclaration typeDeclaration = getContext().getTypeDeclaration();
+        boolean isInterface = isInterface(typeDeclaration);
         boolean classIsFinal = isFinal(typeDeclaration);
         boolean methodIsAbstract = isAbstract(methodDeclaration);
         boolean methodIsFinal = isFinal(methodDeclaration);

@@ -26,8 +26,23 @@ import org.junit.Test;
 import org.juniversal.translator.TranslateNodeTest;
 
 public class TranslateStatementTest extends TranslateNodeTest {
-    @Test
-    public void testTranslateIfStatement() {
+    @Test public void returnTest() {
+        sourceTabStop = 4;
+        destTabStop = -1;
+        testWriteStatement("return 3;", null, null);
+        testWriteStatement("return\r\n\t3;", "return\r\n    3;", "return\r\n    3;");
+        testWriteStatement("return\t3\t\t;", "return  3       ;", "return  3       ;");
+
+        sourceTabStop = 4;
+        destTabStop = 4;  // Return to default settings
+        testWriteStatement("return 3;", null, null);
+        testWriteStatement("return\r\n\t3;", null, null);
+        testWriteStatement("return\r\n   \t3;", "return\r\n\t3;", "return\r\n\t3;");
+        testWriteStatement("return\r\n  \t  \t 3;", "return\r\n\t\t 3;", "return\r\n\t\t 3;");
+        testWriteStatement("return\t3\t\t;", "return  3       ;", "return  3       ;");
+    }
+
+    @Test public void testTranslateIfStatement() {
         // Test different combinations around the condition
         testTranslateStatement("if (true) { return; }", null, "if true { return; }");
         testTranslateStatement("if /*x*/ ( /*y*/ true /*y*/ ) /*z*/  { return; }", null, "if /*x*/ true /*z*/  { return; }");
@@ -100,8 +115,7 @@ public class TranslateStatementTest extends TranslateNodeTest {
                 "}");
     }
 
-    @Test
-    public void testTranslateIfElseStatement() {
+    @Test public void testTranslateIfElseStatement() {
         // Test with existing braces
         testTranslateStatement("if (true) {return;} else {return;}", null, "if true {return;} else {return;}");
         testTranslateStatement("if (true) {return;} else  /*abc*/  {/*def*/return;}", null, "if true {return;} else  /*abc*/  {/*def*/return;}");
@@ -145,39 +159,38 @@ public class TranslateStatementTest extends TranslateNodeTest {
                 "}");
 
         testTranslateStatement(
-                "if (true) {return;} else  /*abc*/       return;  /*def*/ return;\n" +
+                "if (true) {;} else  /*abc*/       return;  /*def*/ return;\n" +
                 "/*ghi*/",
 
-                "if (true) {return;} else  /*abc*/       return;",
+                "if (true) {;} else  /*abc*/       return;",
 
-                "if true {return;} else {\n" +
+                "if true {;} else {\n" +
                 "    /*abc*/       return;  /*def*/ \n" +
                 "}");
 
         testTranslateStatement(
-                "if (true) {return;} else   /*foo*/\n" +
+                "if (true) {;} else   /*foo*/\n" +
                 "    \n" +
                 "    /*abc*/       return;  /*def*/ return;",
 
-                "if (true) {return;} else   /*foo*/\n" +
+                "if (true) {;} else   /*foo*/\n" +
                 "\n" +
                 "    /*abc*/       return;",
 
-                "if true {return;} else {   /*foo*/\n" +
+                "if true {;} else {   /*foo*/\n" +
                 "\n" +
                 "    /*abc*/       return;  /*def*/ \n" +
                 "}");
     }
 
-    @Test
-    public void testTranslateWhileStatement() {
+    @Test public void testTranslateWhileStatement() {
         // Test with existing braces
 
         testTranslateStatement("while /*abc*/(/*def*/true) {return;}", null, "while /*abc*/true {return;}");
 
         testTranslateStatement(
                 "while (true)\n" +
-                " /*abc*/ {return; /*def*/}  return;",
+                " /*abc*/ {return; /*def*/}",
 
                 "while (true)\n" +
                 " /*abc*/ {return; /*def*/}",
@@ -205,8 +218,7 @@ public class TranslateStatementTest extends TranslateNodeTest {
                 "}");
     }
 
-    @Test
-    public void testTranslateDoStatement() {
+    @Test public void testTranslateDoStatement() {
         // Test with existing braces
 
         testTranslateStatement(
@@ -217,7 +229,11 @@ public class TranslateStatementTest extends TranslateNodeTest {
                 "do  /*xx*/   \n" +
                 "    {return;}\n" +
                 "  while/*abc*/(/*def*/true) /*ghi*/  ;",
-                null,
+
+                "do  /*xx*/\n" +
+                "    {return;}\n" +
+                "  while/*abc*/(/*def*/true) /*ghi*/  ;",
+
                 "do  /*xx*/\n" +
                 "    {return;}\n" +
                 "  while/*abc*/true /*ghi*/  ;");
@@ -238,7 +254,15 @@ public class TranslateStatementTest extends TranslateNodeTest {
                 "  ;\n" +
                 "  while (true)\n" +
                 " /*y*/ ;",
-                null,
+
+                "do /*a*/\n" +
+                "  //abc\n" +
+                "    return\n" +
+                "  //xx\n" +
+                "  ;\n" +
+                "  while (true)\n" +
+                " /*y*/ ;",
+
                 "do { /*a*/\n" +
                 "  //abc\n" +
                 "    return\n" +
@@ -247,9 +271,5 @@ public class TranslateStatementTest extends TranslateNodeTest {
                 "}\n" +
                 "  while true\n" +
                 " /*y*/ ;");
-    }
-
-    @Test
-    public void testCurr() {
     }
 }

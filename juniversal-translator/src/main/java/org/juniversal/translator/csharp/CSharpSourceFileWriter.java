@@ -609,9 +609,7 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
                     matchAndWrite("!");
                 else throw invalidAST("Unknown prefix operator type: " + operator);
 
-                // In Swift there can't be any whitespace or comments between a unary prefix operator & its operand, so
-                // strip it, not copying anything here
-                skipSpaceAndComments();
+                copySpaceAndComments();
 
                 writeNode(prefixExpression.getOperand());
             }

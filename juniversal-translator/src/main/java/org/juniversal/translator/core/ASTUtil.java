@@ -243,8 +243,13 @@ public class ASTUtil {
         return getAccessModifier(bodyDeclaration.modifiers()) == AccessLevel.PRIVATE;
     }
 
-    public static boolean isFinal(TypeDeclaration typeDeclaration) {
-        return containsFinal(typeDeclaration.modifiers());
+    public static boolean isFinal(AbstractTypeDeclaration typeDeclaration) {
+        // Enums are implicitly final
+        return typeDeclaration instanceof EnumDeclaration || containsFinal(typeDeclaration.modifiers());
+    }
+
+    public static boolean isInterface(AbstractTypeDeclaration typeDeclaration) {
+        return typeDeclaration instanceof TypeDeclaration && ((TypeDeclaration) typeDeclaration).isInterface();
     }
 
     public static boolean isAbstract(TypeDeclaration typeDeclaration) {

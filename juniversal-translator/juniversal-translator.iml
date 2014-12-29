@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module external.linked.project.id=":juniversal-translator" external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$/.." external.system.id="GRADLE" external.system.module.group="org.juniversal" external.system.module.version="0.7-SNAPSHOT" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" inherit-compiler-output="false">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/build/classes/main" />
     <output-test url="file://$MODULE_DIR$/build/classes/test" />
     <exclude-output />
@@ -20,6 +20,8 @@
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -28,6 +30,8 @@
     <orderEntry type="module-library" exported="">
       <library name="Gradle: org.eclipse.core.jobs_3.6.0.v20140424-0053">
         <CLASSES>
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.jobs_3.6.0.v20140424-0053.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.jobs_3.6.0.v20140424-0053.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.jobs_3.6.0.v20140424-0053.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.jobs_3.6.0.v20140424-0053.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.jobs_3.6.0.v20140424-0053.jar!/" />
@@ -42,6 +46,8 @@
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.resources_3.9.0.v20140514-1307.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.resources_3.9.0.v20140514-1307.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.resources_3.9.0.v20140514-1307.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.resources_3.9.0.v20140514-1307.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.resources_3.9.0.v20140514-1307.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -50,6 +56,8 @@
     <orderEntry type="module-library" exported="">
       <library name="Gradle: org.eclipse.core.runtime_3.10.0.v20140318-2214">
         <CLASSES>
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.runtime_3.10.0.v20140318-2214.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.runtime_3.10.0.v20140318-2214.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.runtime_3.10.0.v20140318-2214.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.runtime_3.10.0.v20140318-2214.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.core.runtime_3.10.0.v20140318-2214.jar!/" />
@@ -64,6 +72,8 @@
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -72,6 +82,8 @@
     <orderEntry type="module-library" exported="">
       <library name="Gradle: org.eclipse.equinox.preferences_3.5.200.v20140224-1527">
         <CLASSES>
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar!/" />
@@ -86,6 +98,8 @@
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.jdt.core_3.10.0.v20140604-1726.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.jdt.core_3.10.0.v20140604-1726.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.jdt.core_3.10.0.v20140604-1726.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.jdt.core_3.10.0.v20140604-1726.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.jdt.core_3.10.0.v20140604-1726.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -94,6 +108,8 @@
     <orderEntry type="module-library" exported="">
       <library name="Gradle: org.eclipse.osgi_3.10.0.v20140606-1445">
         <CLASSES>
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.osgi_3.10.0.v20140606-1445.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/org.eclipse.osgi_3.10.0.v20140606-1445.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.osgi_3.10.0.v20140606-1445.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.osgi_3.10.0.v20140606-1445.jar!/" />
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.osgi_3.10.0.v20140606-1445.jar!/" />

@@ -36,11 +36,11 @@ public class NumberLiteralWriter extends CSharpASTNodeWriter<NumberLiteral> {
 
     @Override
     public void write(NumberLiteral numberLiteral) {
-        String token = numberLiteral.getToken();
+        String rawToken = numberLiteral.getToken();
 
         // Strip out any _ separators in the number, as those aren't supported in C# (at least not until the
         // new C# 6 comes out)
-        token = token.replace("_", "");
+        String token = rawToken.replace("_", "");
 
         // First see if it's a floating point or integer literal
         if (token.contains("."))
@@ -74,6 +74,6 @@ public class NumberLiteralWriter extends CSharpASTNodeWriter<NumberLiteral> {
             }
         }
 
-        match(token);
+        match(rawToken);
     }
 }

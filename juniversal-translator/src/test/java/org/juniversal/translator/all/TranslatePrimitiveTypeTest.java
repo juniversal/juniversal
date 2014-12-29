@@ -26,8 +26,7 @@ import org.junit.Test;
 import org.juniversal.translator.TranslateNodeTest;
 
 public class TranslatePrimitiveTypeTest extends TranslateNodeTest {
-    @Test
-    public void testTranslatePrimitiveTypes() {
+    @Test public void testTranslatePrimitiveTypes() {
         testTranslateStatement("byte foo;", "sbyte foo;", "FILL IN");
         testTranslateStatement("short foo;", null, "FILL IN");
         testTranslateStatement("char foo;", null, "FILL IN");

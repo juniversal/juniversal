@@ -77,10 +77,11 @@ uploadArchives {
 */
 
             // To publish translator updates to our Maven Central repo, ossrhUsername and ossrhPassword should
-            // be defined in ~/.gradle/gradle.properties, with our credential info.   Do the hasProperty
-            if (hasProperty('ossrhUsername') && hasProperty('ossrhPassword')) {
+            // be defined in ~/.gradle/gradle.properties, with our credential info.   Do the hasProperty to check
+            // for that
+            if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
                 repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: ext.ossrhUsername, password: ext.ossrhPassword)
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
                 }
 
                 snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
@@ -111,9 +112,13 @@ uploadArchives {
 
                 developers {
                     developer {
-                        //id 'manfred'
                         name 'Bret Johnson'
                         email 'bret.johnson@microsoft.com'
+                    }
+
+                    developer {
+                        name 'Chris Ingram'
+                        email 'chris.ingram@microsoft.com'
                     }
                 }
             }

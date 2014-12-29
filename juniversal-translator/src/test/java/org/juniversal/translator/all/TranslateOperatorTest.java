@@ -26,8 +26,7 @@ import org.junit.Test;
 import org.juniversal.translator.TranslateNodeTest;
 
 public class TranslateOperatorTest extends TranslateNodeTest {
-    @Test
-    public void testTranslatePrefixOperators() {
+    @Test public void testTranslatePrefixOperators() {
         testTranslateIntExpression("-3", null, null);
         testTranslateIntExpression("- 3", null, "-3");
         testTranslateIntExpression("- /* foo */\n 3", null, "-3");
@@ -35,11 +34,10 @@ public class TranslateOperatorTest extends TranslateNodeTest {
         testTranslateIntExpression("+ /* foo */\n 3", null, "+3");
 
         testTranslateBooleanExpression("! true", null, "!true");
-        testTranslateBooleanExpression("~ 12", null, "~12");
+        testTranslateIntExpression("~ 12", null, "~12");
     }
 
-    @Test
-    public void testTranslateInfixOperators() {
+    @Test public void testTranslateInfixOperators() {
         testTranslateIntExpression("-3 * 4", null, null);
         testTranslateIntExpression("4 /*x*/ / /*y*/ 2", null, null);
 
@@ -72,12 +70,10 @@ public class TranslateOperatorTest extends TranslateNodeTest {
     }
 
     // TODO: Test -- and ++, prefix and postfix versions, when a bit more test plumbing in place
-    @Test
-    public void testTranslatePostfixOperator() {
+    @Test public void testTranslatePostfixOperator() {
     }
 
-    @Test
-    public void testTranslateConditionalOperator() {
+    @Test public void testTranslateConditionalOperator() {
         testTranslateIntExpression("true   ? /*foo*/  1 :  0", null, null);
     }
 }

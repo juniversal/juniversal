@@ -35,33 +35,7 @@ public class WriteCPPTest {
     private int m_destTabStop = 4;
     private CPlusPlusTranslator cPlusPlusTranslator = new CPlusPlusTranslator();
 
-    @Test
-    public void returnTest() {
-        m_sourceTabStop = 4;
-        m_destTabStop = -1;
-        testWriteStatement("return 3;");
-        testWriteStatement("return\r\n\t3;", "return\r\n    3;");
-        testWriteStatement("return\t3\t\t;", "return  3       ;");
-
-        m_sourceTabStop = 4;
-        m_destTabStop = 4;  // Return to default settings
-        testWriteStatement("return 3;");
-        testWriteStatement("return\r\n\t3;");
-        testWriteStatement("return\r\n   \t3;", "return\r\n\t3;");
-        testWriteStatement("return\r\n  \t  \t 3;", "return\r\n\t\t 3;");
-        testWriteStatement("return\t3\t\t;", "return  3       ;");
-    }
-
-    @Test
-    public void ifTest() {
-        testWriteStatement("if (false) return 3;");
-        testWriteStatement("if (true) return 3; else return 7;");
-        testWriteStatement("if ( true ) { return 3 ; } else { return 7 ; }");
-        testWriteStatement("if ( true )\r\n\t\t{ return 3 ; }\r\n\t\telse { return 7 ; }");
-    }
-
-    @Test
-    public void variableDeclarationTest() {
+    @Test public void variableDeclarationTest() {
         testWriteStatement("int i = 3;");
         testWriteStatement("boolean /* comment 1 */ b /* comment 2 */ ;",
                 "bool /* comment 1 */ b /* comment 2 */ ;");
@@ -83,14 +57,12 @@ public class WriteCPPTest {
         testWriteStatement("boolean foo;", "bool foo;");
     }
 
-    @Test
-    public void blockTest() {
+    @Test public void blockTest() {
         testWriteStatement("{ int i = 3; boolean b = false; if ( b ) \r\n return 5; else return 6; }",
                 "{ int i = 3; bool b = false; if ( b )\r\n return 5; else return 6; }");
     }
 
-    @Test
-    public void classTest() {
+    @Test public void classTest() {
         testWriteClass(
                 "class Foo {\r\n" +
                 "	private int abc;\r\n" +

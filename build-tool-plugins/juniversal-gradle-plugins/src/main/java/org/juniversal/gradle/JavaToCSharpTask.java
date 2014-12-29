@@ -31,8 +31,7 @@ public class JavaToCSharpTask extends JUniversalTranslatorTask {
         super("c#");
     }
 
-    @TaskAction
-    public void translate() {
+    @TaskAction public void translate() {
         JavaToCSharp javaToCSharp = new JavaToCSharp(new GradleProject(getProject()));
         initTranslator(javaToCSharp);
 

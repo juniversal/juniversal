@@ -27,8 +27,8 @@ import org.juniversal.translator.TranslateNodeTest;
 
 public class TranslateMethodTest extends TranslateNodeTest {
     @Test public void testTranslateMethod() {
-        testTranslateMethod("int foo() { return 3; }", null, "func foo() -> Int { return 3; }");
-        testTranslateMethod("int foo(int a, int b) { return 3; }", null, "func foo(a: Int, b: Int) -> Int { return 3; }");
-        testTranslateMethod("void foo(int a, int b) { }", null, "func foo(a: Int, b: Int) { }");
+        testTranslateMethod("public int foo() { return 3; }", null, "func foo() -> Int { return 3; }");
+        testTranslateMethod("public int foo(int a, int b) { return 3; }", null, "func foo(a: Int, b: Int) -> Int { return 3; }");
+        testTranslateMethod("public void foo(int a, int b) { }", null, "func foo(a: Int, b: Int) { }");
     }
 }

@@ -23,6 +23,7 @@
 package org.juniversal.translator.swift;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.juniversal.translator.core.*;
@@ -50,9 +51,13 @@ public class SwiftTranslator extends Translator {
 
     @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
         try (StringWriter writer = new StringWriter()) {
-            SwiftSourceFileWriter swiftASTWriters = new SwiftSourceFileWriter(this, sourceFile, writer);
+            SwiftSourceFileWriter swiftSourceFileWriter = new SwiftSourceFileWriter(this, sourceFile, writer);
 
-            swiftASTWriters.writeRootNode(astNode);
+            // Set the type declaration part of the context
+            AbstractTypeDeclaration typeDeclaration = (AbstractTypeDeclaration) sourceFile.getCompilationUnit().types().get(0);
+            swiftSourceFileWriter.getContext().setTypeDeclaration(typeDeclaration);
+
+            swiftSourceFileWriter.writeRootNode(astNode);
 
             return writer.getBuffer().toString();
         } catch (IOException e) {

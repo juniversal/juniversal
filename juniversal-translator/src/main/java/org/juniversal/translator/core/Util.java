@@ -42,7 +42,7 @@ public class Util {
 	public static int countChars(String string, int character) {
 		int count = 0;
 		int currIndex = 0;
-		for (;;) {
+		while (true) {
 			currIndex = string.indexOf(character, currIndex);
 			if (currIndex == -1)
 				break;

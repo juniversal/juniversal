@@ -30,13 +30,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Context {
-    private TypeDeclaration typeDeclaration;
+    private AbstractTypeDeclaration typeDeclaration;
     private @Nullable Set<String> typeMethodNames = null;
     private ArrayList<WildcardType> methodWildcardTypes = null;
     private boolean writingMethodImplementation;
 
 
-    public TypeDeclaration getTypeDeclaration() {
+    public AbstractTypeDeclaration getTypeDeclaration() {
         return typeDeclaration;
     }
 
@@ -58,7 +58,7 @@ public class Context {
         return typeMethodNames;
     }
 
-    public void setTypeDeclaration(TypeDeclaration typeDeclaration) {
+    public void setTypeDeclaration(AbstractTypeDeclaration typeDeclaration) {
         if (typeDeclaration != this.typeDeclaration) {
             this.typeDeclaration = typeDeclaration;
             this.typeMethodNames = null;

@@ -35,7 +35,7 @@ public class TypeDeclarationWriter extends SwiftASTNodeWriter {
     public void write(ASTNode node) {
 		TypeDeclaration typeDeclaration = (TypeDeclaration) node;
 
-		TypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
+		AbstractTypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
         getContext().setTypeDeclaration(typeDeclaration);
 
         //new WriteTypeDeclaration(typeDeclaration, context, swiftASTWriters);

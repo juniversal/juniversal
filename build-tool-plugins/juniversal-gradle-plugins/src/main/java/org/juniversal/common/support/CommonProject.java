@@ -69,6 +69,14 @@ public abstract class CommonProject {
      */
     public abstract void error(String message);
 
+    /**
+     * Log an error message with an exception, as appropriate for the build system.
+     *
+     * @param message message to log
+     * @param t       exception to log
+     */
+    public abstract void error(String message, Throwable t);
+
     public abstract FileSet getTranslatableSourceDirectories(SourceType sourceType);
 
     public abstract FileSet getAllSourceDirectories(SourceType sourceType);

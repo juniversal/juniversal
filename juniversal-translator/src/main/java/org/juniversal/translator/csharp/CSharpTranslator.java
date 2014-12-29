@@ -57,6 +57,10 @@ public class CSharpTranslator extends Translator {
         try (StringWriter writer = new StringWriter()) {
             CSharpSourceFileWriter cSharpSourceFileWriter = new CSharpSourceFileWriter(this, sourceFile, writer);
 
+            // Set the type declaration part of the context
+            AbstractTypeDeclaration typeDeclaration = (AbstractTypeDeclaration) sourceFile.getCompilationUnit().types().get(0);
+            cSharpSourceFileWriter.getContext().setTypeDeclaration(typeDeclaration);
+
             cSharpSourceFileWriter.writeRootNode(astNode);
 
             return writer.getBuffer().toString();

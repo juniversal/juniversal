@@ -36,7 +36,7 @@ public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> 
 
     @Override
     public void write(TypeDeclaration typeDeclaration) {
-        @Nullable TypeDeclaration outerTypeDeclaration = getContext().getTypeDeclaration();
+        @Nullable AbstractTypeDeclaration outerTypeDeclaration = getContext().getTypeDeclaration();
         getContext().setTypeDeclaration(typeDeclaration);
 
         try {
@@ -50,7 +50,7 @@ public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> 
                 if (! containsStatic(modifiers))
                     throw sourceNotSupported("Only static nested classes are supported, as C# doesn't support inner (non static) classes.  Make the nested class static and pass in the outer instance to the constructor, to simulate an inner class.");
 
-                if (outerTypeDeclaration.isInterface())
+                if (isInterface(outerTypeDeclaration))
                     throw sourceNotSupported("C# doesn't support nested types inside an interface (nesting in a class is OK, but not an interface).   Move the nested type outside the interface.");
             }
 

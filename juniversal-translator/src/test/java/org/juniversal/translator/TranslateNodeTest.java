@@ -34,29 +34,12 @@ import org.juniversal.translator.csharp.CSharpTranslator;
 
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 
 public class TranslateNodeTest {
-    private int sourceTabStop = 4;
-    private int destTabStop = -1;
-
-    @Test
-    public void returnTest() {
-        sourceTabStop = 4;
-        destTabStop = -1;
-        testWriteStatement("return 3;", null, null);
-        testWriteStatement("return\r\n\t3;", "return\r\n    3;", "return\r\n    3;");
-        testWriteStatement("return\t3\t\t;", "return  3       ;", "return  3       ;");
-
-        sourceTabStop = 4;
-        destTabStop = 4;  // Return to default settings
-        testWriteStatement("return 3;", null, null);
-        testWriteStatement("return\r\n\t3;", null, null);
-        testWriteStatement("return\r\n   \t3;", "return\r\n\t3;", "return\r\n\t3;");
-        testWriteStatement("return\r\n  \t  \t 3;", "return\r\n\t\t 3;", "return\r\n\t\t 3;");
-        testWriteStatement("return\t3\t\t;", "return  3       ;", "return  3       ;");
-    }
+    protected int sourceTabStop = 4;
+    protected int destTabStop = -1;
 
 /*
     @Test public void ifTest() {
@@ -106,7 +89,7 @@ public class TranslateNodeTest {
 
     public void testWriteStatement(String javaStatement, @Nullable String expectedCSharp,
                                    @Nullable String expectedSwift) {
-        String javaFullSource = "class TestClass{ void testMethod() {\n" + javaStatement + "\n} }";
+        String javaFullSource = "class TestClass{ int testMethod() {\n" + javaStatement + "\n} }";
 
         CompilationUnit compilationUnit = parseCompilationUnit(javaFullSource);
 
@@ -189,10 +172,10 @@ public class TranslateNodeTest {
                                            @Nullable String expectedSwiftExpression) {
         String javaClass =
                 "class TestClass{\n" +
-                "    private int intField;\n" +
-                "    private int[] intArrayField;\n" +
-                "    void testMethod() {" + javaType + " foo = " + javaExpression + "; }\n" +
-                "}";
+                        "    private int intField;\n" +
+                        "    private int[] intArrayField;\n" +
+                        "    void testMethod() {" + javaType + " foo = " + javaExpression + "; }\n" +
+                        "}";
 
         CompilationUnit compilationUnit = parseCompilationUnit(javaClass);
 
@@ -219,7 +202,7 @@ public class TranslateNodeTest {
 
     protected void testTranslateMethod(String javaMethod, @Nullable String expectedCSharpMethod,
                                        @Nullable String expectedSwiftMethod) {
-        String javaClass = "class TestClass{ " + javaMethod + " }";
+        String javaClass = "final class TestClass{ " + javaMethod + " }";
 
         CompilationUnit compilationUnit = parseCompilationUnit(javaClass);
 
@@ -229,20 +212,18 @@ public class TranslateNodeTest {
                 expectedSwiftMethod);
     }
 
-    protected void testTranslateJavadocComment(String javadocComment, @Nullable String expectedCSharpComment,
-                                               @Nullable String expectedSwiftComment) {
-        String javaClass =  "class TestClass{\n" + javadocComment + "\n  void testMethod() {\n  }\n}";
+    protected void testTranslateJavadocComment(String javadocComment, @Nullable String expectedCSharpComment) {
+        String javaClass = "class TestClass{\n" + javadocComment + "\n  void testMethod() {\n  }\n}";
 
         CompilationUnit compilationUnit = parseCompilationUnit(javaClass);
 
-        int numComments = compilationUnit.getCommentList().size();
         Javadoc commentObj = getFirstJavadoc(compilationUnit);
         testTranslateNode(commentObj, javaClass, javadocComment, compilationUnit, expectedCSharpComment,
                 expectedCSharpComment);
     }
 
     public static Javadoc getFirstJavadoc(CompilationUnit compilationUnit) {
-        return (Javadoc)compilationUnit.getCommentList().get(0);
+        return (Javadoc) compilationUnit.getCommentList().get(0);
     }
 
     protected void testTranslateNode(ASTNode node, String javaFullSource, String javaNodeSource,
@@ -253,7 +234,9 @@ public class TranslateNodeTest {
         profile.setTabStop(destTabStop);
 */
 
-        SourceFile sourceFile = new SourceFile(compilationUnit, javaFullSource, 4);
+        cSharpTranslator.setDestTabStop(destTabStop);
+
+        SourceFile sourceFile = new SourceFile(compilationUnit, javaFullSource, sourceTabStop);
 
         testTranslate(cSharpTranslator, sourceFile, node, javaNodeSource, expectedCSharp);
         //testTranslate(swiftTranslator, sourceFile, node, javaNodeSource, expectedSwift);

@@ -29,9 +29,9 @@ import org.gradle.api.file.FileVisitor;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
-import org.juniversal.common.support.FileSet;
 import org.juniversal.common.support.CommonJavaExec;
 import org.juniversal.common.support.CommonProject;
+import org.juniversal.common.support.FileSet;
 import org.juniversal.common.support.SourceType;
 
 import java.io.File;
@@ -47,13 +47,11 @@ public class GradleProject extends CommonProject {
         this.project = project;
     }
 
-    @Override
-    public File getProjectDirectory() {
+    @Override public File getProjectDirectory() {
         return project.getProjectDir();
     }
 
-    @Override
-    public CommonJavaExec createJavaExec(String name, File executableJar) {
+    @Override public CommonJavaExec createJavaExec(String name, File executableJar) {
         return new GradleJavaExec(project, name, executableJar);
     }
 
@@ -71,25 +69,22 @@ public class GradleProject extends CommonProject {
         return fileSet;
     }
 
-    @Override
-    public FileSet getTranslatableSourceDirectories(SourceType sourceType) {
+    @Override public FileSet getTranslatableSourceDirectories(SourceType sourceType) {
         FileSet fileSet = createFileSet();
 
         for (File directory : getSourceSet(sourceType).getJava().getSrcDirs()) {
-            if (! directory.toString().contains("nontranslated"))
+            if (!directory.toString().contains("nontranslated"))
                 fileSet.add(directory);
         }
 
         return fileSet;
     }
 
-    @Override
-    public FileSet getAllSourceDirectories(SourceType sourceType) {
+    @Override public FileSet getAllSourceDirectories(SourceType sourceType) {
         return createFileSet(getSourceSet(sourceType).getAllJava().getSrcDirs());
     }
 
-    @Override
-    public FileSet getTranslatableSourceFiles(SourceType sourceType) {
+    @Override public FileSet getTranslatableSourceFiles(SourceType sourceType) {
         SourceSet sourceSet = getSourceSet(sourceType);
 
         // Get all the Java source files, from the source directory(ies) defined in the source set.  Skip source
@@ -115,8 +110,7 @@ public class GradleProject extends CommonProject {
         return sourceFiles;
     }
 
-    @Override
-    public FileSet getClasspath(SourceType sourceType) {
+    @Override public FileSet getClasspath(SourceType sourceType) {
         return createFileSet(getSourceSet(sourceType).getCompileClasspath());
     }
 
@@ -138,23 +132,23 @@ public class GradleProject extends CommonProject {
         else return SourceSet.MAIN_SOURCE_SET_NAME;
     }
 
-    @Override
-    public void debug(String message) {
+    @Override public void debug(String message) {
         project.getLogger().debug(message);
     }
 
-    @Override
-    public void info(String message) {
+    @Override public void info(String message) {
         project.getLogger().info(message);
     }
 
-    @Override
-    public void warn(String message) {
+    @Override public void warn(String message) {
         project.getLogger().warn(message);
     }
 
-    @Override
-    public void error(String message) {
+    @Override public void error(String message) {
         project.getLogger().error(message);
+    }
+
+    @Override public void error(String message, Throwable throwable) {
+        project.getLogger().error(message, throwable);
     }
 }

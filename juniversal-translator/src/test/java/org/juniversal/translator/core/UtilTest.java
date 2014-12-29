@@ -20,19 +20,18 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus;
+package org.juniversal.translator.core;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
+import org.juniversal.translator.core.Util;
 
-public @SuppressWarnings("unused") class AdHocTest {
-	@Test public void test() {
-		char a = 'a';
-		short b = (short) -10000;
-		
-		if (b < 0)
-			System.out.println("negative");
-		else System.out.println("positive");
-		
-		System.out.println((int) b);
+import org.junit.*;
+
+public class UtilTest {
+
+	@Test public void testCountChars() {
+		assertTrue(Util.countChars("abcxdefxghix", 'x') == 3);
+		assertTrue(Util.countChars("", 'x') == 0);
+		assertTrue(Util.countChars("abc\ndef", '\n') == 1);
 	}
 }
