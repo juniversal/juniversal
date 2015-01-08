@@ -42,8 +42,14 @@ public class NumberLiteralWriter extends CSharpASTNodeWriter<NumberLiteral> {
         // new C# 6 comes out)
         String token = rawToken.replace("_", "");
 
-        // First see if it's a floating point or integer literal
-        if (token.contains("."))
+        boolean isHex = token.startsWith("0x") || token.startsWith("0X");
+        char lastChar = token.charAt(token.length() - 1);
+
+        boolean isFloatingPoint = !isHex && (token.contains(".") || token.contains("e") || token.contains("E") ||
+                                             lastChar == 'f' || lastChar == 'F' || lastChar == 'd' || lastChar == 'D');
+
+        // First see if it's a floating point (with a decimal point or in scientific notation) or an integer
+        if (isFloatingPoint)
             write(token);
         else {
             // TODO: Support binary (and octal) literals by converting to hex
@@ -56,21 +62,25 @@ public class NumberLiteralWriter extends CSharpASTNodeWriter<NumberLiteral> {
                 }
             }
 
-            // If the literal exceeds the max size of an int/long, then C# will automatically treat its type as an
-            // unsigned int/long instead of signed.   In that case, add an explicit cast, with the unchecked modifier,
-            // to convert the type back to signed
+            if (token.length() < 8)
+                write(token);
+            else {
+                // If the literal exceeds the max size of an int/long, then C# will automatically treat its type as an
+                // unsigned int/long instead of signed.   In that case, add an explicit cast, with the unchecked modifier,
+                // to convert the type back to signed
 
-            BigInteger tokenValue = ASTUtil.getIntegerLiteralValue(numberLiteral);
+                BigInteger tokenValue = ASTUtil.getIntegerLiteralValue(numberLiteral);
 
-            // TODO: ADD TEST CASES HERE
-            if (token.endsWith("L") || token.endsWith("l")) {
-                if (tokenValue.longValue() < 0)
-                    write("unchecked((long) " + token + ")");
-                else write(token);
-            } else {
-                if (tokenValue.intValue() < 0)
-                    write("unchecked((int) " + token + ")");
-                else write(token);
+                // TODO: ADD TEST CASES HERE
+                if (lastChar == 'L' || lastChar == 'l') {
+                    if (tokenValue.longValue() < 0)
+                        write("unchecked((long) " + token + ")");
+                    else write(token);
+                } else {
+                    if (tokenValue.intValue() < 0)
+                        write("unchecked((int) " + token + ")");
+                    else write(token);
+                }
             }
         }
 

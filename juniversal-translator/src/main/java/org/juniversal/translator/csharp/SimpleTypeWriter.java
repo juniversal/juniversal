@@ -34,19 +34,19 @@ public class SimpleTypeWriter extends CSharpASTNodeWriter<SimpleType> {
     public SimpleTypeWriter(CSharpSourceFileWriter cSharpASTWriters) {
         super(cSharpASTWriters);
 
+        // TODO: Finalize how will handle Java primitive type wrappers, considering when will allow to be nullable
         primitiveWrapperClassMapping = new HashMap<>();
-        primitiveWrapperClassMapping.put("java.lang.Byte", "Byte?");
-        primitiveWrapperClassMapping.put("java.lang.Short", "Int16?");
-        primitiveWrapperClassMapping.put("java.lang.Integer", "Int32?");
-        primitiveWrapperClassMapping.put("java.lang.Long", "Int64?");
-        primitiveWrapperClassMapping.put("java.lang.Float", "Single?");
-        primitiveWrapperClassMapping.put("java.lang.Double", "Double?");
-        primitiveWrapperClassMapping.put("java.lang.Character", "Char?");
-        primitiveWrapperClassMapping.put("java.lang.Boolean", "Boolean?");
+        primitiveWrapperClassMapping.put("java.lang.Byte", "byte");
+        primitiveWrapperClassMapping.put("java.lang.Short", "short");
+        primitiveWrapperClassMapping.put("java.lang.Integer", "int");
+        primitiveWrapperClassMapping.put("java.lang.Long", "long");
+        primitiveWrapperClassMapping.put("java.lang.Float", "float");
+        primitiveWrapperClassMapping.put("java.lang.Double", "double");
+        primitiveWrapperClassMapping.put("java.lang.Character", "char");
+        primitiveWrapperClassMapping.put("java.lang.Boolean", "bool");
     }
 
-    @Override
-    public void write(SimpleType simpleType) {
+    @Override public void write(SimpleType simpleType) {
         Name name = simpleType.getName();
 
         String fullyQualifiedTypeName = "";
@@ -61,9 +61,10 @@ public class SimpleTypeWriter extends CSharpASTNodeWriter<SimpleType> {
         } else if (fullyQualifiedTypeName.equals("java.lang.String")) {
             matchNodeAndWrite(name, "string");
         } else if (fullyQualifiedTypeName.equals("java.lang.Cloneable")) {
+            // TODO: INCLUDE Cloneable?
             matchNodeAndWrite(name, nativeReference("System", "ICloneable"));
         } else if (mappedPrimitiveWrapper != null) {
-            matchNodeAndWrite(name, nativeReference("System", mappedPrimitiveWrapper));
+            matchNodeAndWrite(name, mappedPrimitiveWrapper);
         } else if (fullyQualifiedTypeName.equals("java.lang.StringBuilder")) {
             matchNodeAndWrite(name, nativeReference("System.Text", "StringBuilder"));
         } else if (fullyQualifiedTypeName.equals("java.lang.Throwable")) {

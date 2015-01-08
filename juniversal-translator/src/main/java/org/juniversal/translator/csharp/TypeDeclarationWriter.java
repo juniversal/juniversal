@@ -40,14 +40,14 @@ public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> 
         getContext().setTypeDeclaration(typeDeclaration);
 
         try {
-            if (isFunctionalInterface(typeDeclaration))   {
+            if (isFunctionalInterface(typeDeclaration)) {
                 writeFunctionalInterfaceAsDelegate(typeDeclaration);
                 return;
             }
 
             List<?> modifiers = typeDeclaration.modifiers();
             if (outerTypeDeclaration != null) {
-                if (! containsStatic(modifiers))
+                if (!containsStatic(modifiers))
                     throw sourceNotSupported("Only static nested classes are supported, as C# doesn't support inner (non static) classes.  Make the nested class static and pass in the outer instance to the constructor, to simulate an inner class.");
 
                 if (isInterface(outerTypeDeclaration))
@@ -57,7 +57,6 @@ public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> 
             boolean isInterface = typeDeclaration.isInterface();
 
             List typeParameters = typeDeclaration.typeParameters();
-
             boolean isGeneric = !typeParameters.isEmpty();
 
             writeAccessModifier(modifiers);
@@ -138,6 +137,28 @@ public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> 
                 functionalInterfaceMethod.getName().getIdentifier(),
                 typeDeclaration.getName().getIdentifier());
 
+        List typeParameters = typeDeclaration.typeParameters();
+        boolean isGeneric = !typeParameters.isEmpty();
+        if (isGeneric) {
+            setPositionToEndOfNode(typeDeclaration.getName());
+
+            copySpaceAndComments();
+            matchAndWrite("<");
+
+            writeCommaDelimitedNodes(typeParameters, (TypeParameter typeParameter) -> {
+                copySpaceAndComments();
+                writeNode(typeParameter.getName());
+
+                // Skip any constraints; they'll be written out at the end of the declaration line
+                setPositionToEndOfNode(typeParameter);
+            });
+
+            copySpaceAndComments();
+            matchAndWrite(">");
+
+            setPositionToEndOfNode(functionalInterfaceMethod.getName());
+        }
+
         copySpaceAndComments();
         matchAndWrite("(");
 
@@ -153,6 +174,9 @@ public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> 
 
         copySpaceAndComments();
         matchAndWrite(")");
+
+        if (isGeneric)
+            writeTypeParameterConstraints(typeParameters);
 
         copySpaceAndComments();
         matchAndWrite(";");

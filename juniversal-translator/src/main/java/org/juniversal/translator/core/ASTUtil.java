@@ -179,7 +179,7 @@ public class ASTUtil {
      * @param extendedModifiers extended modifiers to check
      * @return true if and only if list contains "static"
      */
-    public static boolean containsStatic(List<?> extendedModifiers) {
+    public static boolean containsStatic(List extendedModifiers) {
         for (Object extendedModifierObject : extendedModifiers) {
             IExtendedModifier extendedModifier = (IExtendedModifier) extendedModifierObject;
             if (extendedModifier.isModifier() && ((Modifier) extendedModifier).isStatic())
@@ -254,21 +254,6 @@ public class ASTUtil {
 
     public static boolean isAbstract(TypeDeclaration typeDeclaration) {
         return containsAbstract(typeDeclaration.modifiers());
-    }
-
-    public static boolean isOverride(MethodDeclaration methodDeclaration) {
-        for (Object extendedModifierObject : methodDeclaration.modifiers()) {
-            IExtendedModifier extendedModifier = (IExtendedModifier) extendedModifierObject;
-            if (extendedModifier.isAnnotation()) {
-                // TODO: Check for full, resolved binding annotation type name, matching against java.lang.Override as
-                // soon as figure & fix out why calling resolveAnnotationBinding returned null here
-                Annotation annotation = (Annotation) extendedModifier;
-                if (annotation.getTypeName().getFullyQualifiedName().equals("Override"))
-                    return true;
-            }
-        }
-
-        return false;
     }
 
     public static boolean isConstructor(MethodDeclaration methodDeclaration) {
@@ -362,11 +347,18 @@ public class ASTUtil {
         return getEndPosition((ASTNode) lastNodeObject);
     }
 
+    public static @Nullable String qualifierFromQualifiedName(String qualifiedName) {
+        int lastPeriodIndex = qualifiedName.lastIndexOf('.');
+        if (lastPeriodIndex == -1)
+            return null;
+        else return qualifiedName.substring(0, lastPeriodIndex);
+    }
+
     public static String simpleNameFromQualifiedName(String qualifiedName) {
         int lastPeriodIndex = qualifiedName.lastIndexOf('.');
         if (lastPeriodIndex == -1)
             return qualifiedName;
-        else return qualifiedName.substring(lastPeriodIndex) + 1;
+        else return qualifiedName.substring(lastPeriodIndex + 1);
     }
 
     public static boolean directlyImplementsInterface(ITypeBinding typeBinding, String desiredInterfaceQualifiedName) {
@@ -389,6 +381,15 @@ public class ASTUtil {
     }
 
     public static boolean isFunctionalInterface(TypeDeclaration typeDeclaration) {
+        return anyMatch(typeDeclaration.modifiers(),
+                (IExtendedModifier extendedModifier) -> isFunctionalInterface(extendedModifier));
+    }
+
+/*
+    public static boolean isFunctionalInterface(ITypeBinding typeBinding) {
+        typeBinding.
+
+
         boolean hasAnnotation = false;
         for (Object extendedModifierObject : typeDeclaration.modifiers()) {
             IExtendedModifier extendedModifier = (IExtendedModifier) extendedModifierObject;
@@ -400,15 +401,14 @@ public class ASTUtil {
 
         return hasAnnotation;
     }
+*/
 
     public static boolean isGenericImport(ImportDeclaration importDeclaration) {
         @Nullable IBinding binding = importDeclaration.resolveBinding();
         return binding != null && binding instanceof ITypeBinding && ((ITypeBinding) binding).isGenericType();
     }
 
-    public static boolean isFunctionalInterfaceImplementation(SourceFileWriter sourceFileWriter, Type type) {
-        ITypeBinding typeBinding = sourceFileWriter.resolveTypeBinding(type);
-
+    public static boolean isFunctionalInterface(ITypeBinding typeBinding) {
         if (!typeBinding.isInterface())
             return false;
 
@@ -416,26 +416,23 @@ public class ASTUtil {
         if (methodCount != 1)
             return false;
 
-        boolean hasFunctionalInterfaceAnnotation = false;
-        for (IAnnotationBinding annotationBinding : typeBinding.getAnnotations()) {
-            annotationBinding.getAnnotationType().getQualifiedName().equals("java.lang.FunctionalInterface");
-            hasFunctionalInterfaceAnnotation = true;
-        }
-
-        if (!hasFunctionalInterfaceAnnotation)
-            return false;
+        // See if the type has the FunctionalInterface annotation
+        return anyMatch(typeBinding.getAnnotations(),
+                (IAnnotationBinding annotationBinding) -> annotationBinding.getAnnotationType().getQualifiedName().equals("java.lang.FunctionalInterface"));
 
         // TODO: Ensure no default implementation (I think) nor constants defined for the interface
+    }
 
-        return true;
+    public static boolean isFunctionalInterfaceImplementation(SourceFileWriter sourceFileWriter, Type type) {
+        return isFunctionalInterface(sourceFileWriter.resolveTypeBinding(type));
     }
 
     /**
      * Add all the wildcards referenced from a given type, searching recursively in the type definition to add all of
      * them.   That is, for a type like this:
-     * <p>
+     * <p/>
      * "Foo< Bar<? extends Fizz>, <Blip <? super Pop>>, ? >"
-     * <p>
+     * <p/>
      * 3 wildcard types would be added (<? extends Fizz>, <? super Pop>, and ?) since essentially the ? appears 3 times
      * the in the type definition above.
      *
@@ -458,6 +455,48 @@ public class ASTUtil {
             if (bound != null)
                 addWildcardTypes(bound, wildcardTypes);
         }
+    }
+
+    /**
+     * Checks if the cast expression is creating an array (which in Java can never be generic) and then turns around and
+     * casts it to an array of a generic type.   In Java, which doesn't allow directly creating a generic array,
+     * creating a non-generic array and casting is the the only way to create an array of generic type.   However, in
+     * other languages, like C#, that don't do type erasure for generics you can create a generic array directly--and in
+     * fact you have to if that's what you want to end up with.   This method helps us map from the Java way (cast) to
+     * target language (create directly, with no cast).
+     *
+     * @param castExpression cast expression in question
+     * @return true if the expression creates an array then casts it to a generic array
+     */
+    public static boolean isGenericArrayCreation(CastExpression castExpression) {
+        if (!(castExpression.getExpression() instanceof ArrayCreation))
+            return false;
+
+        Type type = castExpression.getType();
+        return type instanceof ArrayType && isGenericType(((ArrayType) type).getElementType());
+    }
+
+    /**
+     * Returns true if the specified type is generic in any way (that is, it has generic parameters, like
+     * ArrayList&lt;E&gt;, is a type variable itself, like E, or is an array of a generic type, like E[]).
+     *
+     * @param type type in question
+     * @return true if it's a generic type
+     */
+    public static boolean isGenericType(Type type) {
+        if (type instanceof ParameterizedType)
+            return true;
+
+        if (type instanceof ArrayType)
+            return isGenericType(((ArrayType) type).getElementType());
+
+        if (type instanceof SimpleType) {
+            ITypeBinding typeBinding = type.resolveBinding();
+            if (typeBinding != null && typeBinding.isTypeVariable())
+                return true;
+        }
+
+        return false;
     }
 
     @FunctionalInterface
@@ -486,13 +525,87 @@ public class ASTUtil {
     }
 
     public static <T> boolean anyMatch(List list, Predicate<? super T> predicate) {
-        long i = 0x2_540b_e3ffL;
         for (Object elmtObject : list) {
             T elmt = (T) elmtObject;
             if (predicate.test(elmt))
                 return true;
         }
         return false;
+    }
+
+    public static <T> boolean anyMatch(T[] array, Predicate<? super T> predicate) {
+        for (T elmt : array) {
+            if (predicate.test(elmt))
+                return true;
+        }
+        return false;
+    }
+
+    public static boolean anyTypeOrAncestorMatch(ITypeBinding typeBinding, Predicate<? super ITypeBinding> predicate) {
+        if (predicate.test(typeBinding))
+            return true;
+
+        return anyAncestorMatch(typeBinding, predicate);
+    }
+
+    public static boolean anyAncestorMatch(ITypeBinding typeBinding, Predicate<? super ITypeBinding> predicate) {
+        ITypeBinding superClassTypeBinding = typeBinding.getSuperclass();
+        if (superClassTypeBinding != null && anyTypeOrAncestorMatch(superClassTypeBinding, predicate))
+            return true;
+
+        for (ITypeBinding interfaceTypeBinding : typeBinding.getInterfaces()) {
+            if (anyTypeOrAncestorMatch(interfaceTypeBinding, predicate))
+                return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check all the superclasses (all the way up the tree) for the given type, seeing if any of them match the
+     * specified predicate.   Note that the type itself isn't checked, just its superclasses.   Interfaces aren't
+     * checked either; use anyAncestorInterfaceMatch for that.
+     *
+     * @param typeBinding type (normally a class)
+     * @param predicate   predicate to test against
+     * @return true if any superclass matches the specified test
+     */
+    public static boolean anySuperclassMatch(ITypeBinding typeBinding, Predicate<? super ITypeBinding> predicate) {
+        // See if this method doesn't have the @Override annotation but actually is an override, by iterating through
+        // all ancestor classes/interfaces and checking methods on each to see if this method overrides
+        ITypeBinding superclass = typeBinding.getSuperclass();
+
+        while (superclass != null) {
+            if (predicate.test(superclass))
+                return true;
+            superclass = superclass.getSuperclass();
+        }
+
+        return false;
+    }
+
+    /**
+     * Check all the ancestor interfaces of the given type, to see if any of them match the specified predicate.
+     * Ancestor interfaces include super interfaces for a type & their super interfaces, all the way up the tree. Super
+     * interfaces implemented by are are also included.   Note that superclasses themselves aren't tested (use
+     * anySuperclassMatch for that), but all interfaces implemented by superclasses are tested.
+     *
+     * @param typeBinding type (normally a class) in question
+     * @param predicate   predicate to test against
+     * @return true if any superinterface matches the specified test
+     */
+    public static boolean anyAncestorInterfaceMatch(ITypeBinding typeBinding, Predicate<? super ITypeBinding> predicate) {
+        // See if this method doesn't have the @Override annotation but actually is an override, by iterating through
+        // all ancestor classes/interfaces and checking methods on each to see if this method overrides
+        for (ITypeBinding interfaceBinding : typeBinding.getInterfaces()) {
+            if (predicate.test(interfaceBinding))
+                return true;
+
+            if (anyAncestorMatch(interfaceBinding, predicate))
+                return true;
+        }
+
+        return anySuperclassMatch(typeBinding, superclass -> anyAncestorInterfaceMatch(superclass, predicate));
     }
 
     public static BigInteger getIntegerLiteralValue(NumberLiteral numberLiteral) {
@@ -507,7 +620,7 @@ public class ASTUtil {
             return new BigInteger(token.substring(2), 16);
         else if (token.startsWith("0B"))
             return new BigInteger(token.substring(2), 2);
-        else if (token.startsWith("0") && ! token.equals("0"))
+        else if (token.startsWith("0") && !token.equals("0"))
             return new BigInteger(token.substring(1), 8);
         else return new BigInteger(token, 10);
     }

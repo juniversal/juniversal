@@ -22,10 +22,7 @@
 
 package org.juniversal.translator.core;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Javadoc;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;

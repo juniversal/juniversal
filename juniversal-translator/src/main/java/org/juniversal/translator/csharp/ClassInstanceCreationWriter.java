@@ -65,7 +65,7 @@ public class ClassInstanceCreationWriter extends CSharpASTNodeWriter<ClassInstan
         Type type = classInstanceCreation.getType();
 
         if (! isFunctionalInterfaceImplementation(getSourceFileWriter(), type))
-            throw sourceNotSupported("Anonymous inner classes are only supported when they implement a functional interface--an interface with a single abstract method, no constants, and the @FunctionalInterface annotation");
+            throw sourceNotSupported("Anonymous inner classes are only supported when they implement a functional interface (an interface with a single abstract method, no constants, and the @FunctionalInterface annotation).  Change to use a functional interface if you just want a single method/function or use a static (non-anonymous) inner class for a full class.");
 
         MethodDeclaration functionalMethod = (MethodDeclaration) classInstanceCreation.getAnonymousClassDeclaration().bodyDeclarations().get(0);
 

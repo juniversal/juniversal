@@ -29,11 +29,11 @@ import org.juniversal.translator.core.SourceFileWriter;
 import org.juniversal.translator.core.Var;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
 import static org.juniversal.translator.core.ASTUtil.isGenericImport;
-import static org.juniversal.translator.core.ASTUtil.isThisName;
 
 
 // TODO: Finish this
@@ -74,14 +74,18 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
     }
 
     private void writeUsingStatements(CompilationUnit compilationUnit) {
+        Map<String, String> annotationMap = getSourceFileWriter().getTranslator().getAnnotationMap();
         Set<String> genericUsings = new HashSet<>();
 
         Var<Boolean> wroteUsing = new Var<>(false);
         forEach(compilationUnit.imports(), (ImportDeclaration importDeclaration) -> {
             Name importDeclarationName = importDeclaration.getName();
 
-            // Skip imports for the Nullable annotation
-            if (isThisName(importDeclarationName, "org.jetbrains.annotations.Nullable")) {
+            String importDeclarationFullyQualifiedName = importDeclarationName.getFullyQualifiedName();
+
+            // Skip imports for the Nullable annotation and mapped annotations
+            if (importDeclarationFullyQualifiedName.equals("org.jetbrains.annotations.Nullable") ||
+                annotationMap.containsKey(importDeclarationFullyQualifiedName)) {
                 setPositionToEndOfNode(importDeclaration);
                 return;
             }
@@ -106,6 +110,10 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
             copySpaceAndComments();
             if (importDeclaration.isOnDemand()) {
                 writeNode(importDeclarationName);
+                skipSpaceAndComments();
+                match(".");
+                skipSpaceAndComments();
+                match("*");
             } else {
                 if (namespaceToImportForGenericClass != null) {
                     write(namespaceToImportForGenericClass);
@@ -124,7 +132,7 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
             wroteUsing.set(true);
         });
 
-        if (wroteUsing.get())
+        if (wroteUsing.value())
             writeln();
 
         for (String extraUsing : getContext().getExtraUsings()) {

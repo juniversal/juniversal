@@ -5,12 +5,22 @@
       <GradleProjectSettings>
         <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="c:/Tools/gradle-2.1" />
+        <option name="gradleHome" value="$PROJECT_DIR$/../../gradle-1.12" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/juniversal-translator" />
             <option value="$PROJECT_DIR$/translator-tests" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/build-tool-plugins/juniversal-gradle-plugins" />
+        <option name="gradleHome" value="$PROJECT_DIR$/../../gradle-1.12" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/build-tool-plugins/juniversal-gradle-plugins" />
           </set>
         </option>
       </GradleProjectSettings>

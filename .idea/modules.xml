@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/juniversal.iml" filepath="$PROJECT_DIR$/juniversal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/build-tool-plugins/juniversal-gradle-plugins/juniversal-gradle-plugins.iml" filepath="$PROJECT_DIR$/build-tool-plugins/juniversal-gradle-plugins/juniversal-gradle-plugins.iml" />
       <module fileurl="file://$PROJECT_DIR$/juniversal-translator/juniversal-translator.iml" filepath="$PROJECT_DIR$/juniversal-translator/juniversal-translator.iml" />
       <module fileurl="file://$PROJECT_DIR$/translator-tests/translator-tests.iml" filepath="$PROJECT_DIR$/translator-tests/translator-tests.iml" />
     </modules>

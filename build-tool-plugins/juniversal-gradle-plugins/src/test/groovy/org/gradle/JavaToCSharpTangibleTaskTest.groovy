@@ -25,7 +25,7 @@ package org.gradle
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Test
-import org.juniversal.gradle.JavaToCSharpTangibleTask
+import org.juniversal.buildtools.gradle.JavaToCSharpTangibleTask
 
 import static org.junit.Assert.assertTrue
 

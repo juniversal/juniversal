@@ -59,13 +59,10 @@ public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> 
             if (statement instanceof SwitchCase) {
                 SwitchCase switchCase = (SwitchCase) statement;
 
-                if (previousStatement.isSet() && !(previousStatement.get() instanceof BreakStatement ||
-                        previousStatement.get() instanceof ContinueStatement ||
-                        previousStatement.get() instanceof ReturnStatement)) {
-
+                if (previousStatement.isSet() && !isSwitchExitStatement(previousStatement.value())) {
                     copySpaceAndCommentsUntilEOL();
                     writeln();
-                    indentToColumn(previousStatementIndent.get());
+                    indentToColumn(previousStatementIndent.value());
 
                     write("goto case ");
                     writeCaseLabelAtOtherPosition(switchCase.getExpression());
@@ -86,8 +83,25 @@ public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> 
             }
         });
 
+        // In C#, unlike Java, the final case statement / default in the switch must end in an explicit break (assuming
+        // it doesn't exit the scope in some other way)
+        if (previousStatement.isSet() && !isSwitchExitStatement(previousStatement.value())) {
+            copySpaceAndCommentsUntilEOL();
+            writeln();
+            indentToColumn(previousStatementIndent.value());
+
+            write("break;");
+        }
+
         copySpaceAndComments();
         matchAndWrite("}");
+    }
+
+    private boolean isSwitchExitStatement(Statement previousStatement) {
+        return previousStatement instanceof BreakStatement ||
+               previousStatement instanceof ContinueStatement ||
+               previousStatement instanceof ReturnStatement ||
+               previousStatement instanceof ThrowStatement;
     }
 
     private void writeSwitchCase(SwitchCase switchCase) {

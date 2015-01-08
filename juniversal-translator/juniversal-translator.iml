@@ -102,7 +102,9 @@
           <root url="jar://$MODULE_DIR$/libs/org.eclipse.jdt.core_3.10.0.v20140604-1726.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/libs-source/org.eclipse.jdt.core.source_3.10.0.v20140604-1726.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library" exported="">

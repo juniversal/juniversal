@@ -31,7 +31,7 @@ public class MethodInvocationWriter extends MethodInvocationWriterBase<MethodInv
 
     @Override public void write(MethodInvocation methodInvocation) {
         writeMethodInvocation(methodInvocation, methodInvocation.getExpression(),
-                methodInvocation.getName().getIdentifier(), methodInvocation.typeArguments(),
+                methodInvocation.getName(), methodInvocation.typeArguments(),
                 methodInvocation.arguments(), methodInvocation.resolveMethodBinding());
     }
 }

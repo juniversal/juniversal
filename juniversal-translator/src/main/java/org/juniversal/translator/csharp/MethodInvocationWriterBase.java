@@ -22,9 +22,7 @@
 
 package org.juniversal.translator.csharp;
 
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.JUniversalException;
 
@@ -38,8 +36,10 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
         super(cSharpASTWriters);
     }
 
-    protected void writeMethodInvocation(T methodInvocationNode, @Nullable Expression expression, String methodName,
+    protected void writeMethodInvocation(T methodInvocationNode, @Nullable Expression expression, SimpleName methodName,
                                          List typeArguments, List arguments, IMethodBinding methodBinding) {
+        String methodNameString = methodName.getIdentifier();
+
         ArrayList<Expression> args = new ArrayList<>();
         for (Object argument : arguments)
             args.add((Expression) argument);
@@ -51,11 +51,23 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
 
             // If the Java method is mapped to an overloaded operator in C# (e.g. charAt -> []) then handle that case
             // here, with no "." getting written
-            if (writeMethodMappedToOperatorOverload(methodName, args, methodBinding))
+            if (writeMethodMappedToOperatorOverload(methodNameString, args, methodBinding))
                 return;
 
-            matchAndWrite(".");
+            // A functional interface method becomes a delegate.   So in Java a call of the form
+            // "funcInterface.funcMethod(...)" becomes in C# "funcInterface(...)".   Handle that case here
+            @Nullable ITypeBinding expressionTypeBinding = expression.resolveTypeBinding();
+            if (expressionTypeBinding != null && isFunctionalInterface(expressionTypeBinding)) {
+                match(".");
+                skipSpaceAndComments();
+                match(methodNameString);
+                skipSpaceAndComments();
 
+                writeMethodInvocationArgumentList(arguments);
+                return;
+            }
+
+            matchAndWrite(".");
             copySpaceAndComments();
         }
 
@@ -65,22 +77,38 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
         else objectType = methodBinding.getDeclaringClass();
 
         // If it's a standard Object method (toString, equals, etc.), handle that first
-        if (writeMappedObjectMethod(methodInvocationNode, methodName, args, methodBinding))
+        if (writeMappedObjectMethod(methodInvocationNode, methodNameString, args, methodBinding))
             return;
 
         if (implementsInterface(objectType, "java.lang.List"))
-            if (writeMappedListMethod(methodInvocationNode, methodName, args, methodBinding))
+            if (writeMappedListMethod(methodInvocationNode, methodNameString, args, methodBinding))
                 return;
 
         if (isType(objectType, "java.lang.String"))
-            writeMappedStringMethod(methodInvocationNode, methodName, args, methodBinding);
+            writeMappedStringMethod(methodInvocationNode, methodNameString, args, methodBinding);
         else if (isType(objectType, "java.lang.StringBuilder"))
-            writeMappedStringBuilderMethod(methodInvocationNode, methodName, args, methodBinding);
+            writeMappedStringBuilderMethod(methodInvocationNode, methodNameString, args, methodBinding);
         else {
-            matchAndWrite(methodName);
+            // In C# type arguments for methods come after the method name, not before ("foo.<String>bar(3)" in Java is
+            // "foo.bar<String>(3)" in C#).   So change the order around here.
+            if (typeArguments != null && !typeArguments.isEmpty()) {
+                writeNodeAtDifferentPosition(methodName);
+
+                matchAndWrite("<");
+
+                writeCommaDelimitedNodes(typeArguments, (Type type) -> {
+                    copySpaceAndComments();
+                    writeNode(type);
+                });
+
+                copySpaceAndComments();
+                matchAndWrite(">");
+
+                setPositionToEndOfNode(methodName);
+            } else matchAndWrite(methodNameString);
 
             copySpaceAndComments();
-            writeMethodInvocationArgumentList(typeArguments, arguments);
+            writeMethodInvocationArgumentList(arguments);
         }
     }
 
@@ -88,8 +116,8 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
      * Some Java methods are mapped to overloaded operators in C# (just String.charAt -> [] currently).  Handle those
      * here.
      *
-     * @param methodName method name
-     * @param args method arguments
+     * @param methodName    method name
+     * @param args          method arguments
      * @param methodBinding IMethodBinding object
      * @return true iff the method call was handled, mapped to an operator
      */
@@ -100,7 +128,7 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
 
         ITypeBinding objectType = methodBinding.getDeclaringClass();
 
-        if (isType(objectType, "java.lang.String")) {
+        if (isType(objectType, "java.lang.String") || isType(objectType, "java.lang.AbstractStringBuilder")) {
             switch (methodName) {
                 case "charAt":
                     verifyArgCount(args, 1);
@@ -122,8 +150,7 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
                 default:
                     return false;
             }
-        }
-        else return false;
+        } else return false;
     }
 
     private boolean writeMappedObjectMethod(T methodInvocation, String methodName,
@@ -188,14 +215,6 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
             }
         } else {
             switch (methodName) {
-                case "charAt":
-                    verifyArgCount(args, 1);
-                    write("[");
-                    setPositionToStartOfNode(args.get(0));
-                    writeNode(args.get(0));
-                    write("]");
-                    break;
-
                 case "compareTo":
                     verifyArgCount(args, 1);
                     writeMappedMethod("CompareTo", args.get(0));
@@ -209,11 +228,6 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
                 case "endsWith":
                     verifyArgCount(args, 1);
                     writeMappedMethod("EndsWith", args.get(0), nativeReference("System", "StringComparison.Ordinal"));
-                    break;
-
-                case "getChars":
-                    verifyArgCount(args, 4);
-                    writeMappedMethod("GetCharsHelper", args.get(0), args.get(1), args.get(2), args.get(3));
                     break;
 
                 case "indexOf":
@@ -313,14 +327,6 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
         match(methodName);
 
         switch (methodName) {
-            case "charAt":
-                verifyArgCount(args, 1);
-                write("[");
-                setPositionToStartOfNode(args.get(0));
-                writeNode(args.get(0));
-                write("]");
-                break;
-
             case "append":
                 verifyArgCount(args, 1, 3);
                 if (args.size() == 1)
@@ -348,15 +354,15 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
     private void verifyArgCount(ArrayList<Expression> args, int expectedArgCount) {
         if (args.size() != expectedArgCount)
             throw sourceNotSupported("Method call has " + args.size() +
-                    " argument(s); the translator only supports this method with " +
-                    expectedArgCount + " argument(s)");
+                                     " argument(s); the translator only supports this method with " +
+                                     expectedArgCount + " argument(s)");
     }
 
     private void verifyArgCount(ArrayList<Expression> args, int expectedArgCount1, int expectedArgCount2) {
         if (args.size() != expectedArgCount1 && args.size() != expectedArgCount2)
             throw sourceNotSupported("Method call has " + args.size() +
-                    " argument(s); the translator only supports this method with " +
-                    expectedArgCount1 + " or " + expectedArgCount2 + " argument(s)");
+                                     " argument(s); the translator only supports this method with " +
+                                     expectedArgCount1 + " or " + expectedArgCount2 + " argument(s)");
     }
 
     private void writeMappedMethod(String mappedMethodName, Object... args) {

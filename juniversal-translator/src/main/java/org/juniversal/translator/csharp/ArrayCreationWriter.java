@@ -37,6 +37,10 @@ public class ArrayCreationWriter extends CSharpASTNodeWriter<ArrayCreation> {
 
     @Override
     public void write(ArrayCreation arrayCreation) {
+        // TODO: C# doesn't support an exact equivalent to Integer[], with boxed integers (or other primitive types).
+        // Consider disallowing arrays of that type to be created, instead forcing the dev to either create an
+        // Object[] if they want boxed types or an int[] if they want primitive types
+
         List<?> dimensions = arrayCreation.dimensions();
         // TODO: Support multidimensional arrays
         if (dimensions.size() > 1)

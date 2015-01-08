@@ -42,7 +42,7 @@ public class SuperMethodInvocationWriter extends MethodInvocationWriterBase<Supe
 
         copySpaceAndComments();
         writeMethodInvocation(superMethodInvocation, null,
-                superMethodInvocation.getName().getIdentifier(), superMethodInvocation.typeArguments(),
+                superMethodInvocation.getName(), superMethodInvocation.typeArguments(),
                 superMethodInvocation.arguments(), superMethodInvocation.resolveMethodBinding());
     }
 }

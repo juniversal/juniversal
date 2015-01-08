@@ -30,7 +30,6 @@ import org.juniversal.translator.core.Context;
 import java.util.List;
 
 import static org.juniversal.translator.core.ASTUtil.isFinal;
-import static org.juniversal.translator.core.ASTUtil.isOverride;
 import static org.juniversal.translator.core.ASTUtil.isStatic;
 
 

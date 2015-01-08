@@ -32,10 +32,21 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CSharpTranslator extends Translator {
-    @Override
-    public void translateFile(SourceFile sourceFile) {
+    private HashMap<String, String> annotationMap = new HashMap<>();
+
+    public CSharpTranslator() {
+        annotationMap.put("org.junit.Test", "NUnit.Framework.Test");
+    }
+
+    public Map<String, String> getAnnotationMap() {
+        return annotationMap;
+    }
+
+    @Override public void translateFile(SourceFile sourceFile) {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         AbstractTypeDeclaration mainTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
 
@@ -52,8 +63,7 @@ public class CSharpTranslator extends Translator {
         }
     }
 
-    @Override
-    public String translateNode(SourceFile sourceFile, ASTNode astNode) {
+    @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
         try (StringWriter writer = new StringWriter()) {
             CSharpSourceFileWriter cSharpSourceFileWriter = new CSharpSourceFileWriter(this, sourceFile, writer);
 

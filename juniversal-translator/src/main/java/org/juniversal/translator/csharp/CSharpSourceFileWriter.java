@@ -548,6 +548,14 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
                 writeNode(synchronizedStatement.getBody());
             }
         });
+
+        // Static initializer
+        addWriter(Initializer.class, new CSharpASTNodeWriter<Initializer>(this) {
+            @Override
+            public void write(Initializer initializer) {
+                throw sourceNotSupported("Static initializers aren't supported (for one thing, their order of execution isn't fully deterministic); use a static method that initializes on demand instead");
+            }
+        });
     }
 
     /**
@@ -754,21 +762,7 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
 
         // TODO: Implement this
         // Cast expression
-        addWriter(CastExpression.class, new CSharpASTNodeWriter<CastExpression>(this) {
-            @Override
-            public void write(CastExpression castExpression) {
-                matchAndWrite("(");
-
-                copySpaceAndComments();
-                writeNode(castExpression.getType());
-
-                copySpaceAndComments();
-                matchAndWrite(")");
-
-                copySpaceAndComments();
-                writeNode(castExpression.getExpression());
-            }
-        });
+        addWriter(CastExpression.class, new CastExpressionWriter(this));
 
         // Number literal
         addWriter(NumberLiteral.class, new NumberLiteralWriter(this));
@@ -786,6 +780,9 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
             @Override
             public void write(CharacterLiteral characterLiteral) {
                 // TODO: Map character escape sequences
+                // TODO: Add cast to {byte) or other types if needed, to handle for instance:
+                // byte[] binaryData = new byte[]{'1', '2', '3'};
+                // Maybe should do that for all expressions, not just literals (do more testing to see)
                 matchAndWrite(characterLiteral.getEscapedValue());
             }
         });

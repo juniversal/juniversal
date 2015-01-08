@@ -56,7 +56,7 @@ public class Var<T> {
         value = null;
     }
 
-    public T get() {
+    public T value() {
         return value;
     }
 }

@@ -24,7 +24,6 @@ package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.JUniversalException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +44,7 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         boolean classIsFinal = isFinal(typeDeclaration);
         boolean methodIsAbstract = isAbstract(methodDeclaration);
         boolean methodIsFinal = isFinal(methodDeclaration);
-        boolean methodIsOverride = isOverride(methodDeclaration);
+        boolean methodIsOverride = isMethodEffectivelyOverride(methodDeclaration);
         boolean methodIsStatic = isStatic(methodDeclaration);
         boolean methodIsConstructor = isConstructor(methodDeclaration);
 
@@ -66,6 +65,20 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
             returnType = methodDeclaration.getReturnType2();
 
         List<?> modifiers = methodDeclaration.modifiers();
+
+        writeMappedAnnotations(modifiers);
+
+        // Handle finalize here separately; it maps to a C# destructor, with no access modifiers or return type
+        if (isThisMethod(methodDeclaration, "finalize")) {
+            write("~" + typeDeclaration.getName().getIdentifier());
+            setPositionToEndOfNode(methodDeclaration.getName());
+
+            writeParameterList(methodDeclaration);
+
+            writeThrownExceptions(methodDeclaration);
+            writeBody(methodDeclaration.getBody());
+            return;
+        }
 
         // Write the access modifier.  For C# interfaces, methods are always public and the access modifier isn't allowed
         if (!isInterface)
@@ -115,6 +128,7 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
             mappedMethodName = "ToString";
         else mappedMethodName = methodDeclaration.getName().getIdentifier();
 
+        validateIdentifier(methodDeclaration.getName().getIdentifier());
         matchAndWrite(methodDeclaration.getName().getIdentifier(), mappedMethodName);
 
         ArrayList<WildcardType> wildcardTypes = new ArrayList<>();
@@ -154,6 +168,27 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         }
     }
 
+    /**
+     * Go up the superclass tree to see if this method overrides a method higher up the tree.   We ignore interfaces
+     * here because implementations of interface methods in C# don't get the override keyword; only overrides of
+     * superclass methods (be they defined or abstract) do.   We also ignore the @Override keyword in Java, as that's
+     * just optional.
+     *
+     * @param methodDeclaration method in question
+     * @return true if this method is an override (and thus should use the override keyword in the generated C#)
+     */
+    private boolean isMethodEffectivelyOverride(MethodDeclaration methodDeclaration) {
+        IMethodBinding methodBinding = methodDeclaration.resolveBinding();
+        if (methodBinding == null)
+            return false;
+
+        ITypeBinding typeBinding = methodBinding.getDeclaringClass();
+
+        // See if any of the superclasses specify a method that we're overriding
+        return anySuperclassMatch(typeBinding, superclass ->
+                anyMatch(superclass.getDeclaredMethods(), methodBinding::overrides));
+    }
+
     private void writeTypeParameters(MethodDeclaration methodDeclaration, ArrayList<WildcardType> wildcardTypes) {
         boolean outputTypeParameter = false;
         for (Object typeParameterObject : methodDeclaration.typeParameters()) {
@@ -184,21 +219,14 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         writeTypeParameterConstraints(methodDeclaration.typeParameters());
 
         for (WildcardType wildcardType : wildcardTypes) {
-            write(" where ");
-            writeWildcardTypeSyntheticName(wildcardTypes, wildcardType);
-            write(" : ");
-
             @Nullable Type bound = wildcardType.getBound();
-            if (bound == null) {
-                write("class ");
-            }
-            else {
-                // TODO: Fix this isSimpleType check; should only include parameterized types
-                if (bound.isSimpleType())
-                    write("class, ");
+            if (bound != null) {
+                write(" where ");
+                writeWildcardTypeSyntheticName(wildcardTypes, wildcardType);
+                write(" : ");
 
                 if (!wildcardType.isUpperBound())
-                    throw new JUniversalException("Wildcard lower bounds ('? super') aren't supported; only upper bounds ('? extends') are supported");
+                    throw sourceNotSupported("Wildcard lower bounds ('? super') aren't supported; only upper bounds ('? extends') are supported");
 
                 writeNodeFromOtherPosition(bound);
             }
@@ -251,11 +279,10 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void writeOtherConstructorInvocation(MethodDeclaration methodDeclaration) {
         Block body = methodDeclaration.getBody();
 
-        List<Object> statements = body.statements();
+        List statements = body.statements();
         if (!statements.isEmpty()) {
             Statement firstStatement = (Statement) statements.get(0);
 
@@ -265,22 +292,27 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
                 int savedPosition = getPosition();
                 setPositionToStartOfNode(firstStatement);
 
+                // TODO: Handle type arguments
                 if (firstStatement instanceof SuperConstructorInvocation) {
                     SuperConstructorInvocation superConstructorInvocation = (SuperConstructorInvocation) firstStatement;
+
+                    if (!superConstructorInvocation.typeArguments().isEmpty())
+                        throw sourceNotSupported("Type arguments not currently supported on a super constructor invocation");
 
                     matchAndWrite("super", "base");
 
                     copySpaceAndComments();
-                    writeMethodInvocationArgumentList(superConstructorInvocation.typeArguments(),
-                            superConstructorInvocation.arguments());
+                    writeMethodInvocationArgumentList(superConstructorInvocation.arguments());
                 } else {
                     ConstructorInvocation constructorInvocation = (ConstructorInvocation) firstStatement;
+
+                    if (!constructorInvocation.typeArguments().isEmpty())
+                        throw sourceNotSupported("Type arguments not currently supported on a delegating constructor invocation");
 
                     matchAndWrite("this");
 
                     copySpaceAndComments();
-                    writeMethodInvocationArgumentList(constructorInvocation.typeArguments(),
-                            constructorInvocation.arguments());
+                    writeMethodInvocationArgumentList(constructorInvocation.arguments());
                 }
 
                 setPosition(savedPosition);

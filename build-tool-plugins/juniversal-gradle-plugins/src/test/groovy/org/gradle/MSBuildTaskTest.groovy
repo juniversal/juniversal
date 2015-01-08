@@ -25,7 +25,7 @@ package org.gradle
 import org.junit.Test
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.api.Project
-import org.juniversal.gradle.MSBuildTask
+import org.juniversal.buildtools.gradle.MSBuildTask
 
 import static org.junit.Assert.*
 

@@ -47,45 +47,48 @@ public abstract class Translator {
 
     public static void main(String[] args) {
         try {
-            translate(args);
-        } catch (UserViewableException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
+            if (!translate(args))
+                System.exit(1);
         } catch (Throwable t) {
             t.printStackTrace(System.err);
             System.exit(2);
         }
     }
 
-    public static void translate(String[] args) {
-        @Nullable String targetLanguage = null;
+    public static boolean translate(String[] args) {
+        try {
+            @Nullable String targetLanguage = null;
 
-        for (int i = 0; i < args.length; ++i) {
-            String arg = args[i];
+            for (int i = 0; i < args.length; ++i) {
+                String arg = args[i];
 
-            if (arg.equals("-l")) {
-                ++i;
-                if (i < args.length) {
-                    targetLanguage = args[i];
-                    break;
+                if (arg.equals("-l")) {
+                    ++i;
+                    if (i < args.length) {
+                        targetLanguage = args[i];
+                        break;
+                    }
                 }
             }
+
+            if (targetLanguage == null)
+                throw new UserViewableException("No target language specified; must specify -l <language> param");
+
+            Translator translator;
+            if (targetLanguage.equals("c++"))
+                translator = new CPlusPlusTranslator();
+            else if (targetLanguage.equals("c#"))
+                translator = new CSharpTranslator();
+            else {
+                throw new UserViewableException("'" + targetLanguage + "' is not a valid target language");
+            }
+
+            translator.init(args);
+            return translator.translate();
+        } catch (UserViewableException e) {
+            System.err.println("Error: " + e.getMessage());
+            return false;
         }
-
-        if (targetLanguage == null)
-            throw new UserViewableException("No target language specified; must specify -l <language> param");
-
-        Translator translator;
-        if (targetLanguage.equals("c++"))
-            translator = new CPlusPlusTranslator();
-        else if (targetLanguage.equals("c#"))
-            translator = new CSharpTranslator();
-        else {
-            throw new UserViewableException("'" + targetLanguage + "' is not a valid target language");
-        }
-
-        translator.init(args);
-        translator.translate();
     }
 
     public Translator() {
@@ -138,7 +141,7 @@ public abstract class Translator {
         for (String pathEntry : arg.split(Pattern.quote(File.pathSeparator))) {
             File pathEntryFile = new File(pathEntry);
 
-            if (! pathEntryFile.exists())
+            if (!pathEntryFile.exists())
                 System.err.println("Warning: " + pathType + " path entry " + pathEntry + " does not exist; ignoring");
             else pathEntries.add(pathEntry);
         }
@@ -185,9 +188,17 @@ public abstract class Translator {
         }
 
         return directory;
-   }
+    }
 
-    public void translate() {
+    /**
+     * Translate all source files configured for the translator.   If a user errors occurs during translation for a file
+     * (e.g. a SourceNotSupported exception is thrown), an error message is output for that file, the translation
+     * continues on with remaining files, and false is eventually returned from this method as the translate failed.  If
+     * an internal occurs during translation (e.g. the translator has a bug), an exception is thrown.
+     *
+     * @return true if all files were translated without error, false if some failed
+     */
+    public boolean translate() {
         ASTParser parser = ASTParser.newParser(AST.JLS8);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         //parser.setEnvironment(new String[0], new String[0], null, false);
@@ -199,6 +210,8 @@ public abstract class Translator {
         Map options = JavaCore.getOptions();
         JavaCore.setComplianceOptions(JavaCore.VERSION_1_7, options);
         parser.setCompilerOptions(options);
+
+        Var<Boolean> failed = new Var<>(false);
 
         FileASTRequestor astRequestor = new FileASTRequestor() {
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
@@ -212,12 +225,22 @@ public abstract class Translator {
                     }
                 }
 
+                // Translate each file as it's returned; if a user error occurs while translating (e.g. a
+                // SourceNotSupported exception is thrown), print the message for that, note the failure, and continue
+                // on
                 System.out.println("Translating " + sourceFilePath);
-                translateFile(sourceFile);
+                try {
+                    translateFile(sourceFile);
+                } catch (UserViewableException e) {
+                    System.err.println("Error: " + e.getMessage());
+                    failed.set(true);
+                }
             }
         };
 
         parser.createASTs(getJavaFiles(), null, new String[0], astRequestor, null);
+
+        return !failed.value();
 
 		/*
          * String source = readFile(jUniversal.getJavaProjectDirectories().get(0).getPath());

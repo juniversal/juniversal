@@ -23,6 +23,7 @@
 package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.ASTNodeWriter;
 import org.juniversal.translator.core.AccessLevel;
 import org.juniversal.translator.core.JUniversalException;
@@ -30,8 +31,7 @@ import org.juniversal.translator.core.JUniversalException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.juniversal.translator.core.ASTUtil.forEach;
-import static org.juniversal.translator.core.ASTUtil.getAccessModifier;
+import static org.juniversal.translator.core.ASTUtil.*;
 
 
 public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
@@ -41,12 +41,13 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
         this.cSharpASTWriters = cSharpASTWriters;
     }
 
-    @Override
-    protected CSharpSourceFileWriter getSourceFileWriter() {
+    @Override protected CSharpSourceFileWriter getSourceFileWriter() {
         return cSharpASTWriters;
     }
 
-    public CSharpContext getContext() { return getSourceFileWriter().getContext(); }
+    public CSharpContext getContext() {
+        return getSourceFileWriter().getContext();
+    }
 
     public void writeAccessModifier(List<?> modifiers) {
         AccessLevel accessLevel = getAccessModifier(modifiers);
@@ -92,6 +93,37 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
         write(" ");
     }
 
+    /**
+     * Write out any annotations that are explicitly mapped from Java annotations to C# annotations.   If an annotation
+     * isn't explicitly mapped, it's skipped.
+     *
+     * @param modifiers modifier list
+     */
+    public void writeMappedAnnotations(List modifiers) {
+        for (Object extendedModifierObject : modifiers) {
+            IExtendedModifier extendedModifier = (IExtendedModifier) extendedModifierObject;
+            if (extendedModifier.isAnnotation()) {
+                IAnnotationBinding annotationBinding = ((Annotation) extendedModifier).resolveAnnotationBinding();
+                if (annotationBinding != null) {
+                    String annotationTypeName = annotationBinding.getAnnotationType().getQualifiedName();
+
+                    // See if the annotation has a mapping
+                    @Nullable String mappedAnnotationTypeName = cSharpASTWriters.getTranslator().getAnnotationMap().get(annotationTypeName);
+                    if (mappedAnnotationTypeName != null) {
+                        @Nullable String qualifier = qualifierFromQualifiedName(mappedAnnotationTypeName);
+
+                        if (qualifier != null)
+                            getContext().addExtraUsing(qualifier);
+
+                        write("[");
+                        write(simpleNameFromQualifiedName(mappedAnnotationTypeName));
+                        write("] ");
+                    }
+                }
+            }
+        }
+    }
+
     public void writeVariableDeclaration(List<?> modifiers, Type type, List<?> fragments) {
         ensureModifiersJustFinalOrAnnotations(modifiers);
         skipModifiers(modifiers);
@@ -106,11 +138,7 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
         });
     }
 
-    public void writeMethodInvocationArgumentList(List<?> typeArguments, List<?> arguments) {
-        // TODO: Handle type arguments
-        if (!typeArguments.isEmpty())
-            throw sourceNotSupported("Type arguments not currently supported on a method invocation");
-
+    public void writeMethodInvocationArgumentList(List<?> arguments) {
         matchAndWrite("(");
         writeCommaDelimitedNodes(arguments);
 
@@ -120,26 +148,15 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
 
     public void writeTypeParameterConstraints(List typeParameters) {
         forEach(typeParameters, (TypeParameter typeParameter) -> {
-            boolean encounteredBound = false;
-            for (Object typeBoundObject : typeParameter.typeBounds()) {
-                Type typeBound = (Type) typeBoundObject;
-
-                if (! encounteredBound) {
+            forEach(typeParameter.typeBounds(), (Type typeBound, boolean first) -> {
+                if (first) {
                     write(" where ");
                     write(typeParameter.getName().getIdentifier());
-                    write(" : class, ");
+                    write(" : ");
                 } else write(", ");
 
                 writeNodeFromOtherPosition(typeBound);
-
-                encounteredBound = true;
-            }
-
-            if (! encounteredBound) {
-                write(" where ");
-                write(typeParameter.getName().getIdentifier());
-                write(" : class");
-            }
+            });
         });
     }
 
@@ -195,5 +212,14 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
     public String nativeReference(String namespace, String name) {
         getContext().addExtraUsing(namespace);
         return name;
+    }
+
+    public void validateIdentifier(SimpleName simpleName) {
+        validateIdentifier(simpleName.getIdentifier());
+    }
+
+    public void validateIdentifier(String name) {
+        if (name.contains("$"))
+            throw sourceNotSupported("C# identifiers, unlike Java, can't contain a dollar sign; rename the identifier to not use $");
     }
 }
