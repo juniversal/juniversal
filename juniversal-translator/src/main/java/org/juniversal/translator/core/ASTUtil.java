@@ -403,6 +403,15 @@ public class ASTUtil {
     }
 */
 
+    public static boolean isNumericPrimitiveType(Type type) {
+        if (!(type instanceof PrimitiveType))
+            return false;
+
+        PrimitiveType.Code code = ((PrimitiveType) type).getPrimitiveTypeCode();
+        return code == PrimitiveType.BYTE || code == PrimitiveType.SHORT || code == PrimitiveType.INT ||
+               code == PrimitiveType.LONG || code == PrimitiveType.FLOAT || code == PrimitiveType.DOUBLE;
+    }
+
     public static boolean isGenericImport(ImportDeclaration importDeclaration) {
         @Nullable IBinding binding = importDeclaration.resolveBinding();
         return binding != null && binding instanceof ITypeBinding && ((ITypeBinding) binding).isGenericType();

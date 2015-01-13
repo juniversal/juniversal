@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 import static org.juniversal.translator.core.ASTUtil.isGenericArrayCreation;
+import static org.juniversal.translator.core.ASTUtil.isNumericPrimitiveType;
 
 /**
  * Created by Bret on 12/31/2014.
@@ -22,6 +23,11 @@ public class CastExpressionWriter extends CSharpASTNodeWriter<CastExpression> {
         if (isGenericArrayCreation(castExpression))
             writeGenericArrayCreation((ArrayType) type, (ArrayCreation) expression);
         else {
+            boolean makeUncheckedCast = isNumericPrimitiveType(type) && expression instanceof NumberLiteral;
+
+            if (makeUncheckedCast)
+                write("unchecked(");
+
             matchAndWrite("(");
 
             copySpaceAndComments();
@@ -32,6 +38,9 @@ public class CastExpressionWriter extends CSharpASTNodeWriter<CastExpression> {
 
             copySpaceAndComments();
             writeNode(expression);
+
+            if (makeUncheckedCast)
+                write(")");
         }
     }
 

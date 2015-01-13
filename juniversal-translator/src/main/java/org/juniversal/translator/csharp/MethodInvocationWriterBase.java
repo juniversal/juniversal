@@ -44,6 +44,19 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
         for (Object argument : arguments)
             args.add((Expression) argument);
 
+        ITypeBinding objectType;
+        if (expression != null)
+            objectType = expression.resolveTypeBinding();
+        else objectType = methodBinding.getDeclaringClass();
+
+        //TODO: Detect when precedence allows skkpping parens
+        boolean addParentheses = false;
+        if (isType(objectType, "java.lang.String") && methodNameString.equals("isEmpty"))
+            addParentheses = true;
+
+        if (addParentheses)
+            write("(");
+
         if (expression != null) {
             writeNode(expression);
 
@@ -71,20 +84,13 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
             copySpaceAndComments();
         }
 
-        ITypeBinding objectType;
-        if (expression != null)
-            objectType = expression.resolveTypeBinding();
-        else objectType = methodBinding.getDeclaringClass();
-
         // If it's a standard Object method (toString, equals, etc.), handle that first
         if (writeMappedObjectMethod(methodInvocationNode, methodNameString, args, methodBinding))
-            return;
-
-        if (implementsInterface(objectType, "java.lang.List"))
-            if (writeMappedListMethod(methodInvocationNode, methodNameString, args, methodBinding))
-                return;
-
-        if (isType(objectType, "java.lang.String"))
+            ;
+        else if (implementsInterface(objectType, "java.lang.List") &&
+                 writeMappedListMethod(methodInvocationNode, methodNameString, args, methodBinding))
+            ;
+        else if (isType(objectType, "java.lang.String"))
             writeMappedStringMethod(methodInvocationNode, methodNameString, args, methodBinding);
         else if (isType(objectType, "java.lang.StringBuilder"))
             writeMappedStringBuilderMethod(methodInvocationNode, methodNameString, args, methodBinding);
@@ -110,6 +116,9 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
             copySpaceAndComments();
             writeMethodInvocationArgumentList(arguments);
         }
+
+        if (addParentheses)
+            write(")");
     }
 
     /**
@@ -294,15 +303,15 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
                     }
                     break;
 
+                // TODO: Remove this
+                case "split":
+                    verifyArgCount(args, 1, 1);
+                    writeMappedMethod("xxxxx");
+                    break;
+
                 case "toCharArray":
                     verifyArgCount(args, 0);
                     writeMappedMethod("ToCharArray");
-                    break;
-
-                // TODO: Remove this--temporary
-                case "split":
-                    verifyArgCount(args, 1);
-                    writeMappedMethod("XXXXX");
                     break;
 
                 case "trim":
