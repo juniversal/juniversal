@@ -1,3 +1,4 @@
 JUniversal makes Java truly cross platform.
+======
 
-Check it out:  http://www.juniversal.org
+Check it out here:  http://www.juniversal.org
