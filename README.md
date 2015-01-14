@@ -1,4 +1,5 @@
-JUniversal makes Java truly cross platform.
-======
+# JUniversal
+JUniversal lets you write mobile (and nonmobile) cross platform apps, in Java.
+It makes Java truly cross platform.
 
-Check it out here:  http://www.juniversal.org
+For more information, check out:  http://juniversal.org
