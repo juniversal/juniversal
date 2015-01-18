@@ -22,6 +22,7 @@
 
 package org.juniversal.translator.all;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.juniversal.translator.TranslateNodeTest;
 
@@ -29,7 +30,7 @@ import org.juniversal.translator.TranslateNodeTest;
  * @author Chris Ingram
  * @since 12/11/2014
  */
-public class TranslateJavadocCommentTest extends TranslateNodeTest {
+public @Ignore class TranslateJavadocCommentTest extends TranslateNodeTest {
     @Test public void testSimpleMethodJD() {
         testTranslateJavadocComment(
                 "/**\n" +

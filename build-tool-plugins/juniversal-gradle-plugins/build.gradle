@@ -32,10 +32,6 @@ repositories {
     maven {
         // Use snapshot repository for now, until released to Maven central public
         url uri('https://oss.sonatype.org/content/repositories/snapshots/')
-        credentials {
-            username 'bretajohnson'
-            password 'd4E6i4TQzetI'
-        }
     }
 }
 
@@ -44,7 +40,7 @@ dependencies {
     compile localGroovy()
     compile group: 'com.intellij', name: 'annotations', version: '9.0.4'
 
-    compile group: 'org.juniversal', name: 'juniversal-translator', version: '0.7-SNAPSHOT'
+    compile group: 'org.juniversal', name: 'juniversal-translator', version: '0.8-SNAPSHOT'
 
     testCompile 'junit:junit:4.11'
 }
