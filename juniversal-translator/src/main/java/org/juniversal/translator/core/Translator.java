@@ -72,7 +72,7 @@ public abstract class Translator {
             }
 
             if (targetLanguage == null)
-                throw new UserViewableException("No target language specified; must specify -l <language> param");
+                usageError("No target language specified; must specify -l <language> param");
 
             Translator translator;
             if (targetLanguage.equals("c++"))
@@ -152,6 +152,12 @@ public abstract class Translator {
     }
 
     public static void usageError() {
+        usageError(null);
+    }
+
+    public static void usageError(@Nullable String message) {
+        if (message != null)
+            System.err.println(message);
         System.err.println("Usage: -o <output-directory> -l <target-language> [-classpath <classpath>] [-sourcepath <sourcepath>] <java-project-directories-to-translate>...");
         System.exit(1);
     }
