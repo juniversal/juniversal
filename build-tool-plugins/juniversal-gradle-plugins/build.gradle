@@ -21,12 +21,14 @@
  */
 
 apply plugin: 'groovy'
+apply from: '../../shared.gradle'
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.1'
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 
     maven {
@@ -40,7 +42,7 @@ dependencies {
     compile localGroovy()
     compile group: 'com.intellij', name: 'annotations', version: '9.0.4'
 
-    compile group: 'org.juniversal', name: 'juniversal-translator', version: '0.8-SNAPSHOT'
+    compile group: 'org.juniversal', name: 'juniversal-translator', version: masterVersion
 
     testCompile 'junit:junit:4.11'
 }
@@ -49,7 +51,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 group = 'org.juniversal'
-version = '0.8-SNAPSHOT'
+version = masterVersion
 archivesBaseName = "juniversal-gradle-plugins"
 
 compileJava.targetCompatibility = "1.6"
@@ -58,10 +60,9 @@ compileJava.sourceCompatibility = "1.6"
 jar {
     manifest {
         attributes 'Implementation-Title': "JUniversal translators and related tool Gradle plugins",
-                'Implementation-Version': version,
+                'Implementation-Version': "${version} build ${buildNumber}",
                 'Built-Date': new Date(),
                 'Built-JDK': System.getProperty('java.version')
-
     }
 }
 
@@ -98,13 +99,13 @@ uploadArchives {
             repository(url: uri('../repo'))
 */
 
-            if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+            if (project.hasProperty('ossrhUsernameJUniversal') && project.hasProperty('ossrhPasswordJUniversal')) {
                 repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                    authentication(userName: ossrhUsernameJUniversal, password: ossrhPasswordJUniversal)
                 }
 
                 snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                    authentication(userName: ossrhUsernameJUniversal, password: ossrhPasswordJUniversal)
                 }
             }
 
@@ -121,11 +122,10 @@ uploadArchives {
                     url 'git@github.com:juniversal/juniversal.git'
                 }
 
-                // TODO: Update with correct license
                 licenses {
                     license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name 'The MIT License'
+                        url 'http://opensource.org/licenses/MIT'
                     }
                 }
 

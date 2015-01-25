@@ -25,9 +25,10 @@
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'signing'
+apply from: '../shared.gradle'
 
 group = 'org.juniversal'
-version = '0.8-SNAPSHOT'
+version = masterVersion
 
 buildscript {
     repositories {
@@ -55,11 +56,10 @@ jar {
 
     manifest {
         attributes 'Implementation-Title': "JUniversal Translator",
-                'Implementation-Version': version,
+                'Implementation-Version': "${version} build ${buildNumber}",
                 'Main-Class': 'org.juniversal.translator.core.Translator',
                 'Built-Date': new Date(),
                 'Built-JDK': System.getProperty('java.version')
-
     }
 }
 
@@ -78,16 +78,16 @@ uploadArchives {
             repository(url: uri('../repo'))
 */
 
-            // To publish translator updates to our Maven Central repo, ossrhUsername and ossrhPassword should
+            // To publish translator updates to our Maven Central repo, ossrhUsernameJUniversal and ossrhPasswordJUniversal should
             // be defined in ~/.gradle/gradle.properties, with our credential info.   Do the hasProperty to check
             // for that
-            if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+            if (project.hasProperty('ossrhUsernameJUniversal') && project.hasProperty('ossrhPasswordJUniversal')) {
                 repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                    authentication(userName: ossrhUsernameJUniversal, password: ossrhPasswordJUniversal)
                 }
 
                 snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                    authentication(userName: ossrhUsernameJUniversal, password: ossrhPasswordJUniversal)
                 }
             }
 
@@ -104,11 +104,10 @@ uploadArchives {
                     url 'git@github.com:juniversal/juniversal.git'
                 }
 
-                // TODO: Update with correct license
                 licenses {
                     license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name 'The MIT License'
+                        url 'http://opensource.org/licenses/MIT'
                     }
                 }
 
