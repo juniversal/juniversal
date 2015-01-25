@@ -47,6 +47,21 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    // Include sources too, when upload to Maven Central
+    archives sourcesJar
+}
+
+// Sign all artifacts
+signing {
+    sign configurations.archives
+}
+
 jar {
     from(configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude "META-INF/*.SF"

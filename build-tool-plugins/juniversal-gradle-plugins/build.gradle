@@ -21,6 +21,8 @@
  */
 
 apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'signing'
 apply from: '../../shared.gradle'
 
 task wrapper(type: Wrapper) {
@@ -47,25 +49,6 @@ dependencies {
     testCompile 'junit:junit:4.11'
 }
 
-apply plugin: 'maven'
-apply plugin: 'signing'
-
-group = 'org.juniversal'
-version = masterVersion
-archivesBaseName = "juniversal-gradle-plugins"
-
-compileJava.targetCompatibility = "1.6"
-compileJava.sourceCompatibility = "1.6"
-
-jar {
-    manifest {
-        attributes 'Implementation-Title': "JUniversal translators and related tool Gradle plugins",
-                'Implementation-Version': "${version} build ${buildNumber}",
-                'Built-Date': new Date(),
-                'Built-JDK': System.getProperty('java.version')
-    }
-}
-
 task javadocJar(type: Jar) {
     classifier = 'javadoc'
     from javadoc
@@ -82,6 +65,22 @@ artifacts {
 
 signing {
     sign configurations.archives
+}
+
+group = 'org.juniversal'
+version = masterVersion
+archivesBaseName = "juniversal-gradle-plugins"
+
+compileJava.targetCompatibility = "1.6"
+compileJava.sourceCompatibility = "1.6"
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': "JUniversal translators and related tool Gradle plugins",
+                'Implementation-Version': "${version} build ${buildNumber}",
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version')
+    }
 }
 
 uploadArchives {
