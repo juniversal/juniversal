@@ -37,6 +37,7 @@ buildscript {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -77,6 +78,18 @@ jar {
                 'Built-JDK': System.getProperty('java.version')
     }
 }
+
+// Note that for the signing and uploading to work, the following must be defined in gradle.properties
+// Normally that's only set on the JUniversal build machine, as those are the only builds we want published
+// to Maven Central.   For everyone else, just don't run uploadArchives
+//
+// Sample gradle.properties for JUniversal build machine:
+// signing.keyId=YourKeyId
+// signing.password=YourPublicKeyPassword
+// signing.secretKeyRingFile=PathToYourKeyRingFile
+//
+// ossrhUsernameJUniversal=your-jira-id
+// ossrhPasswordJUniversal=your-jira-password
 
 uploadArchives {
     repositories {
