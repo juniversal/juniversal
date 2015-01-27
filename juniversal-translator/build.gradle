@@ -93,18 +93,9 @@ jar {
 
 uploadArchives {
     repositories {
-/*
-        mavenDeployer {
-            repository(url: uri('../repo'))
-        }
-*/
 
         mavenDeployer {
             beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-/*
-            repository(url: uri('../repo'))
-*/
 
             // To publish translator updates to our Maven Central repo, ossrhUsernameJUniversal and ossrhPasswordJUniversal should
             // be defined in ~/.gradle/gradle.properties, with our credential info.   Do the hasProperty to check
