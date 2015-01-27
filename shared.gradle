@@ -1,4 +1,4 @@
-ext.masterVersion = '0.8.1-SNAPSHOT'
+ext.masterVersion = 'develop-SNAPSHOT'
 
 if (hasProperty("teamcity")) {
     ext.buildNumber = teamcity["build.number"]
