@@ -28,7 +28,7 @@ apply plugin: 'signing'
 apply from: '../shared.gradle'
 
 group = 'org.juniversal'
-version = masterVersion
+version = juniversalVersion
 
 buildscript {
     repositories {

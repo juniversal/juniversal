@@ -44,7 +44,7 @@ dependencies {
     compile localGroovy()
     compile group: 'com.intellij', name: 'annotations', version: '9.0.4'
 
-    compile group: 'org.juniversal', name: 'juniversal-translator', version: masterVersion
+    compile group: 'org.juniversal', name: 'juniversal-translator', version: juniversalVersion
 
     testCompile 'junit:junit:4.11'
 }
@@ -68,7 +68,7 @@ signing {
 }
 
 group = 'org.juniversal'
-version = masterVersion
+version = juniversalVersion
 archivesBaseName = "juniversal-gradle-plugins"
 
 compileJava.targetCompatibility = "1.6"
