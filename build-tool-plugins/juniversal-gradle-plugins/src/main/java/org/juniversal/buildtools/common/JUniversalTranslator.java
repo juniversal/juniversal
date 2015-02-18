@@ -41,7 +41,7 @@ public class JUniversalTranslator extends Translator {
 
     public void translateSourceType(SourceType sourceType, File outputDirectory) {
         // Delete the generated source directories
-        Utils.deleteChildDirectoriesExcept(outputDirectory, "nontranslated", "Properties");
+        Utils.deleteChildDirectoriesExcept(outputDirectory, "nontranslated", "Properties", "bin");
 
         ArrayList<String> args = new ArrayList<String>();
 
