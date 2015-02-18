@@ -348,6 +348,11 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
                 write("Length");
                 break;
 
+            case "deleteCharAt":
+                verifyArgCount(args, 1);
+                writeMappedMethod("Remove", args.get(0), "1");
+                break;
+
             case "toString":
                 verifyArgCount(args, 0);
                 writeMappedMethod("ToString");
