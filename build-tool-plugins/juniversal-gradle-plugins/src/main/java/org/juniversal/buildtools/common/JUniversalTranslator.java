@@ -22,6 +22,7 @@
 
 package org.juniversal.buildtools.common;
 
+import org.gradle.api.GradleException;
 import org.juniversal.buildtools.common.support.*;
 
 import java.io.File;
@@ -41,7 +42,7 @@ public class JUniversalTranslator extends Translator {
 
     public void translateSourceType(SourceType sourceType, File outputDirectory) {
         // Delete the generated source directories
-        Utils.deleteChildDirectoriesExcept(outputDirectory, "nontranslated", "Properties");
+        Utils.deleteChildDirectoriesExcept(outputDirectory, "nontranslated", "Properties", "bin");
 
         ArrayList<String> args = new ArrayList<String>();
 
@@ -75,10 +76,7 @@ public class JUniversalTranslator extends Translator {
         // Log the arguments
         getProject().info("Calling juniversal-translator with: " + Utils.argsToCommandLineString(argsArray));
 
-        try {
-            org.juniversal.translator.core.Translator.translate(argsArray);
-        } catch (Throwable t) {
-            getProject().error("Error when invoking JUniversal translator:", t);
-        }
+        if (! org.juniversal.translator.core.Translator.translate(argsArray))
+            throw new RuntimeException("JUniversal source translation failed");
     }
 }
