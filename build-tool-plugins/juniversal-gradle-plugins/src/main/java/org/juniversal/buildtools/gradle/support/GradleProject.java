@@ -73,7 +73,7 @@ public class GradleProject extends CommonProject {
         FileSet fileSet = createFileSet();
 
         for (File directory : getSourceSet(sourceType).getJava().getSrcDirs()) {
-            if (!directory.toString().contains("nontranslated"))
+            if (!directory.toString().contains("nontranslated") && directory.exists())
                 fileSet.add(directory);
         }
 
