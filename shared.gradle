@@ -1,5 +1,5 @@
-ext.masterVersion = '0.8.2'
-ext.juniversalVersion = '0.8.2'
+ext.masterVersion = '0.8.3'
+ext.juniversalVersion = '0.8.3'
 
 if (hasProperty("teamcity")) {
     ext.buildNumber = teamcity["build.number"]
