@@ -803,6 +803,13 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
                 matchAndWrite(stringLiteral.getEscapedValue());
             }
         });
+
+        addWriter(TypeLiteral.class, new CSharpASTNodeWriter<TypeLiteral>(this) {
+            @Override
+            public void write(TypeLiteral typeLiteral) {
+                throw sourceNotSupported("Type literals (<type>.class) aren't supported by JUniversal, partially to ease idiomatic translation to C++.  For HashMaps of types, consider using string keys instead.");
+            }
+        });
     }
 
     public HashSet<String> getCSharpReservedWords() {
