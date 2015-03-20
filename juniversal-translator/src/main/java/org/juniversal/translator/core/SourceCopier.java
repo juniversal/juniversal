@@ -140,9 +140,6 @@ public class SourceCopier {
      * end of the whitespace/newlines/comments.
      *
      * @param startPosition starting position in source
-     * @param justUntilEOL  if true, then the skipping stops just short of the end of line (not including \r or \n
-     *                      characters); if there's a multiline comment, it's skipped in its entirety and the copying
-     *                      stops at the first EOL or code character after that
      * @return ending position--position of character following space and comments
      */
     public int skipBlankLines(int startPosition) {
@@ -433,7 +430,7 @@ public class SourceCopier {
      * If position is at the end of the line, the first position on the following line is returned. Else, the current
      * position is returned.
      *
-     * @param startPosition starting position in source
+     * @param position starting position in source
      * @return position just past the end of line, if there is one at that position
      */
     public int skipNewline(int position) {
