@@ -20,12 +20,19 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus;
+package maintests;
 
-import org.juniversal.translator.core.TargetWriter;
+/**
+ * @author Bret Johnson
+ * @since 5/5/2015
+ */
+public class TestObjectReferences {
+    public void testObjParam() {
+        SimpleObj simpleObj = new SimpleObj(3);
+        testBar(simpleObj);
+    }
 
-import java.io.File;
-
-public abstract class CPPWriterFactory {
-	abstract TargetWriter createCPPWriter(File file);
+    public int testBar(SimpleObj param) {
+        return param.getValue();
+    }
 }

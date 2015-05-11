@@ -27,7 +27,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
 public class TypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDeclaration>  {
-    public TypeDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter) {
+    public TypeDeclarationWriter(CPlusPlusFileTranslator cPlusPlusSourceFileWriter) {
         super(cPlusPlusSourceFileWriter);
     }
 
@@ -35,9 +35,9 @@ public class TypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDeclaratio
 		AbstractTypeDeclaration oldTypeDeclaration = getContext().getTypeDeclaration();
 		getContext().setTypeDeclaration(typeDeclaration);
 
-		if (getSourceFileWriter().getOutputType() == OutputType.HEADER)
-			new HeaderTypeDeclarationWriter(getSourceFileWriter()).write(typeDeclaration);
-		else new SourceTypeDeclarationWriter(getSourceFileWriter()).write(typeDeclaration);
+		if (getContext().getOutputType() == OutputType.HEADER)
+			new HeaderTypeDeclarationWriter(getFileTranslator()).write(typeDeclaration);
+		else new SourceTypeDeclarationWriter(getFileTranslator()).write(typeDeclaration);
 
 		getContext().setTypeDeclaration(oldTypeDeclaration);
 	}

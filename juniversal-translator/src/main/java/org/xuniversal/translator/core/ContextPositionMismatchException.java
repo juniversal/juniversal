@@ -20,29 +20,14 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.csharp;
+package org.xuniversal.translator.core;
 
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
-public class SuperMethodInvocationWriter extends MethodInvocationWriterBase<SuperMethodInvocation> {
-    public SuperMethodInvocationWriter(CSharpFileTranslator cSharpASTWriters) {
-        super(cSharpASTWriters);
-    }
+import org.juniversal.translator.core.JUniversalException;
 
-    @Override
-    public void write(SuperMethodInvocation superMethodInvocation) {
-        // TODO: Support this
-        if (superMethodInvocation.getQualifier() != null)
-            throw sourceNotSupported("Qualified super invocations aren't currently supported");
-
-        matchAndWrite("super", "base");
-
-        copySpaceAndComments();
-        matchAndWrite(".");
-
-        copySpaceAndComments();
-        writeMethodInvocation(superMethodInvocation, null,
-                superMethodInvocation.getName(), superMethodInvocation.typeArguments(),
-                superMethodInvocation.arguments(), superMethodInvocation.resolveMethodBinding());
-    }
+@SuppressWarnings("serial")
+public class ContextPositionMismatchException extends JUniversalException {
+	public ContextPositionMismatchException(String message) {
+		super(message);
+	}
 }

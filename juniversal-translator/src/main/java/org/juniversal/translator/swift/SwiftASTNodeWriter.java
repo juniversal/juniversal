@@ -30,13 +30,13 @@ import java.util.List;
 
 
 public abstract class SwiftASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
-    private SwiftSourceFileWriter swiftASTWriters;
+    private SwiftFileTranslator swiftASTWriters;
 
-    protected SwiftASTNodeWriter(SwiftSourceFileWriter swiftASTWriters) {
+    protected SwiftASTNodeWriter(SwiftFileTranslator swiftASTWriters) {
         this.swiftASTWriters = swiftASTWriters;
     }
 
-    @Override protected SwiftSourceFileWriter getSourceFileWriter() {
+    @Override protected SwiftFileTranslator getFileTranslator() {
         return swiftASTWriters;
     }
 
@@ -45,7 +45,7 @@ public abstract class SwiftASTNodeWriter<T extends ASTNode> extends ASTNodeWrite
             copySpaceAndComments();
             writeNode(statement);
         } else {
-            if (getSourceFileWriter().startsOnSameLine(statement)) {
+            if (getFileTranslator().startsOnSameLine(statement)) {
                 if (forceSeparateLine) {
                     write(" {\n");
 
@@ -144,5 +144,5 @@ public abstract class SwiftASTNodeWriter<T extends ASTNode> extends ASTNodeWrite
         write(">");
     }
 
-    public Context getContext() { return getSourceFileWriter().getContext(); }
+    public Context getContext() { return getFileTranslator().getContext(); }
 }

@@ -20,29 +20,24 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.csharp;
+package maintests;
 
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+/**
+ * @author Bret Johnson
+ * @since 5/5/2015
+ */
+public class SimpleObj {
+    private int value;
 
-public class SuperMethodInvocationWriter extends MethodInvocationWriterBase<SuperMethodInvocation> {
-    public SuperMethodInvocationWriter(CSharpFileTranslator cSharpASTWriters) {
-        super(cSharpASTWriters);
+    public SimpleObj(int value) {
+        this.value = value;
     }
 
-    @Override
-    public void write(SuperMethodInvocation superMethodInvocation) {
-        // TODO: Support this
-        if (superMethodInvocation.getQualifier() != null)
-            throw sourceNotSupported("Qualified super invocations aren't currently supported");
+    public int getValue() {
+        return value;
+    }
 
-        matchAndWrite("super", "base");
-
-        copySpaceAndComments();
-        matchAndWrite(".");
-
-        copySpaceAndComments();
-        writeMethodInvocation(superMethodInvocation, null,
-                superMethodInvocation.getName(), superMethodInvocation.typeArguments(),
-                superMethodInvocation.arguments(), superMethodInvocation.resolveMethodBinding());
+    public void setValue(int value) {
+        this.value = value;
     }
 }

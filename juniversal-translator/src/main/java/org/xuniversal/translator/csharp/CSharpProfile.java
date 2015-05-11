@@ -20,43 +20,19 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.core;
+package org.xuniversal.translator.csharp;
 
-import org.jetbrains.annotations.Nullable;
+import org.xuniversal.translator.core.TargetProfile;
 
 /**
- * A Var is a wrapper around some object, which can change.   It's main use currently is to allow a local variable
- * outside of a lambda to be modified by the lambda.   That is, the Var itself can be final (as required for locals
- * referenced from a lambda / anonymous inner class method) but the contents inside it can change as required to
- * captured updated state.   It can also be used as a "var" parameter to methods, to return extra info outside the
- * return value.
- * <p>
- * Created by Bret on 12/21/2014.
+ * The CPPProfile class describes how the C++ should be generated.  Primarily this class gives
+ * attributes of the target C++ compiler, for example saying what types are used to represent
+ * different sizes of unsigned integers.
+ *
+ * @author bretjohn
  */
-public class Var<T> {
-    private @Nullable T value;
-
-    public Var(T value) {
-        this.value = value;
-    }
-
-    public Var() {
-        this.value = null;
-    }
-
-    public void set(T value) {
-        this.value = value;
-    }
-
-    public boolean isSet() {
-        return value != null;
-    }
-
-    public void clear() {
-        value = null;
-    }
-
-    public T value() {
-        return value;
+public class CSharpProfile extends TargetProfile {
+    @Override public boolean isCSharp() {
+        return true;
     }
 }

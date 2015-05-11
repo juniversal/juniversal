@@ -24,6 +24,7 @@ package org.juniversal.translator.cplusplus;
 
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.ASTUtil;
+import org.xuniversal.translator.core.SourceFile;
 
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class SourceTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
     private boolean outputSomething;
 
     @SuppressWarnings("unchecked")
-    public SourceTypeDeclarationWriter(CPlusPlusSourceFileWriter sourceFileWriter) {
+    public SourceTypeDeclarationWriter(CPlusPlusFileTranslator sourceFileWriter) {
         super(sourceFileWriter);
     }
 
@@ -76,8 +77,8 @@ public class SourceTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 
     private void writeNestedType(TypeDeclaration nestedTypeDeclaration) {
         if (outputSomething) {
-            getSourceFileWriter().writeln();
-            getSourceFileWriter().writeln();
+            getFileTranslator().writeln();
+            getFileTranslator().writeln();
         }
 
         writeln("/**");
@@ -94,9 +95,10 @@ public class SourceTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
         // We assume that the first non-whitespace text on the first line of the method
         // isn't indented at all--there's nothing in the method left of it. Unindent the
         // whole method by that amount, since methods aren't indented in the C++ source.
-        CompilationUnit compilationUnit = getSourceFileWriter().getCompilationUnit();
-        int methodLine = compilationUnit.getLineNumber(methodDeclaration.getStartPosition());
-        int methodLineStartPosition = compilationUnit.getPosition(methodLine, 0);
+
+        SourceFile sourceFile = getFileTranslator().getSourceFile();
+        int methodLine = sourceFile.getLineNumber(methodDeclaration.getStartPosition());
+        int methodLineStartPosition = sourceFile.getPosition(methodLine, 0);
         setPosition(methodLineStartPosition);
         skipSpacesAndTabs();
         int additionalIndent = getSourceLogicalColumn();

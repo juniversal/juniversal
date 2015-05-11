@@ -31,7 +31,7 @@ import java.util.List;
 
 
 public class ArrayCreationWriter extends CSharpASTNodeWriter<ArrayCreation> {
-    public ArrayCreationWriter(CSharpSourceFileWriter cPlusPlusASTWriters) {
+    public ArrayCreationWriter(CSharpFileTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

@@ -23,16 +23,17 @@
 package org.juniversal.translator.cplusplus;
 
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.cplusplus.OutputType;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.xuniversal.translator.cplusplus.ReferenceKind;
+
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public class FieldDeclarationWriter extends CPlusPlusASTNodeWriter<FieldDeclaration> {
-    public FieldDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
+    public FieldDeclarationWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
@@ -42,36 +43,30 @@ public class FieldDeclarationWriter extends CPlusPlusASTNodeWriter<FieldDeclarat
 
 		boolean isStatic = ASTUtil.containsStatic(fieldDeclaration.modifiers());
 
-		if (getSourceFileWriter().getOutputType() == OutputType.HEADER && isStatic)
+		if (getContext().getOutputType() == OutputType.HEADER && isStatic)
 			write("static ");
 		skipModifiers(fieldDeclaration.modifiers());
 
 		// Write the type
 		skipSpaceAndComments();
-        writeType(fieldDeclaration.getType(), false);
+        writeType(fieldDeclaration.getType(), ReferenceKind.SharedPtr);
 
-		boolean first = true;
-		for (Object fragment : fieldDeclaration.fragments()) {
-			VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) fragment;
-
-			if (! first) {
+		forEach(fieldDeclaration.fragments(), (VariableDeclarationFragment variableDeclarationFragment, boolean first) -> {
+			if (!first) {
 				copySpaceAndComments();
 				matchAndWrite(",");
 			}
 
 			copySpaceAndComments();
-			writeVariableDeclarationFragment(variableDeclarationFragment,
-                    getSourceFileWriter().getOutputType() == OutputType.SOURCE);
-
-			first = false;
-		}
+			writeVariableDeclarationFragment(variableDeclarationFragment);
+		});
 
 		copySpaceAndComments();
 		matchAndWrite(";");
 	}
 
-	private void writeVariableDeclarationFragment(VariableDeclarationFragment variableDeclarationFragment,
-                                                  boolean writingSourceFile) {
+	private void writeVariableDeclarationFragment(VariableDeclarationFragment variableDeclarationFragment) {
+		boolean writingSourceFile = getContext().getOutputType() == OutputType.SOURCE;
 
 		// TODO: Handle syntax with extra dimensions on array
 		if (variableDeclarationFragment.getExtraDimensions() > 0)

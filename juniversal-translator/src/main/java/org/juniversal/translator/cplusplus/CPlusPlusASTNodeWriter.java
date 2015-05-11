@@ -22,11 +22,12 @@
 
 package org.juniversal.translator.cplusplus;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.TypeParameter;
+import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.ASTNodeWriter;
+import org.xuniversal.translator.cplusplus.CPlusPlusProfile;
+import org.xuniversal.translator.cplusplus.ReferenceKind;
 
 import java.util.List;
 
@@ -34,31 +35,23 @@ import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
-    private CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter;
+    private CPlusPlusFileTranslator cPlusPlusSourceFileWriter;
 
-    protected CPlusPlusASTNodeWriter(CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter) {
+    protected CPlusPlusASTNodeWriter(CPlusPlusFileTranslator cPlusPlusSourceFileWriter) {
         this.cPlusPlusSourceFileWriter = cPlusPlusSourceFileWriter;
     }
 
-    public CPPProfile getCPPProfile() {
+    public CPlusPlusProfile getCPPProfile() {
         return cPlusPlusSourceFileWriter.getTranslator().getTargetProfile();
     }
 
-    public CPlusPlusContext getContext() { return getSourceFileWriter().getContext(); }
-
-    public OutputType getOutputType() {
-        return getSourceFileWriter().getOutputType();
+    public CPlusPlusContext getContext() {
+        return getFileTranslator().getContext();
     }
 
     @Override
-    protected CPlusPlusSourceFileWriter getSourceFileWriter() {
+    protected CPlusPlusFileTranslator getFileTranslator() {
         return cPlusPlusSourceFileWriter;
-    }
-
-    public void writeArrayOfType(Type elementType) {
-        write("array<");
-        writeNode(elementType);
-        write(">");
     }
 
     /**
@@ -66,19 +59,38 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
      *
      * @param type type to write
      */
-    public void writeType(Type type, boolean useRawPointer) {
-        boolean referenceType = !type.isPrimitiveType();
+    public void writeType(Type type, ReferenceKind referenceKind) {
+        @Nullable ITypeBinding typeBinding = type.resolveBinding();
+        boolean isTypeVariable = typeBinding != null && (typeBinding.isTypeVariable() || typeBinding.isWildcardType());
 
-        if (!referenceType)
+        if (type.isPrimitiveType() || isTypeVariable)
             writeNode(type);
         else {
-            if (useRawPointer) {
-                writeNode(type);
-                write("*");
-            } else {
-                write("ptr< ");
-                writeNode(type);
-                write(" >");
+            switch (referenceKind) {
+                case SharedPtr:
+                    writeNode(type);
+                    write("::ptr");
+                    break;
+
+                case WeakPtr:
+                    writeNode(type);
+                    write("::weak_ptr");
+                    break;
+
+                case ConstReference:
+                    write("const ");
+                    writeNode(type);
+                    write("&");
+                    break;
+
+                case RawPointer:
+                    writeNode(type);
+                    write("*");
+                    break;
+
+                case Value:
+                    writeNode(type);
+                    break;
             }
         }
     }
@@ -105,10 +117,10 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
     /**
      * Write out the type parameters in the specified list, surrounded by "<" and ">".
      *
-     * @param typeParameters      list of TypeParameter objects
-     * @param includeClassKeyword if true, each parameter is prefixed with "class "
+     * @param typeParameters         list of TypeParameter objects
+     * @param includeTypenameKeyword if true, each parameter is prefixed with "typename "
      */
-    public void writeTypeParameters(List typeParameters, boolean includeClassKeyword) {
+    public void writeTypeParameters(List typeParameters, boolean includeTypenameKeyword) {
         // If we're writing the implementation of a generic method, include the "template<...>" prefix
 
         write("<");
@@ -117,8 +129,8 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
             if (!first)
                 write(", ");
 
-            if (includeClassKeyword)
-                write("class ");
+            if (includeTypenameKeyword)
+                write("typename ");
             write(typeParameter.getName().getIdentifier());
         });
 

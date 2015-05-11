@@ -24,16 +24,17 @@ package org.juniversal.translator.swift;
 
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.*;
+import org.xuniversal.translator.core.SourceFile;
 
 import java.io.Writer;
 import java.util.List;
 
 
-public class SwiftSourceFileWriter extends SourceFileWriter {
+public class SwiftFileTranslator extends FileTranslator {
     private SwiftTranslator swiftTranslator;
     private Context context;
 
-    public SwiftSourceFileWriter(SwiftTranslator swiftTranslator, SourceFile sourceFile, Writer writer) {
+    public SwiftFileTranslator(SwiftTranslator swiftTranslator, SourceFile sourceFile, Writer writer) {
         super(swiftTranslator, sourceFile, writer);
 
         this.swiftTranslator = swiftTranslator;
@@ -170,38 +171,6 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
         });
 
         // TODO: Implement this
-        // Parameterized type
-        addWriter(ParameterizedType.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                ParameterizedType parameterizedType = (ParameterizedType) node;
-
-                writeNode(parameterizedType.getType());
-
-                copySpaceAndComments();
-                matchAndWrite("<");
-
-                boolean first = true;
-                List<?> typeArguments = parameterizedType.typeArguments();
-                for (Object typeArgumentObject : typeArguments) {
-                    Type typeArgument = (Type) typeArgumentObject;
-
-                    if (!first) {
-                        copySpaceAndComments();
-                        matchAndWrite(",");
-                    }
-
-                    copySpaceAndComments();
-                    writeNode(typeArgument);
-
-                    first = false;
-                }
-
-                matchAndWrite(">");
-            }
-        });
-
-        // TODO: Implement this
         // Array type
         addWriter(ArrayType.class, new SwiftASTNodeWriter(this) {
             @Override
@@ -257,62 +226,8 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
      * Add visitors for the different kinds of statements.
      */
     private void addStatementWriters() {
-        // TODO: Implement this
-        // Block
-        addWriter(Block.class, new SwiftASTNodeWriter(this) {
-            @SuppressWarnings("unchecked")
-            @Override
-            public void write(ASTNode node) {
-                Block block = (Block) node;
-
-                matchAndWrite("{");
-
-                boolean firstStatement = true;
-                for (Statement statement : (List<Statement>) block.statements()) {
-                    // If the first statement is a super constructor invocation, we skip it since
-                    // it's included as part of the method declaration in C++. If a super
-                    // constructor invocation is a statement other than the first, which it should
-                    // never be, we let that error out since writeNode won't find a match for it.
-                    if (firstStatement && statement instanceof SuperConstructorInvocation)
-                        setPositionToEndOfNodeSpaceAndComments(statement);
-                    else {
-                        copySpaceAndComments();
-                        writeNode(statement);
-                    }
-
-                    firstStatement = false;
-                }
-
-                copySpaceAndComments();
-                matchAndWrite("}");
-            }
-        });
-
-        // TODO: Implement this
-        // Empty statement (";")
-        addWriter(EmptyStatement.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                matchAndWrite(";");
-            }
-        });
-
-        // TODO: Implement this
-        // Expression statement
-        addWriter(ExpressionStatement.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                ExpressionStatement expressionStatement = (ExpressionStatement) node;
-
-                writeNode(expressionStatement.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
         // If statement
-        addWriter(IfStatement.class, new SwiftASTNodeWriter(this) {
+        replaceWriter(IfStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 IfStatement ifStatement = (IfStatement) node;
@@ -337,7 +252,7 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
         });
 
         // While statement
-        addWriter(WhileStatement.class, new SwiftASTNodeWriter(this) {
+        replaceWriter(WhileStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 WhileStatement whileStatement = (WhileStatement) node;
@@ -354,7 +269,7 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
         });
 
         // Do while statement
-        addWriter(DoStatement.class, new SwiftASTNodeWriter(this) {
+        replaceWriter(DoStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
                 DoStatement doStatement = (DoStatement) node;
@@ -376,64 +291,10 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
         });
 
         // TODO: Implement this
-        // Continue statement
-        addWriter(ContinueStatement.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                ContinueStatement continueStatement = (ContinueStatement) node;
-
-                if (continueStatement.getLabel() != null)
-                    throw sourceNotSupported("continue statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
-
-                matchAndWrite("continue");
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // TODO: Implement this
-        // Break statement
-        addWriter(BreakStatement.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                BreakStatement breakStatement = (BreakStatement) node;
-
-                if (breakStatement.getLabel() != null)
-                    throw sourceNotSupported("break statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
-
-                matchAndWrite("break");
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // TODO: Implement this
         // For statement
 /*
         addWriter(ForStatement.class, new ForStatementWriter(this));
 */
-
-        // TODO: Implement this
-        // Return statement
-        addWriter(ReturnStatement.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                ReturnStatement returnStatement = (ReturnStatement) node;
-
-                matchAndWrite("return");
-
-                Expression expression = returnStatement.getExpression();
-                if (expression != null) {
-                    copySpaceAndComments();
-                    writeNode(returnStatement.getExpression());
-                }
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
 
         // TODO: Implement this
         // Local variable declaration statement
@@ -441,18 +302,10 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
 
         // TODO: Implement this
         // Throw statement
-        addWriter(ThrowStatement.class, new SwiftASTNodeWriter(this) {
+        replaceWriter(ThrowStatement.class, new SwiftASTNodeWriter(this) {
             @Override
             public void write(ASTNode node) {
-                ThrowStatement throwStatement = (ThrowStatement) node;
-
-                matchAndWrite("throw");
-                copySpaceAndComments();
-
-                writeNode(throwStatement.getExpression());
-                copySpaceAndComments();
-
-                matchAndWrite(";");
+                throw sourceNotSupported("throw isn't supported in Swift (unfortunately) currently;");
             }
         });
 
@@ -502,56 +355,6 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
         // Infix expression
         addWriter(InfixExpression.class, new InfixExpressionWriter(this));
 
-        // Prefix expression
-        addWriter(PrefixExpression.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                PrefixExpression prefixExpression = (PrefixExpression) node;
-
-                PrefixExpression.Operator operator = prefixExpression.getOperator();
-                if (operator == PrefixExpression.Operator.INCREMENT)
-                    matchAndWrite("++");
-                else if (operator == PrefixExpression.Operator.DECREMENT)
-                    matchAndWrite("--");
-                else if (operator == PrefixExpression.Operator.PLUS)
-                    matchAndWrite("+");
-                else if (operator == PrefixExpression.Operator.MINUS)
-                    matchAndWrite("-");
-                else if (operator == PrefixExpression.Operator.COMPLEMENT)
-                    matchAndWrite("~");
-                else if (operator == PrefixExpression.Operator.NOT)
-                    matchAndWrite("!");
-                else throw invalidAST("Unknown prefix operator type: " + operator);
-
-                // In Swift there can't be any whitespace or comments between a unary prefix operator & its operand, so
-                // strip it, not copying anything here
-                skipSpaceAndComments();
-
-                writeNode(prefixExpression.getOperand());
-            }
-        });
-
-        // Postfix expression
-        addWriter(PostfixExpression.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                PostfixExpression postfixExpression = (PostfixExpression) node;
-
-                writeNode(postfixExpression.getOperand());
-
-                // In Swift there can't be any whitespace or comments between a postfix operator & its operand, so
-                // strip it, not copying anything here
-                skipSpaceAndComments();
-
-                PostfixExpression.Operator operator = postfixExpression.getOperator();
-                if (operator == PostfixExpression.Operator.INCREMENT)
-                    matchAndWrite("++");
-                else if (operator == PostfixExpression.Operator.DECREMENT)
-                    matchAndWrite("--");
-                else throw invalidAST("Unknown postfix operator type: " + operator);
-            }
-        });
-
         // TODO: Implement this
         // instanceof expression
         addWriter(InstanceofExpression.class, new SwiftASTNodeWriter(this) {
@@ -572,28 +375,6 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
                 writeNode(type);
 
                 write(")");
-            }
-        });
-
-        // conditional expression
-        addWriter(ConditionalExpression.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                ConditionalExpression conditionalExpression = (ConditionalExpression) node;
-
-                writeNode(conditionalExpression.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite("?");
-
-                copySpaceAndComments();
-                writeNode(conditionalExpression.getThenExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(":");
-
-                copySpaceAndComments();
-                writeNode(conditionalExpression.getElseExpression());
             }
         });
 
@@ -632,26 +413,6 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
         });
 
         // TODO: Implement this
-        // Array access
-        addWriter(ArrayAccess.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                ArrayAccess arrayAccess = (ArrayAccess) node;
-
-                writeNode(arrayAccess.getArray());
-                copySpaceAndComments();
-
-                matchAndWrite("[");
-                copySpaceAndComments();
-
-                writeNode(arrayAccess.getIndex());
-                copySpaceAndComments();
-
-                matchAndWrite("]");
-            }
-        });
-
-        // TODO: Implement this
         // Qualified name
         addWriter(QualifiedName.class, new SwiftASTNodeWriter(this) {
             @Override
@@ -669,23 +430,6 @@ public class SwiftSourceFileWriter extends SourceFileWriter {
                 matchAndWrite(".", "->");
 
                 writeNode(qualifiedName.getName());
-            }
-        });
-
-        // TODO: Implement this
-        // Parenthesized expression
-        addWriter(ParenthesizedExpression.class, new SwiftASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                ParenthesizedExpression parenthesizedExpression = (ParenthesizedExpression) node;
-
-                matchAndWrite("(");
-                copySpaceAndComments();
-
-                writeNode(parenthesizedExpression.getExpression());
-                copySpaceAndComments();
-
-                matchAndWrite(")");
             }
         });
 

@@ -20,7 +20,9 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.core;
+package org.xuniversal.translator.core;
+
+import org.juniversal.translator.core.JUniversalException;
 
 import java.io.*;
 

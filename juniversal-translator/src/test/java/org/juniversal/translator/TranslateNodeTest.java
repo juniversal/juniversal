@@ -26,9 +26,9 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.junit.Test;
-import org.juniversal.translator.core.SourceFile;
-import org.juniversal.translator.core.SourceNotSupportedException;
+import org.juniversal.translator.core.JavaSourceFile;
+import org.xuniversal.translator.core.SourceFile;
+import org.xuniversal.translator.core.SourceNotSupportedException;
 import org.juniversal.translator.core.Translator;
 import org.juniversal.translator.csharp.CSharpTranslator;
 
@@ -236,7 +236,7 @@ public class TranslateNodeTest {
 
         cSharpTranslator.setDestTabStop(destTabStop);
 
-        SourceFile sourceFile = new SourceFile(compilationUnit, javaFullSource, sourceTabStop);
+        JavaSourceFile sourceFile = new JavaSourceFile(compilationUnit, javaFullSource, sourceTabStop);
 
         testTranslate(cSharpTranslator, sourceFile, node, javaNodeSource, expectedCSharp);
         //testTranslate(swiftTranslator, sourceFile, node, javaNodeSource, expectedSwift);
@@ -249,7 +249,7 @@ public class TranslateNodeTest {
 */
     }
 
-    private void testTranslate(Translator translator, SourceFile sourceFile, ASTNode node, String javaNodeSource,
+    private void testTranslate(Translator translator, JavaSourceFile sourceFile, ASTNode node, String javaNodeSource,
                                @Nullable String expectedOutput) {
         String effectiveExpectedOutput = expectedOutput == null ? javaNodeSource : expectedOutput;
 

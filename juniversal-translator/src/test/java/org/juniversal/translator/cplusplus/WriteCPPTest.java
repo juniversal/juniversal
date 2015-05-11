@@ -25,8 +25,9 @@ package org.juniversal.translator.cplusplus;
 import org.eclipse.jdt.core.dom.*;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.juniversal.translator.core.SourceFile;
-import org.juniversal.translator.core.SourceNotSupportedException;
+import org.juniversal.translator.core.JavaSourceFile;
+import org.xuniversal.translator.core.SourceNotSupportedException;
+import org.xuniversal.translator.cplusplus.CPlusPlusProfile;
 
 import static org.junit.Assert.*;
 
@@ -122,10 +123,10 @@ public @Ignore class WriteCPPTest {
 
     public void testWriteNode(ASTNode node, String javaSource, CompilationUnit compilationUnit, int sourceTabStop,
                               String expectedOutput) {
-        CPPProfile profile = new CPPProfile();
+        CPlusPlusProfile profile = new CPlusPlusProfile();
         profile.setTabStop(m_destTabStop);
 
-        SourceFile sourceFile = new SourceFile(compilationUnit, javaSource, m_sourceTabStop);
+        JavaSourceFile sourceFile = new JavaSourceFile(compilationUnit, javaSource, m_sourceTabStop);
 
         String cppOutput = cPlusPlusTranslator.translateNode(sourceFile, node);
 

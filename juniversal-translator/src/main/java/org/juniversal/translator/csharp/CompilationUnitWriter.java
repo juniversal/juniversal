@@ -24,9 +24,9 @@ package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.BufferTargetWriter;
-import org.juniversal.translator.core.SourceFileWriter;
-import org.juniversal.translator.core.Var;
+import org.xuniversal.translator.core.BufferTargetWriter;
+import org.juniversal.translator.core.FileTranslator;
+import org.xuniversal.translator.core.Var;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -39,7 +39,7 @@ import static org.juniversal.translator.core.ASTUtil.isGenericImport;
 // TODO: Finish this
 
 class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
-    CompilationUnitWriter(CSharpSourceFileWriter cSharpASTWriters) {
+    CompilationUnitWriter(CSharpFileTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 
@@ -49,8 +49,8 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
         // First visit & write out the guts of the class, using a BufferTargetWriter to capture all output.   We do
         // this first to capture the usage of anything that needs an explicit "using" statement in C# but doesn't
         // have an import in Java.   The top of the file, with the "using" statements, is written later, down below
-        BufferTargetWriter bufferTargetWriter = new BufferTargetWriter(getSourceFileWriter().getTargetWriter());
-        try (SourceFileWriter.RestoreTargetWriter ignored = getSourceFileWriter().setTargetWriter(bufferTargetWriter)) {
+        BufferTargetWriter bufferTargetWriter = new BufferTargetWriter(getFileTranslator().getTargetWriter());
+        try (FileTranslator.RestoreTargetWriter ignored = getFileTranslator().setTargetWriter(bufferTargetWriter)) {
             writeNamespaceAndTypeDeclaration(compilationUnit);
         }
 
@@ -74,7 +74,7 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
     }
 
     private void writeUsingStatements(CompilationUnit compilationUnit) {
-        Map<String, String> annotationMap = getSourceFileWriter().getTranslator().getAnnotationMap();
+        Map<String, String> annotationMap = getFileTranslator().getTranslator().getAnnotationMap();
         Set<String> genericUsings = new HashSet<>();
 
         Var<Boolean> wroteUsing = new Var<>(false);

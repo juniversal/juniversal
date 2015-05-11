@@ -20,11 +20,31 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.core;
+package maintests;
 
-@SuppressWarnings("serial")
-public class SourceNotSupportedException extends UserViewableException {
-    SourceNotSupportedException(String baseMessage, String positionDescription) {
-        super(baseMessage + "\n" + positionDescription);
+public class TestStatements {
+    public void testIf() {
+        int i = 3;
+
+        int value;
+        if (i >= 0)
+            value = 1;
+        else {
+            value = 2;
+            value = 3;
+        }
+    }
+
+    public void testWhile() {
+        int i = 0;
+        int sum = 0;
+
+        while (i < 100) {
+            sum += i;
+            ++i;
+        }
+
+        while (i < 200)
+            ++i;
     }
 }

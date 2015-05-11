@@ -29,7 +29,7 @@ import java.util.List;
 
 
 public class VariableDeclarationWriter extends SwiftASTNodeWriter {
-    public VariableDeclarationWriter(SwiftSourceFileWriter swiftASTWriters) {
+    public VariableDeclarationWriter(SwiftFileTranslator swiftASTWriters) {
         super(swiftASTWriters);
     }
 

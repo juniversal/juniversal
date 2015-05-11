@@ -20,44 +20,21 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.csharp;
+package org.juniversal.translator.core;
 
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.*;
+import org.juniversal.translator.core.ASTNodeWriter;
+import org.juniversal.translator.core.FileTranslator;
 
 
-public class ForStatementWriter extends CSharpASTNodeWriter<ForStatement> {
-    public ForStatementWriter(CSharpSourceFileWriter cSharpASTWriters) {
-        super(cSharpASTWriters);
+public abstract class CommonASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
+    private FileTranslator fileTranslator;
+
+    public CommonASTNodeWriter(FileTranslator fileTranslator) {
+        this.fileTranslator = fileTranslator;
     }
 
-    @Override
-    public void write(ForStatement forStatement) {
-        matchAndWrite("for");
-
-        copySpaceAndComments();
-        matchAndWrite("(");
-
-        writeCommaDelimitedNodes(forStatement.initializers());
-
-        copySpaceAndComments();
-        matchAndWrite(";");
-
-        Expression forExpression = forStatement.getExpression();
-        if (forExpression != null) {
-            copySpaceAndComments();
-            writeNode(forStatement.getExpression());
-        }
-
-        copySpaceAndComments();
-        matchAndWrite(";");
-
-        writeCommaDelimitedNodes(forStatement.updaters());
-
-        copySpaceAndComments();
-        matchAndWrite(")");
-
-        copySpaceAndComments();
-        writeNode(forStatement.getBody());
+    @Override protected FileTranslator getFileTranslator() {
+        return fileTranslator;
     }
 }

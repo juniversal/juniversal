@@ -20,7 +20,9 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.core;
+package org.xuniversal.translator.core;
+
+import org.xuniversal.translator.core.TargetWriter;
 
 import java.io.IOException;
 import java.io.Writer;

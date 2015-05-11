@@ -23,28 +23,29 @@
 package org.juniversal.translator.cplusplus;
 
 import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.core.Context;
+import org.juniversal.translator.core.FileTranslator;
 import org.juniversal.translator.core.JUniversalException;
-import org.juniversal.translator.core.SourceFile;
-import org.juniversal.translator.core.SourceFileWriter;
-import org.juniversal.translator.csharp.CSharpASTNodeWriter;
+import org.xuniversal.translator.core.SourceFile;
+import org.xuniversal.translator.cplusplus.CPlusPlusProfile;
+import org.xuniversal.translator.cplusplus.ReferenceKind;
 
 import java.io.Writer;
 import java.util.List;
 
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
-public class CPlusPlusSourceFileWriter extends SourceFileWriter {
+
+public class CPlusPlusFileTranslator extends FileTranslator {
     private CPlusPlusTranslator cPlusPlusTranslator;
     private CPlusPlusContext context;
-    private OutputType outputType;
 
-    public CPlusPlusSourceFileWriter(CPlusPlusTranslator cPlusPlusTranslator, SourceFile sourceFile, Writer writer,
-                                     OutputType outputType) {
+    public CPlusPlusFileTranslator(CPlusPlusTranslator cPlusPlusTranslator, SourceFile sourceFile, Writer writer,
+                                   OutputType outputType) {
         super(cPlusPlusTranslator, sourceFile, writer);
 
         this.cPlusPlusTranslator = cPlusPlusTranslator;
-        this.outputType = outputType;
         this.context = new CPlusPlusContext();
+        this.context.setOutputType(outputType);
 
         addDeclarationWriters();
         addStatementWriters();
@@ -67,11 +68,6 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
     @Override
     public CPlusPlusContext getContext() {
         return context;
-    }
-
-    @Override
-    public OutputType getOutputType() {
-        return outputType;
     }
 
     /**
@@ -131,17 +127,43 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
                 Type type = singleVariableDeclaration.getType();
 
                 if (singleVariableDeclaration.isVarargs()) {
-                    writeArrayOfType(type);
+                    write("Array<");
+                    writeNode(type);
+                    write(">::ptr");
 
                     copySpaceAndComments();
                     match("...");
-                } else writeType(type, true);
+                } else writeType(type, ReferenceKind.SharedPtr);
 
                 copySpaceAndComments();
                 writeNode(singleVariableDeclaration.getName());
 
                 if (singleVariableDeclaration.getInitializer() != null)
                     throw new JUniversalException("Unexpected initializer present for SingleVariableDeclaration");
+            }
+        });
+
+        // Parameterized type
+        replaceWriter(ParameterizedType.class, new CPlusPlusASTNodeWriter<ParameterizedType>(this) {
+            @Override
+            public void write(ParameterizedType parameterizedType) {
+                writeNode(parameterizedType.getType());
+
+                copySpaceAndComments();
+                matchAndWrite("<");
+
+                forEach(parameterizedType.typeArguments(), (Type type, boolean first) -> {
+                    if (!first) {
+                        copySpaceAndComments();
+                        matchAndWrite(",");
+                    }
+
+                    copySpaceAndComments();
+                    writeType(type, ReferenceKind.SharedPtr);
+                });
+
+                copySpaceAndComments();
+                matchAndWrite(">");
             }
         });
 
@@ -161,38 +183,8 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
                     matchAndWrite(qualifiedName.getName().getIdentifier());
                 } else {
                     SimpleName simpleName = (SimpleName) name;
-
                     matchAndWrite(simpleName.getIdentifier());
                 }
-            }
-        });
-
-        // Parameterized type
-        addWriter(ParameterizedType.class, new CPlusPlusASTNodeWriter<ParameterizedType>(this) {
-            @Override
-            public void write(ParameterizedType parameterizedType) {
-                writeNode(parameterizedType.getType());
-
-                copySpaceAndComments();
-                matchAndWrite("<");
-
-                boolean first = true;
-                List<?> typeArguments = parameterizedType.typeArguments();
-                for (Object typeArgumentObject : typeArguments) {
-                    Type typeArgument = (Type) typeArgumentObject;
-
-                    if (!first) {
-                        copySpaceAndComments();
-                        matchAndWrite(",");
-                    }
-
-                    copySpaceAndComments();
-                    writeNode(typeArgument);
-
-                    first = false;
-                }
-
-                matchAndWrite(">");
             }
         });
 
@@ -200,13 +192,23 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
         addWriter(ArrayType.class, new CPlusPlusASTNodeWriter<ArrayType>(this) {
             @Override
             public void write(ArrayType arrayType) {
-                writeArrayOfType(arrayType.getElementType());
+                int dimensions = arrayType.getDimensions();
 
-                skipSpaceAndComments();
-                match("[");
+                for (int i = 0; i < dimensions; i++)
+                    write("Array<");
 
-                skipSpaceAndComments();
-                match("]");
+                writeType(arrayType.getElementType(), ReferenceKind.SharedPtr);
+
+                for (int i = 0; i < dimensions; i++) {
+                    skipSpaceAndComments();
+                    match("[");
+
+                    skipSpaceAndComments();
+                    match("]");
+                }
+
+                for (int i = 0; i < dimensions; i++)
+                    write(">");
             }
         });
 
@@ -214,7 +216,7 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
         addWriter(PrimitiveType.class, new CPlusPlusASTNodeWriter<PrimitiveType>(this) {
             @Override
             public void write(PrimitiveType primitiveType) {
-                CPPProfile profile = getCPPProfile();
+                CPlusPlusProfile profile = getCPPProfile();
 
                 PrimitiveType.Code code = primitiveType.getPrimitiveTypeCode();
                 if (code == PrimitiveType.BYTE)
@@ -222,7 +224,7 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
                 else if (code == PrimitiveType.SHORT)
                     matchAndWrite("short", profile.getInt16Type());
                 else if (code == PrimitiveType.CHAR)
-                    matchAndWrite("char", "unichar");
+                    matchAndWrite("char", "char16_t");
                 else if (code == PrimitiveType.INT)
                     matchAndWrite("int", profile.getInt32Type());
                 else if (code == PrimitiveType.LONG) {
@@ -239,6 +241,33 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
                     throw invalidAST("Unknown primitive type: " + code);
             }
         });
+
+        // TODO: Test the different cases here
+        // Array initializer
+        addWriter(ArrayInitializer.class, new CPlusPlusASTNodeWriter<ArrayInitializer>(this) {
+            @Override
+            public void write(ArrayInitializer arrayInitializer) {
+                // TODO: Test more cases here
+                if (arrayInitializer.getParent() instanceof ArrayInitializer) {
+                    write("new[] ");
+/*
+                    throw sourceNotSupported(
+                            "Nested array initializers, without a 'new' specified, aren't supported in C#.   Change the " +
+                            "Java source to include a new, a syntax supported by both Java and C#.  For instance, " +
+                            "change { {1, 2, 3}, {10, 11, 12} ) => { new int[] {1, 2, 3}, new int[] {10, 11, 12} }");
+*/
+                }
+
+                matchAndWrite("{");
+
+                // TODO: Check that number of expressions matches array size (I think, as I think C# requires exact number and Java allows less)
+                writeCommaDelimitedNodes(arrayInitializer.expressions());
+                // TODO: Skip extra trailing commas here
+
+                copySpaceAndComments();
+                matchAndWrite("}");
+            }
+        });
     }
 
     /**
@@ -246,7 +275,7 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
      */
     private void addStatementWriters() {
         // Block
-        addWriter(Block.class, new CPlusPlusASTNodeWriter<Block>(this) {
+        replaceWriter(Block.class, new CPlusPlusASTNodeWriter<Block>(this) {
             @SuppressWarnings("unchecked")
             @Override
             public void write(Block block) {
@@ -254,11 +283,12 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
 
                 boolean firstStatement = true;
                 for (Statement statement : (List<Statement>) block.statements()) {
-                    // If the first statement is a super constructor invocation, we skip it since
-                    // it's included as part of the method declaration in C++. If a super
+                    // If the first statement is a super or delegating constructor invocation, we skip it since
+                    // it's included as part of the method declaration in C++. If a super/delegating
                     // constructor invocation is a statement other than the first, which it should
                     // never be, we let that error out since writeNode won't find a match for it.
-                    if (firstStatement && statement instanceof SuperConstructorInvocation)
+                    if (firstStatement &&
+                        (statement instanceof SuperConstructorInvocation || statement instanceof ConstructorInvocation))
                         setPositionToEndOfNodeSpaceAndComments(statement);
                     else {
                         copySpaceAndComments();
@@ -273,173 +303,34 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
             }
         });
 
-        // Empty statement (";")
-        addWriter(EmptyStatement.class, new CPlusPlusASTNodeWriter<EmptyStatement>(this) {
+        addWriter(EnhancedForStatement.class, new CPlusPlusASTNodeWriter<EnhancedForStatement>(this) {
             @Override
-            public void write(EmptyStatement emptyStatement) {
-                matchAndWrite(";");
-            }
-        });
-
-        // Expression statement
-        addWriter(ExpressionStatement.class, new CPlusPlusASTNodeWriter<ExpressionStatement>(this) {
-            @Override
-            public void write(ExpressionStatement expressionStatement) {
-                writeNode(expressionStatement.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // If statement
-        addWriter(IfStatement.class, new CPlusPlusASTNodeWriter<IfStatement>(this) {
-            @Override
-            public void write(IfStatement ifStatement) {
-                matchAndWrite("if");
-                copySpaceAndComments();
-
-                matchAndWrite("(");
-                copySpaceAndComments();
-
-                writeNode(ifStatement.getExpression());
-                copySpaceAndComments();
-
-                matchAndWrite(")");
-                copySpaceAndComments();
-
-                writeNode(ifStatement.getThenStatement());
-
-                Statement elseStatement = ifStatement.getElseStatement();
-                if (elseStatement != null) {
-                    copySpaceAndComments();
-
-                    matchAndWrite("else");
-                    copySpaceAndComments();
-
-                    writeNode(elseStatement);
-                }
-            }
-        });
-
-        // While statement
-        addWriter(WhileStatement.class, new CPlusPlusASTNodeWriter<WhileStatement>(this) {
-            @Override
-            public void write(WhileStatement whileStatement) {
-                matchAndWrite("while");
+            public void write(EnhancedForStatement enhancedForStatement) {
+                matchAndWrite("for");
 
                 copySpaceAndComments();
                 matchAndWrite("(");
 
                 copySpaceAndComments();
-                writeNode(whileStatement.getExpression());
+                writeNode(enhancedForStatement.getParameter());
+
+                copySpaceAndComments();
+                // TODO: Ensure spaces around "in"
+                matchAndWrite(":");
+
+                copySpaceAndComments();
+                writeNode(enhancedForStatement.getExpression());
 
                 copySpaceAndComments();
                 matchAndWrite(")");
 
                 copySpaceAndComments();
-                writeNode(whileStatement.getBody());
-            }
-        });
-
-        // Do while statement
-        addWriter(DoStatement.class, new CPlusPlusASTNodeWriter<DoStatement>(this) {
-            @Override
-            public void write(DoStatement doStatement) {
-                matchAndWrite("do");
-
-                copySpaceAndComments();
-                writeNode(doStatement.getBody());
-
-                copySpaceAndComments();
-                matchAndWrite("while");
-
-                copySpaceAndComments();
-                matchAndWrite("(");
-
-                copySpaceAndComments();
-                writeNode(doStatement.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(")");
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // Continue statement
-        addWriter(ContinueStatement.class, new CPlusPlusASTNodeWriter<ContinueStatement>(this) {
-            @Override
-            public void write(ContinueStatement continueStatement) {
-                if (continueStatement.getLabel() != null)
-                    throw sourceNotSupported("continue statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
-
-                matchAndWrite("continue");
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // Break statement
-        addWriter(BreakStatement.class, new CPlusPlusASTNodeWriter<BreakStatement>(this) {
-            @Override
-            public void write(BreakStatement breakStatement) {
-                if (breakStatement.getLabel() != null)
-                    throw sourceNotSupported("break statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
-
-                matchAndWrite("break");
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // For statement
-        addWriter(ForStatement.class, new ForStatementWriter(this));
-
-        // Return statement
-        addWriter(ReturnStatement.class, new CPlusPlusASTNodeWriter<ReturnStatement>(this) {
-            @Override
-            public void write(ReturnStatement returnStatement) {
-                matchAndWrite("return");
-
-                Expression expression = returnStatement.getExpression();
-                if (expression != null) {
-                    copySpaceAndComments();
-                    writeNode(returnStatement.getExpression());
-                }
-
-                copySpaceAndComments();
-                matchAndWrite(";");
+                writeNode(enhancedForStatement.getBody());
             }
         });
 
         // Local variable declaration statement
         addWriter(VariableDeclarationStatement.class, new VariableDeclarationWriter(this));
-
-        // Throw statement
-        addWriter(ThrowStatement.class, new CPlusPlusASTNodeWriter<ThrowStatement>(this) {
-            @Override
-            public void write(ThrowStatement throwStatement) {
-                matchAndWrite("throw");
-
-                copySpaceAndComments();
-                writeNode(throwStatement.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // Delegating constructor invocation
-        addWriter(ConstructorInvocation.class, new CPlusPlusASTNodeWriter(this) {
-            @Override
-            public void write(ASTNode node) {
-                throw sourceNotSupported("Delegating constructors aren't currently supported; for now you have to change the code to not use them (e.g. by adding an init method)");
-            }
-        });
     }
 
     /**
@@ -457,7 +348,7 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
         addWriter(SuperMethodInvocation.class, new MethodInvocationWriter(this));
 
         // Class instance creation
-        addWriter(ClassInstanceCreation.class, new ClassInstanceCreationWriter(this));
+        addWriter(ClassInstanceCreation.class, new CPlusPlusClassInstanceCreationWriter(this));
 
         // Array creation
         addWriter(ArrayCreation.class, new ArrayCreationWriter(this));
@@ -467,46 +358,6 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
 
         // Infix expression
         addWriter(InfixExpression.class, new InfixExpressionWriter(this));
-
-        // Prefix expression
-        addWriter(PrefixExpression.class, new CPlusPlusASTNodeWriter<PrefixExpression>(this) {
-            @Override
-            public void write(PrefixExpression prefixExpression) {
-                PrefixExpression.Operator operator = prefixExpression.getOperator();
-                if (operator == PrefixExpression.Operator.INCREMENT)
-                    matchAndWrite("++");
-                else if (operator == PrefixExpression.Operator.DECREMENT)
-                    matchAndWrite("--");
-                else if (operator == PrefixExpression.Operator.PLUS)
-                    matchAndWrite("+");
-                else if (operator == PrefixExpression.Operator.MINUS)
-                    matchAndWrite("-");
-                else if (operator == PrefixExpression.Operator.COMPLEMENT)
-                    matchAndWrite("~");
-                else if (operator == PrefixExpression.Operator.NOT)
-                    matchAndWrite("!");
-                else throw invalidAST("Unknown prefix operator type: " + operator);
-                copySpaceAndComments();
-
-                writeNode(prefixExpression.getOperand());
-            }
-        });
-
-        // Postfix expression
-        addWriter(PostfixExpression.class, new CPlusPlusASTNodeWriter<PostfixExpression>(this) {
-            @Override
-            public void write(PostfixExpression postfixExpression) {
-                writeNode(postfixExpression.getOperand());
-                copySpaceAndComments();
-
-                PostfixExpression.Operator operator = postfixExpression.getOperator();
-                if (operator == PostfixExpression.Operator.INCREMENT)
-                    matchAndWrite("++");
-                else if (operator == PostfixExpression.Operator.DECREMENT)
-                    matchAndWrite("--");
-                else throw invalidAST("Unknown postfix operator type: " + operator);
-            }
-        });
 
         // instanceof expression
         addWriter(InstanceofExpression.class, new CPlusPlusASTNodeWriter<InstanceofExpression>(this) {
@@ -525,26 +376,6 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
                 writeNode(type);
 
                 write(")");
-            }
-        });
-
-        // conditional expression
-        addWriter(ConditionalExpression.class, new CPlusPlusASTNodeWriter<ConditionalExpression>(this) {
-            @Override
-            public void write(ConditionalExpression conditionalExpression) {
-                writeNode(conditionalExpression.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite("?");
-
-                copySpaceAndComments();
-                writeNode(conditionalExpression.getThenExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(":");
-
-                copySpaceAndComments();
-                writeNode(conditionalExpression.getElseExpression());
             }
         });
 
@@ -576,23 +407,6 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
             }
         });
 
-        // Array access
-        addWriter(ArrayAccess.class, new CPlusPlusASTNodeWriter<ArrayAccess>(this) {
-            @Override
-            public void write(ArrayAccess arrayAccess) {
-                writeNode(arrayAccess.getArray());
-                copySpaceAndComments();
-
-                matchAndWrite("[");
-                copySpaceAndComments();
-
-                writeNode(arrayAccess.getIndex());
-                copySpaceAndComments();
-
-                matchAndWrite("]");
-            }
-        });
-
         // Qualified name
         addWriter(QualifiedName.class, new CPlusPlusASTNodeWriter<QualifiedName>(this) {
             @Override
@@ -608,20 +422,6 @@ public class CPlusPlusSourceFileWriter extends SourceFileWriter {
                 matchAndWrite(".", "->");
 
                 writeNode(qualifiedName.getName());
-            }
-        });
-
-        // Parenthesized expression
-        addWriter(ParenthesizedExpression.class, new CPlusPlusASTNodeWriter<ParenthesizedExpression>(this) {
-            @Override
-            public void write(ParenthesizedExpression parenthesizedExpression) {
-                matchAndWrite("(");
-
-                copySpaceAndComments();
-                writeNode(parenthesizedExpression.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(")");
             }
         });
 

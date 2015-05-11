@@ -25,21 +25,17 @@ package org.juniversal.translator.cplusplus;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.*;
 
-import org.eclipse.jdt.core.dom.BodyDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.TypeParameter;
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
 public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDeclaration> {
 	private TypeDeclaration typeDeclaration;
 	private int typeIndent;
 	private boolean outputSomethingForType;
 
-	public HeaderTypeDeclarationWriter(CPlusPlusSourceFileWriter sourceFileWriter) {
+	public HeaderTypeDeclarationWriter(CPlusPlusFileTranslator sourceFileWriter) {
 		super(sourceFileWriter);
 	}
 
@@ -56,15 +52,14 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 
 		boolean isInterface = typeDeclaration.isInterface();
 
-		@SuppressWarnings("unchecked")
-		List<TypeParameter> typeParameters = (List<TypeParameter>) typeDeclaration.typeParameters();
+		List typeParameters = typeDeclaration.typeParameters();
 
 		boolean isGeneric = !typeParameters.isEmpty();
 
 		if (isGeneric) {
 			write("template ");
-			//sCPlusPlusASTWriter.writeTypeParameters(typeParameters, true);
-			write(" ");
+			writeTypeParameters(typeParameters, true);
+			writeln();
 		}
 
 		if (isInterface)
@@ -92,10 +87,11 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 		// sourceFileWriter.getTargetWriter().incrementByPreferredIndent();
 
 		outputSomethingForType = false;
-		writeNestedTypes();
 		writeMethods();
 		writeSuperDefinition();
 		writeFields();
+
+		writeNestedTypes();
 
         writeSpaces(typeIndent);
         write("};");
@@ -105,9 +101,6 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 
 	private void writeSuperClassAndInterfaces() {
 		Type superclassType = typeDeclaration.getSuperclassType();
-
-		@SuppressWarnings("unchecked")
-		List<Type> superInterfaceTypes = (List<Type>) typeDeclaration.superInterfaceTypes();
 
 		if (superclassType == null)
             write(" : public Object");
@@ -119,38 +112,33 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 			writeNode(superclassType);
 		}
 
-		// Write out the super interfaces, if any
-		boolean firstInterface = true;
-		for (Object superInterfaceTypeObject : superInterfaceTypes) {
-			Type superInterfaceType = (Type) superInterfaceTypeObject;
-
-			if (firstInterface) {
+        // Write out the super interfaces, if any
+        forEach(typeDeclaration.superInterfaceTypes(), (Type superInterfaceType, boolean first) -> {
+			if (first) {
                 skipSpaceAndComments();
-                matchAndWrite("implements", ", public");
+                matchAndWrite(typeDeclaration.isInterface() ? "extends" : "implements", ", public");
 			} else {
                 copySpaceAndComments();
                 matchAndWrite(",", ", public");
 			}
 
-			// Ensure there's at least a space after the "public" keyword (not required in Java
-			// which just has the comma there)
+			// Ensure there's at least a space after the "public" keyword (not required in Java which just has the comma
+			// there)
 			int originalPosition = getPosition();
             copySpaceAndComments();
 			if (getPosition() == originalPosition)
                 write(" ");
 
 			writeNode(superInterfaceType);
-			firstInterface = false;
-		}
+		});
 	}
 
-	@SuppressWarnings("unchecked")
 	private void writeNestedTypes() {
 		ArrayList<TypeDeclaration> publicTypes = new ArrayList<>();
 		ArrayList<TypeDeclaration> protectedTypes = new ArrayList<>();
 		ArrayList<TypeDeclaration> privateTypes = new ArrayList<>();
 
-		for (BodyDeclaration bodyDeclaration : (List<BodyDeclaration>) typeDeclaration.bodyDeclarations()) {
+		forEach(typeDeclaration.bodyDeclarations(), (BodyDeclaration bodyDeclaration) -> {
 			if (bodyDeclaration instanceof TypeDeclaration) {
 				TypeDeclaration nestedTypeDeclaration = (TypeDeclaration) bodyDeclaration;
 				AccessLevel accessLevel = ASTUtil.getAccessModifier(nestedTypeDeclaration.modifiers());
@@ -162,7 +150,7 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 				else
 					privateTypes.add(nestedTypeDeclaration);
 			}
-		}
+		});
 
 		writeNestedTypeDeclarationsForAccessLevel(publicTypes, AccessLevel.PUBLIC);
 		writeNestedTypeDeclarationsForAccessLevel(protectedTypes, AccessLevel.PROTECTED);
@@ -218,7 +206,7 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 		ArrayList<MethodDeclaration> protectedMethods = new ArrayList<>();
 		ArrayList<MethodDeclaration> privateMethods = new ArrayList<>();
 
-		for (Object bodyDeclaration : typeDeclaration.bodyDeclarations()) {
+		forEach(typeDeclaration.bodyDeclarations(), (BodyDeclaration bodyDeclaration) ->  {
 			if (bodyDeclaration instanceof MethodDeclaration) {
 				MethodDeclaration MethodDeclaration = (MethodDeclaration) bodyDeclaration;
 				AccessLevel accessLevel = ASTUtil.getAccessModifier(MethodDeclaration.modifiers());
@@ -231,7 +219,7 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 					privateMethods.add(MethodDeclaration);
 			} else if (!(bodyDeclaration instanceof FieldDeclaration || bodyDeclaration instanceof TypeDeclaration))
 				throw new JUniversalException("Unexpected bodyDeclaration type" + bodyDeclaration.getClass());
-		}
+		});
 
 		writeMethodsForAccessLevel(publicMethods, AccessLevel.PUBLIC);
 		writeMethodsForAccessLevel(protectedMethods, AccessLevel.PROTECTED);

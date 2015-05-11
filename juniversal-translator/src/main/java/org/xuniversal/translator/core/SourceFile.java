@@ -20,48 +20,40 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.core;
+package org.xuniversal.translator.core;
 
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
-public class SourceFile {
-	private final CompilationUnit compilationUnit;
-	private @Nullable File sourceFile;    // Null if there is no file
-	private final String source;
+public abstract class SourceFile {
+    private @Nullable File sourceFile;    // Null if there is no file
+    private final String source;
     private int sourceTabStop;
 
-	public SourceFile(CompilationUnit compilationUnit, File sourceFile, int sourceTabStop) {
-		this.compilationUnit = compilationUnit;
-		this.sourceFile = sourceFile;
-		this.source = Util.readFile(sourceFile);
+    public SourceFile(File sourceFile, int sourceTabStop) {
+        this.sourceFile = sourceFile;
+        this.source = Util.readFile(sourceFile);
         this.sourceTabStop = sourceTabStop;
-	}
+    }
 
-	public SourceFile(CompilationUnit compilationUnit, String source, int sourceTabStop) {
-		this.compilationUnit = compilationUnit;
-		this.sourceFile = null;
-		this.source = source;
+    public SourceFile(String source, int sourceTabStop) {
+        this.sourceFile = null;
+        this.source = source;
         this.sourceTabStop = sourceTabStop;
-	}
+    }
 
-	public CompilationUnit getCompilationUnit() {
-		return compilationUnit;
-	}
+    public @Nullable File getSourceFile() {
+        return sourceFile;
+    }
 
-	public @Nullable File getSourceFile() {
-		return sourceFile;
-	}
+    public boolean isDiskFile() {
+        return sourceFile != null;
+    }
 
-	public boolean isDiskFile() {
-		return sourceFile != null;
-	}
-
-	public String getSource() {
-		return source;
-	}
+    public String getSource() {
+        return source;
+    }
 
     public int getSourceTabStop() {
         return sourceTabStop;
@@ -80,19 +72,15 @@ public class SourceFile {
     public String getPositionDescription(int position) {
         String prefix = isDiskFile() ? "    File " + sourceFile + "\n" : "";
 
-        CompilationUnit compilationUnit = getCompilationUnit();
+        if (position == source.length())
+            return prefix + "End of file";
 
-        int lineNumber = compilationUnit.getLineNumber(position);
-        if (lineNumber < 0) {
-            if (position == source.length())
-                return prefix + "End of file";
-            else return prefix + "Position " + position + " isn't valid";
-        }
+        int lineNumber = getLineNumber(position);
 
         int columnNumber = getSourceLogicalColumn(position);
 
-        int startPosition = compilationUnit.getPosition(lineNumber, 0);
-        int startOfNextLine = compilationUnit.getPosition(lineNumber + 1, 0);
+        int startPosition = getPosition(lineNumber, 0);
+        int startOfNextLine = getPosition(lineNumber + 1, 0);
         // If on last line, set endPosition to end of source else set it to end of line
         int endPosition = (startOfNextLine == -1) ? source.length() - 1 : startOfNextLine - 1;
 
@@ -129,9 +117,7 @@ public class SourceFile {
      * @return logical column
      */
     public int getSourceLogicalColumn(int position) {
-        int physicalColumn = compilationUnit.getColumnNumber(position);
-        if (physicalColumn < 0)
-            throw new JUniversalException("Position is invalid: " + position);
+        int physicalColumn = getPhysicalColumn(position);
 
         int logicalColumn = 0;
         for (int i = position - physicalColumn; i < position; ++i) {
@@ -145,12 +131,9 @@ public class SourceFile {
         return logicalColumn;
     }
 
-    public int getSourceLineNumber(int position) {
-        int lineNumber = compilationUnit.getLineNumber(position);
-        if (lineNumber < 0) {
-            if (position == source.length())
-                throw new JUniversalException("Position " + position + " is at end of source file; can't get line number");
-            else throw new JUniversalException("Position " + position + " isn't valid");
-        } else return lineNumber;
-    }
+    public abstract int getPhysicalColumn(int position);
+
+    public abstract int getLineNumber(int position);
+
+    public abstract int getPosition(int line, int column);
 }

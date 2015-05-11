@@ -20,13 +20,12 @@
  * THE SOFTWARE.
  */
 
-package method_tests;
+package org.xuniversal.translator.core;
 
-/**
- * Created by Bret on 11/30/2014.
- */
-public class TestGenerics {
-    public static <T> void foo() {
-        T myObject;
-    }
+@SuppressWarnings("serial")
+public class UserViewableException extends RuntimeException {
+
+	public UserViewableException(String message) {
+		super(message);
+	}
 }

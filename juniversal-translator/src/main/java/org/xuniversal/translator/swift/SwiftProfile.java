@@ -20,29 +20,19 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.csharp;
+package org.xuniversal.translator.swift;
 
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.xuniversal.translator.core.TargetProfile;
 
-public class SuperMethodInvocationWriter extends MethodInvocationWriterBase<SuperMethodInvocation> {
-    public SuperMethodInvocationWriter(CSharpFileTranslator cSharpASTWriters) {
-        super(cSharpASTWriters);
-    }
-
-    @Override
-    public void write(SuperMethodInvocation superMethodInvocation) {
-        // TODO: Support this
-        if (superMethodInvocation.getQualifier() != null)
-            throw sourceNotSupported("Qualified super invocations aren't currently supported");
-
-        matchAndWrite("super", "base");
-
-        copySpaceAndComments();
-        matchAndWrite(".");
-
-        copySpaceAndComments();
-        writeMethodInvocation(superMethodInvocation, null,
-                superMethodInvocation.getName(), superMethodInvocation.typeArguments(),
-                superMethodInvocation.arguments(), superMethodInvocation.resolveMethodBinding());
+/**
+ * The CPPProfile class describes how the C++ should be generated.  Primarily this class gives
+ * attributes of the target C++ compiler, for example saying what types are used to represent
+ * different sizes of unsigned integers.
+ *
+ * @author bretjohn
+ */
+public class SwiftProfile extends TargetProfile {
+    @Override public boolean isSwift() {
+        return true;
     }
 }

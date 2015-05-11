@@ -24,27 +24,27 @@ package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.*;
+import org.juniversal.translator.core.FileTranslator;
+import org.juniversal.translator.core.JUniversalException;
+import org.xuniversal.translator.core.SourceFile;
 
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
 import static org.juniversal.translator.core.ASTUtil.isArrayLengthField;
-import static org.juniversal.translator.core.ASTUtil.isType;
 
 // TODO: C# doesn't allow data members and methods to have the same names; add a check for that, so fails at translation
 // time not build time
 // TODO: Think about how to handle "transient" in Java
 
-public class CSharpSourceFileWriter extends SourceFileWriter {
+public class CSharpFileTranslator extends FileTranslator {
     private CSharpTranslator cSharpTranslator;
     private CSharpContext context;
     private HashSet<String> cSharpReservedWords;
 
-    public CSharpSourceFileWriter(CSharpTranslator cSharpTranslator, SourceFile sourceFile, Writer writer) {
+    public CSharpFileTranslator(CSharpTranslator cSharpTranslator, SourceFile sourceFile, Writer writer) {
         super(cSharpTranslator, sourceFile, writer);
 
         this.cSharpTranslator = cSharpTranslator;
@@ -168,35 +168,6 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
             }
         });
 
-        // TODO: Implement this
-        // Parameterized type
-        addWriter(ParameterizedType.class, new CSharpASTNodeWriter<ParameterizedType>(this) {
-            @Override
-            public void write(ParameterizedType parameterizedType) {
-                writeNode(parameterizedType.getType());
-
-                copySpaceAndComments();
-                matchAndWrite("<");
-
-                writeCommaDelimitedNodes(parameterizedType.typeArguments());
-
-                copySpaceAndComments();
-                matchAndWrite(">");
-            }
-        });
-
-        addWriter(WildcardType.class, new CSharpASTNodeWriter<WildcardType>(this) {
-            @Override
-            public void write(WildcardType wildcardType) {
-                ArrayList<WildcardType> wildcardTypes = getContext().getMethodWildcardTypes();
-                if (wildcardTypes == null)
-                    throw sourceNotSupported("Wildcard types (that is, ?) only supported in method parameters and return types.  You may want to change the Java source to use an explicitly named generic type instead of a wildcard here.");
-
-                writeWildcardTypeSyntheticName(wildcardTypes, wildcardType);
-                setPositionToEndOfNode(wildcardType);
-            }
-        });
-
         // Array type
         addWriter(ArrayType.class, new CSharpASTNodeWriter<ArrayType>(this) {
             @Override
@@ -287,137 +258,6 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
             }
         });
 
-        // TODO: Implement this
-        // Empty statement (";")
-        addWriter(EmptyStatement.class, new CSharpASTNodeWriter<EmptyStatement>(this) {
-            @Override
-            public void write(EmptyStatement emptyStatement) {
-                matchAndWrite(";");
-            }
-        });
-
-        // TODO: Implement this
-        // Expression statement
-        addWriter(ExpressionStatement.class, new CSharpASTNodeWriter<ExpressionStatement>(this) {
-            @Override
-            public void write(ExpressionStatement expressionStatement) {
-                writeNode(expressionStatement.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // If statement
-        addWriter(IfStatement.class, new CSharpASTNodeWriter<IfStatement>(this) {
-            @Override
-            public void write(IfStatement ifStatement) {
-                matchAndWrite("if");
-                copySpaceAndComments();
-
-                matchAndWrite("(");
-                copySpaceAndComments();
-
-                writeNode(ifStatement.getExpression());
-                copySpaceAndComments();
-
-                matchAndWrite(")");
-                copySpaceAndComments();
-
-                writeNode(ifStatement.getThenStatement());
-
-                Statement elseStatement = ifStatement.getElseStatement();
-                if (elseStatement != null) {
-                    copySpaceAndComments();
-
-                    matchAndWrite("else");
-                    copySpaceAndComments();
-
-                    writeNode(elseStatement);
-                }
-            }
-        });
-
-        // While statement
-        addWriter(WhileStatement.class, new CSharpASTNodeWriter<WhileStatement>(this) {
-            @Override
-            public void write(WhileStatement whileStatement) {
-                matchAndWrite("while");
-
-                copySpaceAndComments();
-                matchAndWrite("(");
-
-                copySpaceAndComments();
-                writeNode(whileStatement.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(")");
-
-                copySpaceAndComments();
-                writeNode(whileStatement.getBody());
-            }
-        });
-
-        // Do while statement
-        addWriter(DoStatement.class, new CSharpASTNodeWriter<DoStatement>(this) {
-            @Override
-            public void write(DoStatement doStatement) {
-                matchAndWrite("do");
-
-                copySpaceAndComments();
-                writeNode(doStatement.getBody());
-
-                copySpaceAndComments();
-                matchAndWrite("while");
-
-                copySpaceAndComments();
-                matchAndWrite("(");
-
-                copySpaceAndComments();
-                writeNode(doStatement.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(")");
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // TODO: Implement this
-        // Continue statement
-        addWriter(ContinueStatement.class, new CSharpASTNodeWriter<ContinueStatement>(this) {
-            @Override
-            public void write(ContinueStatement continueStatement) {
-                if (continueStatement.getLabel() != null)
-                    throw sourceNotSupported("continue statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
-
-                matchAndWrite("continue");
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // TODO: Implement this
-        // Break statement
-        addWriter(BreakStatement.class, new CSharpASTNodeWriter<BreakStatement>(this) {
-            @Override
-            public void write(BreakStatement breakStatement) {
-                if (breakStatement.getLabel() != null)
-                    throw sourceNotSupported("break statement with a label isn't supported as that construct doesn't exist in C++; change the code to not use a label");
-
-                matchAndWrite("break");
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
-        // TODO: Implement this
-        // For statement
-        addWriter(ForStatement.class, new ForStatementWriter(this));
-
         addWriter(EnhancedForStatement.class, new CSharpASTNodeWriter<EnhancedForStatement>(this) {
             @Override
             public void write(EnhancedForStatement enhancedForStatement) {
@@ -448,24 +288,6 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
         // Switch statement
         addWriter(SwitchStatement.class, new SwitchStatementWriter(this));
 
-        // TODO: Implement this
-        // Return statement
-        addWriter(ReturnStatement.class, new CSharpASTNodeWriter<ReturnStatement>(this) {
-            @Override
-            public void write(ReturnStatement returnStatement) {
-                matchAndWrite("return");
-
-                Expression expression = returnStatement.getExpression();
-                if (expression != null) {
-                    copySpaceAndComments();
-                    writeNode(returnStatement.getExpression());
-                }
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
-
         // Local variable declaration statement
         addWriter(VariableDeclarationStatement.class, new CSharpASTNodeWriter<VariableDeclarationStatement>(this) {
             @Override
@@ -481,21 +303,6 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
 
         // Try statement
         addWriter(TryStatement.class, new TryStatementWriter(this));
-
-        // TODO: Implement this
-        // Throw statement
-        addWriter(ThrowStatement.class, new CSharpASTNodeWriter<ThrowStatement>(this) {
-            @Override
-            public void write(ThrowStatement throwStatement) {
-                matchAndWrite("throw");
-
-                copySpaceAndComments();
-                writeNode(throwStatement.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(";");
-            }
-        });
 
         // TODO: Implement this
         // Delegating constructor invocation
@@ -529,8 +336,7 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
             }
         });
 
-        // TODO: Implement this
-        // Throw statement
+        // Synchronized statement
         addWriter(SynchronizedStatement.class, new CSharpASTNodeWriter<SynchronizedStatement>(this) {
             @Override
             public void write(SynchronizedStatement synchronizedStatement) {
@@ -546,14 +352,6 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
 
                 copySpaceAndComments();
                 writeNode(synchronizedStatement.getBody());
-            }
-        });
-
-        // Static initializer
-        addWriter(Initializer.class, new CSharpASTNodeWriter<Initializer>(this) {
-            @Override
-            public void write(Initializer initializer) {
-                throw sourceNotSupported("Static initializers aren't supported (for one thing, their order of execution isn't fully deterministic); use a static method that initializes on demand instead");
             }
         });
     }
@@ -575,9 +373,8 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
         // Super Method invocation
         addWriter(SuperMethodInvocation.class, new SuperMethodInvocationWriter(this));
 
-        // TODO: Implement this
         // Class instance creation
-        addWriter(ClassInstanceCreation.class, new ClassInstanceCreationWriter(this));
+        addWriter(ClassInstanceCreation.class, new CSharpClassInstanceCreationWriter(this));
 
         // TODO: Implement this
         // Array creation
@@ -598,50 +395,6 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
         // Infix expression
         addWriter(InfixExpression.class, new InfixExpressionWriter(this));
 
-        // Prefix expression
-        addWriter(PrefixExpression.class, new CSharpASTNodeWriter<PrefixExpression>(this) {
-            @Override
-            public void write(PrefixExpression prefixExpression) {
-                PrefixExpression.Operator operator = prefixExpression.getOperator();
-                if (operator == PrefixExpression.Operator.INCREMENT)
-                    matchAndWrite("++");
-                else if (operator == PrefixExpression.Operator.DECREMENT)
-                    matchAndWrite("--");
-                else if (operator == PrefixExpression.Operator.PLUS)
-                    matchAndWrite("+");
-                else if (operator == PrefixExpression.Operator.MINUS)
-                    matchAndWrite("-");
-                else if (operator == PrefixExpression.Operator.COMPLEMENT)
-                    matchAndWrite("~");
-                else if (operator == PrefixExpression.Operator.NOT)
-                    matchAndWrite("!");
-                else throw invalidAST("Unknown prefix operator type: " + operator);
-
-                copySpaceAndComments();
-
-                writeNode(prefixExpression.getOperand());
-            }
-        });
-
-        // Postfix expression
-        addWriter(PostfixExpression.class, new CSharpASTNodeWriter<PostfixExpression>(this) {
-            @Override
-            public void write(PostfixExpression postfixExpression) {
-                writeNode(postfixExpression.getOperand());
-
-                // In Swift there can't be any whitespace or comments between a postfix operator & its operand, so
-                // strip it, not copying anything here
-                skipSpaceAndComments();
-
-                PostfixExpression.Operator operator = postfixExpression.getOperator();
-                if (operator == PostfixExpression.Operator.INCREMENT)
-                    matchAndWrite("++");
-                else if (operator == PostfixExpression.Operator.DECREMENT)
-                    matchAndWrite("--");
-                else throw invalidAST("Unknown postfix operator type: " + operator);
-            }
-        });
-
         // instanceof expression
         addWriter(InstanceofExpression.class, new CSharpASTNodeWriter<InstanceofExpression>(this) {
             @Override
@@ -655,26 +408,6 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
                 copySpaceAndComments();
                 Type type = instanceofExpression.getRightOperand();
                 writeNode(type);
-            }
-        });
-
-        // conditional expression
-        addWriter(ConditionalExpression.class, new CSharpASTNodeWriter<ConditionalExpression>(this) {
-            @Override
-            public void write(ConditionalExpression conditionalExpression) {
-                writeNode(conditionalExpression.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite("?");
-
-                copySpaceAndComments();
-                writeNode(conditionalExpression.getThenExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(":");
-
-                copySpaceAndComments();
-                writeNode(conditionalExpression.getElseExpression());
             }
         });
 
@@ -710,23 +443,6 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
             }
         });
 
-        // Array access
-        addWriter(ArrayAccess.class, new CSharpASTNodeWriter<ArrayAccess>(this) {
-            @Override
-            public void write(ArrayAccess arrayAccess) {
-                writeNode(arrayAccess.getArray());
-
-                copySpaceAndComments();
-                matchAndWrite("[");
-
-                copySpaceAndComments();
-                writeNode(arrayAccess.getIndex());
-
-                copySpaceAndComments();
-                matchAndWrite("]");
-            }
-        });
-
         // Qualified name
         addWriter(QualifiedName.class, new CSharpASTNodeWriter<QualifiedName>(this) {
             @Override
@@ -742,21 +458,6 @@ public class CSharpSourceFileWriter extends SourceFileWriter {
                 if (isArrayLengthField(qualifiedName))
                     matchAndWrite("length", "Length");
                 else writeNode(qualifiedName.getName());
-            }
-        });
-
-        // TODO: Implement this
-        // Parenthesized expression
-        addWriter(ParenthesizedExpression.class, new CSharpASTNodeWriter<ParenthesizedExpression>(this) {
-            @Override
-            public void write(ParenthesizedExpression parenthesizedExpression) {
-                matchAndWrite("(");
-
-                copySpaceAndComments();
-                writeNode(parenthesizedExpression.getExpression());
-
-                copySpaceAndComments();
-                matchAndWrite(")");
             }
         });
 

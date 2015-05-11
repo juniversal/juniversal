@@ -30,9 +30,9 @@ import java.util.List;
 
 
 public class ClassInstanceCreationWriter extends SwiftASTNodeWriter {
-    private SwiftSourceFileWriter swiftASTWriters;
+    private SwiftFileTranslator swiftASTWriters;
 
-    public ClassInstanceCreationWriter(SwiftSourceFileWriter swiftASTWriters) {
+    public ClassInstanceCreationWriter(SwiftFileTranslator swiftASTWriters) {
         super(swiftASTWriters);
     }
 

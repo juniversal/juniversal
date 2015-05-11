@@ -26,27 +26,25 @@ import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.ASTNodeWriter;
 import org.juniversal.translator.core.AccessLevel;
-import org.juniversal.translator.core.JUniversalException;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.juniversal.translator.core.ASTUtil.*;
 
 
 public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
-    private CSharpSourceFileWriter cSharpASTWriters;
+    private CSharpFileTranslator cSharpASTWriters;
 
-    protected CSharpASTNodeWriter(CSharpSourceFileWriter cSharpASTWriters) {
+    protected CSharpASTNodeWriter(CSharpFileTranslator cSharpASTWriters) {
         this.cSharpASTWriters = cSharpASTWriters;
     }
 
-    @Override protected CSharpSourceFileWriter getSourceFileWriter() {
+    @Override protected CSharpFileTranslator getFileTranslator() {
         return cSharpASTWriters;
     }
 
     public CSharpContext getContext() {
-        return getSourceFileWriter().getContext();
+        return getFileTranslator().getContext();
     }
 
     public void writeAccessModifier(List<?> modifiers) {
@@ -158,16 +156,6 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
                 writeNodeFromOtherPosition(typeBound);
             });
         });
-    }
-
-    public void writeWildcardTypeSyntheticName(ArrayList<WildcardType> wildcardTypes, WildcardType wildcardType) {
-        int index = wildcardTypes.indexOf(wildcardType);
-        if (index == -1)
-            throw new JUniversalException("Wildcard type not found in list");
-
-        if (wildcardTypes.size() == 1)
-            write("TWildcard");
-        else write("TWildcard" + (index + 1));
     }
 
     /*

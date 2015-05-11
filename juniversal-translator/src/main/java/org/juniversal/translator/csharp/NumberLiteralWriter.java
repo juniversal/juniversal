@@ -30,7 +30,7 @@ import java.math.BigInteger;
 
 // TODO: Finish this
 public class NumberLiteralWriter extends CSharpASTNodeWriter<NumberLiteral> {
-    public NumberLiteralWriter(CSharpSourceFileWriter cSharpASTWriters) {
+    public NumberLiteralWriter(CSharpFileTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

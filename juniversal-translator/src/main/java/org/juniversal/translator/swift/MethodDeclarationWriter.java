@@ -30,9 +30,9 @@ import java.util.List;
 
 
 public class MethodDeclarationWriter extends SwiftASTNodeWriter {
-    private SwiftSourceFileWriter swiftASTWriters;
+    private SwiftFileTranslator swiftASTWriters;
 
-    public MethodDeclarationWriter(SwiftSourceFileWriter swiftASTWriters) {
+    public MethodDeclarationWriter(SwiftFileTranslator swiftASTWriters) {
         super(swiftASTWriters);
     }
 

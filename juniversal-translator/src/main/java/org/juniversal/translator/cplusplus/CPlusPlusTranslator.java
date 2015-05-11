@@ -27,8 +27,9 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.SourceFile;
+import org.juniversal.translator.core.JavaSourceFile;
 import org.juniversal.translator.core.Translator;
+import org.xuniversal.translator.cplusplus.CPlusPlusProfile;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -36,19 +37,20 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 public class CPlusPlusTranslator extends Translator {
-    private CPPProfile cppProfile = new CPPProfile();
+    private CPlusPlusProfile cPlusPlusProfile = new CPlusPlusProfile();
+    private CPlusPlusContext context;
 
-    public CPPProfile getTargetProfile() {
-        return cppProfile;
+    @Override public CPlusPlusProfile getTargetProfile() {
+        return cPlusPlusProfile;
     }
 
     @Override
-    public void translateFile(SourceFile sourceFile) {
+    public void translateFile(JavaSourceFile sourceFile) {
         writeCPPFile(sourceFile, OutputType.HEADER);
         writeCPPFile(sourceFile, OutputType.SOURCE);
     }
 
-    private void writeCPPFile(SourceFile sourceFile, OutputType outputType) {
+    private void writeCPPFile(JavaSourceFile sourceFile, OutputType outputType) {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
 
@@ -58,19 +60,19 @@ public class CPlusPlusTranslator extends Translator {
         File file = new File(getOutputDirectory(), fileName);
 
         try (FileWriter writer = new FileWriter(file)) {
-            CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter = new CPlusPlusSourceFileWriter(this, sourceFile, writer,
+            CPlusPlusFileTranslator cPlusPlusFileTranslator = new CPlusPlusFileTranslator(this, sourceFile, writer,
                     outputType);
 
-            cPlusPlusSourceFileWriter.writeRootNode(compilationUnit);
+            cPlusPlusFileTranslator.writeRootNode(compilationUnit);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public String translateNode(SourceFile sourceFile, ASTNode astNode) {
+    public String translateNode(JavaSourceFile sourceFile, ASTNode astNode) {
         try (StringWriter writer = new StringWriter()) {
-            CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter = new CPlusPlusSourceFileWriter(this, sourceFile, writer,
+            CPlusPlusFileTranslator cPlusPlusSourceFileWriter = new CPlusPlusFileTranslator(this, sourceFile, writer,
                     OutputType.SOURCE);
 
             // Set the type declaration part of the context

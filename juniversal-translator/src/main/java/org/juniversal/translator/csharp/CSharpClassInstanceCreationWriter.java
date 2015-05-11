@@ -23,50 +23,18 @@
 package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.*;
+import org.juniversal.translator.core.ClassInstanceCreationWriter;
+import org.juniversal.translator.core.FileTranslator;
 
 import static org.juniversal.translator.core.ASTUtil.*;
 
 
-public class ClassInstanceCreationWriter extends CSharpASTNodeWriter<ClassInstanceCreation> {
-    public ClassInstanceCreationWriter(CSharpSourceFileWriter cSharpASTWriters) {
-        super(cSharpASTWriters);
+public class CSharpClassInstanceCreationWriter extends ClassInstanceCreationWriter {
+    public CSharpClassInstanceCreationWriter(CSharpFileTranslator fileTranslator) {
+        super(fileTranslator);
     }
 
-    @Override public void write(ClassInstanceCreation classInstanceCreation) {
-        //TODO: Handle type arguments
-
-        // TODO: Support inner class creation via object.new
-        if (classInstanceCreation.getExpression() != null)
-            throw sourceNotSupported("Inner classes not yet supported");
-
-        if (classInstanceCreation.getAnonymousClassDeclaration() != null) {
-            writeAnonymousInnerClassFunction(classInstanceCreation);
-        } else {
-            matchAndWrite("new");
-
-            copySpaceAndComments();
-            writeNode(classInstanceCreation.getType());
-
-            copySpaceAndComments();
-            matchAndWrite("(");
-
-            writeCommaDelimitedNodes(classInstanceCreation.arguments());
-
-            if (classInstanceCreation.getAnonymousClassDeclaration() != null) {
-                throw sourceNotSupported("Anonymous classes aren't yet supported");
-            }
-
-            copySpaceAndComments();
-            matchAndWrite(")");
-        }
-    }
-
-    private void writeAnonymousInnerClassFunction(ClassInstanceCreation classInstanceCreation) {
-        Type type = classInstanceCreation.getType();
-
-        if (! isFunctionalInterfaceImplementation(getSourceFileWriter(), type))
-            throw sourceNotSupported("Anonymous inner classes are only supported when they implement a functional interface (an interface with a single abstract method, no constants, and the @FunctionalInterface annotation).  Change to use a functional interface if you just want a single method/function or use a static (non-anonymous) inner class for a full class.");
-
+    @Override protected void writeAnonymousInnerClassFunction(ClassInstanceCreation classInstanceCreation) {
         MethodDeclaration functionalMethod = (MethodDeclaration) classInstanceCreation.getAnonymousClassDeclaration().bodyDeclarations().get(0);
 
         write("(");

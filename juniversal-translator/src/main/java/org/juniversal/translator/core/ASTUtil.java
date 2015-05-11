@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -97,12 +98,12 @@ public class ASTUtil {
 
     }
 
-    public static TypeDeclaration getFirstTypeDeclaration(CompilationUnit compilationUnit) {
-        return (TypeDeclaration) compilationUnit.types().get(0);
+    public static @Nullable TypeDeclaration getFirstTypeDeclaration(CompilationUnit compilationUnit) {
+        return getFirst(compilationUnit.types());
     }
 
-    public static Block getFirstMethodBlock(CompilationUnit compilationUnit) {
-        return getFirstTypeDeclaration(compilationUnit).getMethods()[0].getBody();
+    public static @Nullable Statement getFirstStatement(Block block) {
+        return getFirst(block.statements());
     }
 
     /**
@@ -432,8 +433,8 @@ public class ASTUtil {
         // TODO: Ensure no default implementation (I think) nor constants defined for the interface
     }
 
-    public static boolean isFunctionalInterfaceImplementation(SourceFileWriter sourceFileWriter, Type type) {
-        return isFunctionalInterface(sourceFileWriter.resolveTypeBinding(type));
+    public static boolean isFunctionalInterfaceImplementation(FileTranslator fileTranslator, Type type) {
+        return isFunctionalInterface(fileTranslator.resolveTypeBinding(type));
     }
 
     /**
@@ -521,6 +522,15 @@ public class ASTUtil {
             hasItem = true;
         }
         return hasItem;
+    }
+
+    public static @Nullable <T> T getFirst(List list) {
+        Iterator iterator = list.iterator();
+        if (iterator.hasNext()) {
+            Object elmtObject = iterator.next();
+            return (T) elmtObject;
+        }
+        else return null;
     }
 
     public static <T> boolean forEach(List list, ConsumerWithFirst<T> consumerWithFirst) {

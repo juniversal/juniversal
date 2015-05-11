@@ -20,9 +20,9 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.core;
+package org.xuniversal.translator.core;
 
-import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.juniversal.translator.core.JUniversalException;
 
 public class SourceCopier {
     private SourceFile sourceFile;
@@ -185,8 +185,7 @@ public class SourceCopier {
             else if (currChar == ' ' || currChar == '\t' || currChar == '\r')
                 --position;
             else if (currChar == '\n') {
-                CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
-                int lineStartPosition = compilationUnit.getPosition(compilationUnit.getLineNumber(position), 0);
+                int lineStartPosition = sourceFile.getPosition(sourceFile.getLineNumber(position), 0);
                 int lineCommentStartPosition = getLineCommentStartPosition(lineStartPosition);
 
                 if (lineCommentStartPosition != -1)

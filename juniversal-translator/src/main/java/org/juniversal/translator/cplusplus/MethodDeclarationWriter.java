@@ -29,10 +29,13 @@ import org.juniversal.translator.core.ASTUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.juniversal.translator.core.ASTUtil.addWildcardTypes;
+import static org.juniversal.translator.core.ASTUtil.forEach;
+
 
 public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclaration> {
-    public MethodDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusSourceFileWriter) {
-        super(cPlusPlusSourceFileWriter);
+    public MethodDeclarationWriter(CPlusPlusFileTranslator cPlusPlusFileTranslator) {
+        super(cPlusPlusFileTranslator);
     }
 
     @Override
@@ -91,11 +94,19 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
         matchAndWrite(methodDeclaration.getName().getIdentifier());
         copySpaceAndComments();
 
+        ArrayList<WildcardType> wildcardTypes = new ArrayList<>();
+        forEach(methodDeclaration.parameters(), (SingleVariableDeclaration parameter) -> {
+            addWildcardTypes(parameter.getType(), wildcardTypes);
+        });
+
+        getContext().setMethodWildcardTypes(wildcardTypes);
         writeParameterList(methodDeclaration);
+        getContext().setMethodWildcardTypes(null);
+
         writeThrownExceptions(methodDeclaration);
 
         if (getContext().isWritingMethodImplementation())
-            writeSuperConstructorInvocation(methodDeclaration);
+            writeAlternateConstructorInvocation(methodDeclaration);
 
         if (getContext().isWritingMethodImplementation()) {
             copySpaceAndComments();
@@ -164,7 +175,7 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
     }
 
     @SuppressWarnings("unchecked")
-    private void writeSuperConstructorInvocation(MethodDeclaration methodDeclaration) {
+    private void writeAlternateConstructorInvocation(MethodDeclaration methodDeclaration) {
         Block body = methodDeclaration.getBody();
         if (body == null)
             return;
@@ -195,10 +206,7 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
         copySpaceAndComments();
         matchAndWrite("(");
 
-        List<?> arguments = superConstructorInvocation.arguments();
-
-        boolean first = true;
-        for (Expression argument : (List<Expression>) arguments) {
+        forEach(superConstructorInvocation.arguments(), (Expression argument, boolean first) -> {
             if (!first) {
                 copySpaceAndComments();
                 matchAndWrite(",");
@@ -206,9 +214,7 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
 
             copySpaceAndComments();
             writeNode(argument);
-
-            first = false;
-        }
+        });
 
         copySpaceAndComments();
         matchAndWrite(")");

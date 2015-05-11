@@ -26,9 +26,9 @@ import org.eclipse.jdt.core.dom.*;
 
 
 public class TypeDeclarationWriter extends SwiftASTNodeWriter {
-    private SwiftSourceFileWriter swiftASTWriters;
+    private SwiftFileTranslator swiftASTWriters;
 
-    public TypeDeclarationWriter(SwiftSourceFileWriter swiftASTWriters) {
+    public TypeDeclarationWriter(SwiftFileTranslator swiftASTWriters) {
         super(swiftASTWriters);
     }
 

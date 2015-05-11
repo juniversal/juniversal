@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.core;
+package org.xuniversal.translator.core;
 
 /**
  * @author Bret Johnson
@@ -69,4 +69,10 @@ public class TargetProfile {
     public void setClassBraceOnSameLine(boolean value) {
         classBraceOnSameLine = value;
     }
+
+    public boolean isCSharp() { return false; }
+
+    public boolean isCPlusPlus() { return false; }
+
+    public boolean isSwift() { return false; }
 }

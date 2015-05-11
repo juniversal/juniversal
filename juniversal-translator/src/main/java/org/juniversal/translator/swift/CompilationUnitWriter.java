@@ -28,9 +28,9 @@ import org.juniversal.translator.core.Context;
 
 
 public class CompilationUnitWriter extends SwiftASTNodeWriter {
-    private SwiftSourceFileWriter swiftASTWriters;
+    private SwiftFileTranslator swiftASTWriters;
 
-    public CompilationUnitWriter(SwiftSourceFileWriter swiftASTWriters) {
+    public CompilationUnitWriter(SwiftFileTranslator swiftASTWriters) {
         super(swiftASTWriters);
     }
     

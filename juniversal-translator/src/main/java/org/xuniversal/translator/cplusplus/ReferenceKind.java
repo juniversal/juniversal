@@ -20,29 +20,16 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.csharp;
+package org.xuniversal.translator.cplusplus;
 
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
-
-public class SuperMethodInvocationWriter extends MethodInvocationWriterBase<SuperMethodInvocation> {
-    public SuperMethodInvocationWriter(CSharpFileTranslator cSharpASTWriters) {
-        super(cSharpASTWriters);
-    }
-
-    @Override
-    public void write(SuperMethodInvocation superMethodInvocation) {
-        // TODO: Support this
-        if (superMethodInvocation.getQualifier() != null)
-            throw sourceNotSupported("Qualified super invocations aren't currently supported");
-
-        matchAndWrite("super", "base");
-
-        copySpaceAndComments();
-        matchAndWrite(".");
-
-        copySpaceAndComments();
-        writeMethodInvocation(superMethodInvocation, null,
-                superMethodInvocation.getName(), superMethodInvocation.typeArguments(),
-                superMethodInvocation.arguments(), superMethodInvocation.resolveMethodBinding());
-    }
+/**
+ * @author Bret Johnson
+ * @since 5/10/2015
+ */
+public enum ReferenceKind {
+    SharedPtr,
+    WeakPtr,
+    ConstReference,
+    RawPointer,
+    Value
 }

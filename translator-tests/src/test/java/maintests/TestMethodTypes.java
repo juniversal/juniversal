@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package method_tests;
+package maintests;
 
 public class TestMethodTypes {
     /**
@@ -42,8 +42,8 @@ public class TestMethodTypes {
                                      double doubleParam, char charParam, boolean booleanParam, String stringParam) {
     }
 
-    private void paramPrimitiveArrayTypes(byte[] byteParam, short[] shortParam, int[] intParam, long[] longParam, float[] floatParam,
-                                          double[] doubleParam, char[] charParam, boolean[] booleanParam, String[] stringParam) {
+    private void paramPrimitiveArrayTypes(byte[] byteArrayParam, short[] shortArrayParam, int[] intArrayParam, long[] longArrayParam, float[] floatArrayParam,
+                                          double[] doubleArrayParam, char[] charArrayParam, boolean[] booleanArrayParam, String[] stringArrayParam) {
     }
 
 /*
@@ -56,16 +56,5 @@ public class TestMethodTypes {
     }
 
     private void varargs(int intParam, String... strings) {
-    }
-
-    public static abstract class Super {
-        abstract Object foo(Integer p1);
-    }
-
-    public static class Sub extends Super {
-        @Override
-        Double foo(Integer p1) {
-            return null;
-        }
     }
 }

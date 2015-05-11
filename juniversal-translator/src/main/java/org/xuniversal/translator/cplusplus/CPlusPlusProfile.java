@@ -20,9 +20,9 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus;
+package org.xuniversal.translator.cplusplus;
 
-import org.juniversal.translator.core.TargetProfile;
+import org.xuniversal.translator.core.TargetProfile;
 
 /**
  * The CPPProfile class describes how the C++ should be generated.  Primarily this class gives
@@ -31,7 +31,7 @@ import org.juniversal.translator.core.TargetProfile;
  *
  * @author bretjohn
  */
-public class CPPProfile extends TargetProfile {
+public class CPlusPlusProfile extends TargetProfile {
     private String int8Type = "char";
     private String int16Type = "short";
     private String int32Type = "int";
@@ -67,5 +67,9 @@ public class CPPProfile extends TargetProfile {
 
     public String getUnsignedInt32UnicodeCharType() {
         return unsignedInt32UnicodeCharType;
+    }
+
+    @Override public boolean isCPlusPlus() {
+        return true;
     }
 }

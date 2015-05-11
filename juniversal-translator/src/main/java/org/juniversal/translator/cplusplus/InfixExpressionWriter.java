@@ -25,7 +25,6 @@ package org.juniversal.translator.cplusplus;
 import java.util.HashMap;
 import java.util.List;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
 
@@ -34,7 +33,7 @@ public class InfixExpressionWriter extends CPlusPlusASTNodeWriter<InfixExpressio
 	private HashMap<InfixExpression.Operator, String> equivalentOperators;  // Operators that have the same token in both Java & C++
 
 
-	public InfixExpressionWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
+	public InfixExpressionWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
 		super(cPlusPlusASTWriters);
 
 		equivalentOperators = new HashMap<>();
@@ -88,7 +87,7 @@ public class InfixExpressionWriter extends CPlusPlusASTNodeWriter<InfixExpressio
 			copySpaceAndComments();
 			String operatorToken = this.equivalentOperators.get(infixExpression.getOperator());
 			matchAndWrite(operatorToken);
-	
+
 			copySpaceAndComments();
             writeNode(infixExpression.getRightOperand());
 
@@ -97,7 +96,7 @@ public class InfixExpressionWriter extends CPlusPlusASTNodeWriter<InfixExpressio
 					
 					copySpaceAndComments();
 					matchAndWrite(operatorToken);
-	
+
 					copySpaceAndComments();
                     writeNode(extendedOperand);
 				}

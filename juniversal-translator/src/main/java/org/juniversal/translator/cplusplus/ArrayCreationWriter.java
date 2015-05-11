@@ -33,7 +33,7 @@ import org.eclipse.jdt.core.dom.Expression;
 
 
 public class ArrayCreationWriter extends CPlusPlusASTNodeWriter<ArrayCreation> {
-    public ArrayCreationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
+    public ArrayCreationWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
@@ -48,7 +48,7 @@ public class ArrayCreationWriter extends CPlusPlusASTNodeWriter<ArrayCreation> {
 
 		// TODO: Support array initializers
 		if (arrayCreation.getInitializer() != null)
-			throw new JUniversalException("Array initializers not currently supported");
+			throw sourceNotSupported("Array initializers not currently supported");
 
 		Expression dimensionSizeExpression = (Expression) dimensions.get(0);
 

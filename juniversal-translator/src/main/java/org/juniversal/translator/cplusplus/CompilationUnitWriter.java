@@ -27,7 +27,7 @@ import org.juniversal.translator.core.ASTUtil;
 
 
 public class CompilationUnitWriter extends CPlusPlusASTNodeWriter<CompilationUnit> {
-    public CompilationUnitWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
+    public CompilationUnitWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
@@ -36,7 +36,7 @@ public class CompilationUnitWriter extends CPlusPlusASTNodeWriter<CompilationUni
 
         setPosition(mainTypeDeclaration.getStartPosition());
 
-        if (getOutputType() == OutputType.HEADER)
+        if (getContext().getOutputType() == OutputType.HEADER)
             writeHeader(compilationUnit, mainTypeDeclaration);
         else writeSource(compilationUnit, mainTypeDeclaration);
     }
@@ -61,9 +61,9 @@ public class CompilationUnitWriter extends CPlusPlusASTNodeWriter<CompilationUni
         writeln();
 
         writeln("namespace " + getPackageNamespaceName(compilationUnit) + " {");
-        writeln("JU_USING_STD_NAMESPACES");
+        //writeln("JU_USING_STD_NAMESPACES");
         writeln();
-
+        
         // Copy class Javadoc or other comments before the class starts
         copySpaceAndComments();
 

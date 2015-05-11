@@ -28,6 +28,11 @@ import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.cplusplus.CPlusPlusTranslator;
 import org.juniversal.translator.csharp.CSharpTranslator;
+import org.xuniversal.translator.core.TargetProfile;
+import org.xuniversal.translator.core.UserViewableException;
+import org.xuniversal.translator.core.Util;
+import org.xuniversal.translator.core.Var;
+import org.xuniversal.translator.cplusplus.CPlusPlusProfile;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -221,7 +226,7 @@ public abstract class Translator {
 
         FileASTRequestor astRequestor = new FileASTRequestor() {
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
-                SourceFile sourceFile = new SourceFile(compilationUnit, new File(sourceFilePath), sourceTabStop);
+                JavaSourceFile sourceFile = new JavaSourceFile(compilationUnit, new File(sourceFilePath), sourceTabStop);
 
                 //boolean outputErrorForFile = false;
                 for (IProblem problem : compilationUnit.getProblems()) {
@@ -284,7 +289,7 @@ public abstract class Translator {
 		 */
     }
 
-    public abstract void translateFile(SourceFile sourceFile);
+    public abstract void translateFile(JavaSourceFile sourceFile);
 
     /**
      * Translate a single node in the AST.   This method is normally just used for testing (unit tests); for production
@@ -294,7 +299,9 @@ public abstract class Translator {
      * @param astNode    node to translate
      * @return translated source for the node
      */
-    public abstract String translateNode(SourceFile sourceFile, ASTNode astNode);
+    public abstract String translateNode(JavaSourceFile sourceFile, ASTNode astNode);
+
+    public abstract TargetProfile getTargetProfile();
 
     public int getSourceTabStop() {
         return sourceTabStop;

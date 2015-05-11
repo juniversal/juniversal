@@ -23,35 +23,39 @@
 package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.cplusplus.OutputType;
+import org.xuniversal.translator.core.*;
 
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import static org.juniversal.translator.core.ASTUtil.isAnnotation;
 import static org.juniversal.translator.core.ASTUtil.isFinal;
 
-public abstract class SourceFileWriter {
+public abstract class FileTranslator {
     private HashMap<Class<? extends ASTNode>, ASTNodeWriter> visitors = new HashMap<>();
     private SourceFile sourceFile;
     private String source;
     private TargetWriter targetWriter;
     private SourceCopier sourceCopier;
     private int position;
-    private OutputType outputType;
     private int preferredIndent = 4;    // TODO: Set
     private boolean knowinglyProcessedTrailingSpaceAndComments = false;
 
 
-    protected SourceFileWriter(Translator translator, SourceFile sourceFile, Writer writer) {
+    protected FileTranslator(Translator translator, SourceFile sourceFile, Writer writer) {
         this.sourceFile = sourceFile;
         this.source = sourceFile.getSource();
 
         this.targetWriter = new TargetWriter(writer, translator.getDestTabStop());
-        this.position = sourceFile.getCompilationUnit().getStartPosition();
+        this.position = 0;
 
         sourceCopier = new SourceCopier(this.sourceFile, source, targetWriter);
+
+        addDeclarationWriters();
+        addStatementWriters();
+        addExpressionWriters();
     }
 
     public SourceFile getSourceFile() {
@@ -62,9 +66,27 @@ public abstract class SourceFileWriter {
 
     public abstract Context getContext();
 
+    public boolean isCSharp() {
+        return getTranslator().getTargetProfile().isCSharp();
+    }
+
+    public boolean isCPlusPlus() {
+        return getTranslator().getTargetProfile().isCPlusPlus();
+    }
+
+    public boolean isSwift() {
+        return getTranslator().getTargetProfile().isSwift();
+    }
+
     protected void addWriter(Class<? extends ASTNode> clazz, ASTNodeWriter visitor) {
         if (visitors.get(clazz) != null)
             throw new JUniversalException("Writer for class " + clazz + " already added to ASTWriters");
+        visitors.put(clazz, visitor);
+    }
+
+    protected void replaceWriter(Class<? extends ASTNode> clazz, ASTNodeWriter visitor) {
+        if (visitors.get(clazz) == null)
+            throw new JUniversalException("Writer for class " + clazz + " doesn't currently exist so can't replace it; call addWriter to add a new writer");
         visitors.put(clazz, visitor);
     }
 
@@ -88,9 +110,9 @@ public abstract class SourceFileWriter {
             // that rule is the CompilationUnit; as outermost node it handles any comments at the
             // beginning itself.
             if (sourceCopier.getSourceCharAt(nodeStartPosition) == '/'
-                    && sourceCopier.getSourceCharAt(nodeStartPosition + 1) == '*'
-                    && sourceCopier.getSourceCharAt(nodeStartPosition + 2) == '*'
-                    && !(node instanceof CompilationUnit || node instanceof Javadoc))
+                && sourceCopier.getSourceCharAt(nodeStartPosition + 1) == '*'
+                && sourceCopier.getSourceCharAt(nodeStartPosition + 2) == '*'
+                && !(node instanceof CompilationUnit || node instanceof Javadoc))
                 assertPositionIs(sourceCopier.skipSpaceAndComments(nodeStartPosition, false));
             else assertPositionIs(nodeStartPosition);
         }
@@ -117,7 +139,7 @@ public abstract class SourceFileWriter {
                 throw e;
             else
                 throw new JUniversalException(e.getMessage() + "\nError occurred with context at position\n"
-                        + getPositionDescription(getPosition()), e);
+                                              + getPositionDescription(getPosition()), e);
         }
     }
 
@@ -133,10 +155,6 @@ public abstract class SourceFileWriter {
         setPosition(node.getStartPosition());
         writeNode(node);
         setPosition(originalPosition);
-    }
-
-    public CompilationUnit getCompilationUnit() {
-        return sourceFile.getCompilationUnit();
     }
 
     /**
@@ -174,7 +192,7 @@ public abstract class SourceFileWriter {
      * Set the position to the beginning of the whitespace/comments for a node, ignoring any comments associated with
      * the previous node. The heuristic used here is that whitespace/comments that come before a node are for that node,
      * unless they are on the end of a line containing the previous node.
-     * <p>
+     * <p/>
      * One consequence of these rules is that if the previous node (or its trailing comment) & current node are on the
      * same line, all comments/space between them are assumed to be for the previous node. Otherwise, the position will
      * be set to the beginning of the line following the previous node / previous node's line ending comment.
@@ -228,7 +246,7 @@ public abstract class SourceFileWriter {
     public void assertPositionIs(int expectedPosition) {
         if (position != expectedPosition)
             throw new ContextPositionMismatchException("Context is positioned at:\n" + getPositionDescription(position)
-                    + "\n  when expected it to be positioned at:\n" + getPositionDescription(expectedPosition));
+                                                       + "\n  when expected it to be positioned at:\n" + getPositionDescription(expectedPosition));
     }
 
     /**
@@ -240,7 +258,7 @@ public abstract class SourceFileWriter {
     public void assertPositionIsAtLeast(int expectedPositionMin) {
         if (position < expectedPositionMin)
             throw new ContextPositionMismatchException("Context is positioned at:\n" + getPositionDescription(position)
-                    + "\n  when expected it to be positioned here or after:\n" + getPositionDescription(expectedPositionMin));
+                                                       + "\n  when expected it to be positioned here or after:\n" + getPositionDescription(expectedPositionMin));
     }
 
     public SourceCopier getSourceCopier() {
@@ -260,11 +278,11 @@ public abstract class SourceFileWriter {
     }
 
     public int getSourceLineNumber(int position) {
-        return sourceFile.getSourceLineNumber(position);
+        return sourceFile.getLineNumber(position);
     }
 
     public int getSourceLineNumber() {
-        return sourceFile.getSourceLineNumber(getPosition());
+        return sourceFile.getLineNumber(getPosition());
     }
 
     /**
@@ -480,10 +498,6 @@ public abstract class SourceFileWriter {
         return new JUniversalException(baseMessage + "\n" + getPositionDescription(position));
     }
 
-    public OutputType getOutputType() {
-        return outputType;
-    }
-
     public TargetWriter getTargetWriter() {
         return targetWriter;
     }
@@ -507,5 +521,353 @@ public abstract class SourceFileWriter {
             targetWriter = originalTargetWriter;
             sourceCopier = new SourceCopier(sourceFile, source, targetWriter);
         }
+    }
+
+    private void addDeclarationWriters() {
+        // Parameterized type
+        addWriter(ParameterizedType.class, new CommonASTNodeWriter<ParameterizedType>(this) {
+            @Override
+            public void write(ParameterizedType parameterizedType) {
+                writeNode(parameterizedType.getType());
+
+                copySpaceAndComments();
+                matchAndWrite("<");
+
+                writeCommaDelimitedNodes(parameterizedType.typeArguments());
+
+                copySpaceAndComments();
+                matchAndWrite(">");
+            }
+        });
+
+        addWriter(WildcardType.class, new CommonASTNodeWriter<WildcardType>(this) {
+            @Override
+            public void write(WildcardType wildcardType) {
+                ArrayList<WildcardType> wildcardTypes = getContext().getMethodWildcardTypes();
+                if (wildcardTypes == null)
+                    throw sourceNotSupported("Wildcard types (that is, ?) only supported in method parameters and return types.  You may want to change the Java source to use an explicitly named generic type instead of a wildcard here.");
+
+                writeWildcardTypeSyntheticName(wildcardTypes, wildcardType);
+                setPositionToEndOfNode(wildcardType);
+            }
+        });
+    }
+
+    private void addStatementWriters() {
+        // TODO: Implement this
+        // Block
+        addWriter(Block.class, new CommonASTNodeWriter<Block>(this) {
+            @Override
+            public void write(Block block) {
+                matchAndWrite("{");
+
+                writeNodes(block.statements());
+
+                copySpaceAndComments();
+                matchAndWrite("}");
+            }
+        });
+
+        // Empty statement (";")
+        addWriter(EmptyStatement.class, new CommonASTNodeWriter<EmptyStatement>(this) {
+            @Override
+            public void write(EmptyStatement emptyStatement) {
+                matchAndWrite(";");
+            }
+        });
+
+        // Expression statement
+        addWriter(ExpressionStatement.class, new CommonASTNodeWriter<ExpressionStatement>(this) {
+            @Override
+            public void write(ExpressionStatement expressionStatement) {
+                writeNode(expressionStatement.getExpression());
+
+                copySpaceAndComments();
+                matchAndWrite(";");
+            }
+        });
+
+        // If statement
+        addWriter(IfStatement.class, new CommonASTNodeWriter<IfStatement>(this) {
+            @Override
+            public void write(IfStatement ifStatement) {
+                matchAndWrite("if");
+                copySpaceAndComments();
+
+                matchAndWrite("(");
+                copySpaceAndComments();
+
+                writeNode(ifStatement.getExpression());
+                copySpaceAndComments();
+
+                matchAndWrite(")");
+                copySpaceAndComments();
+
+                writeNode(ifStatement.getThenStatement());
+
+                Statement elseStatement = ifStatement.getElseStatement();
+                if (elseStatement != null) {
+                    copySpaceAndComments();
+
+                    matchAndWrite("else");
+                    copySpaceAndComments();
+
+                    writeNode(elseStatement);
+                }
+            }
+        });
+
+        // While statement
+        addWriter(WhileStatement.class, new CommonASTNodeWriter<WhileStatement>(this) {
+            @Override
+            public void write(WhileStatement whileStatement) {
+                matchAndWrite("while");
+
+                copySpaceAndComments();
+                matchAndWrite("(");
+
+                copySpaceAndComments();
+                writeNode(whileStatement.getExpression());
+
+                copySpaceAndComments();
+                matchAndWrite(")");
+
+                copySpaceAndComments();
+                writeNode(whileStatement.getBody());
+            }
+        });
+
+        // Do while statement
+        addWriter(DoStatement.class, new CommonASTNodeWriter<DoStatement>(this) {
+            @Override
+            public void write(DoStatement doStatement) {
+                matchAndWrite("do");
+
+                copySpaceAndComments();
+                writeNode(doStatement.getBody());
+
+                copySpaceAndComments();
+                matchAndWrite("while");
+
+                copySpaceAndComments();
+                matchAndWrite("(");
+
+                copySpaceAndComments();
+                writeNode(doStatement.getExpression());
+
+                copySpaceAndComments();
+                matchAndWrite(")");
+
+                copySpaceAndComments();
+                matchAndWrite(";");
+            }
+        });
+
+        // For statement
+        addWriter(ForStatement.class, new CommonASTNodeWriter<ForStatement>(this) {
+            @Override public void write(ForStatement forStatement) {
+                matchAndWrite("for");
+
+                copySpaceAndComments();
+                matchAndWrite("(");
+
+                writeCommaDelimitedNodes(forStatement.initializers());
+
+                copySpaceAndComments();
+                matchAndWrite(";");
+
+                Expression forExpression = forStatement.getExpression();
+                if (forExpression != null) {
+                    copySpaceAndComments();
+                    writeNode(forStatement.getExpression());
+                }
+
+                copySpaceAndComments();
+                matchAndWrite(";");
+
+                writeCommaDelimitedNodes(forStatement.updaters());
+
+                copySpaceAndComments();
+                matchAndWrite(")");
+
+                copySpaceAndComments();
+                writeNode(forStatement.getBody());
+            }
+        });
+
+        addWriter(SwitchStatement.class, new SwitchStatementWriter(this));
+
+        // Continue statement
+        addWriter(ContinueStatement.class, new CommonASTNodeWriter<ContinueStatement>(this) {
+            @Override
+            public void write(ContinueStatement continueStatement) {
+                if (continueStatement.getLabel() != null)
+                    throw sourceNotSupported("continue statement with a label isn't supported; change the code to not use a label");
+
+                matchAndWrite("continue");
+
+                copySpaceAndComments();
+                matchAndWrite(";");
+            }
+        });
+
+        // Break statement
+        addWriter(BreakStatement.class, new CommonASTNodeWriter<BreakStatement>(this) {
+            @Override
+            public void write(BreakStatement breakStatement) {
+                if (breakStatement.getLabel() != null)
+                    throw sourceNotSupported("break statement with a label isn't supported; change the code to not use a label");
+
+                matchAndWrite("break");
+
+                copySpaceAndComments();
+                matchAndWrite(";");
+            }
+        });
+
+        // Return statement
+        addWriter(ReturnStatement.class, new CommonASTNodeWriter<ReturnStatement>(this) {
+            @Override
+            public void write(ReturnStatement returnStatement) {
+                matchAndWrite("return");
+
+                Expression expression = returnStatement.getExpression();
+                if (expression != null) {
+                    copySpaceAndComments();
+                    writeNode(returnStatement.getExpression());
+                }
+
+                copySpaceAndComments();
+                matchAndWrite(";");
+            }
+        });
+
+        // Throw statement
+        addWriter(ThrowStatement.class, new CommonASTNodeWriter<ThrowStatement>(this) {
+            @Override
+            public void write(ThrowStatement throwStatement) {
+                matchAndWrite("throw");
+
+                copySpaceAndComments();
+                writeNode(throwStatement.getExpression());
+
+                copySpaceAndComments();
+                matchAndWrite(";");
+            }
+        });
+
+        // Static initializer
+        addWriter(Initializer.class, new CommonASTNodeWriter<Initializer>(this) {
+            @Override
+            public void write(Initializer initializer) {
+                throw sourceNotSupported("Static initializers aren't supported (for one thing, their order of execution isn't fully deterministic); use a static method that initializes on demand instead");
+            }
+        });
+    }
+
+    /**
+     * Add visitors for the different kinds of expressions.
+     */
+    private void addExpressionWriters() {
+        // Prefix expression
+        addWriter(PrefixExpression.class, new CommonASTNodeWriter<PrefixExpression>(this) {
+            @Override
+            public void write(PrefixExpression prefixExpression) {
+                PrefixExpression.Operator operator = prefixExpression.getOperator();
+                if (operator == PrefixExpression.Operator.INCREMENT)
+                    matchAndWrite("++");
+                else if (operator == PrefixExpression.Operator.DECREMENT)
+                    matchAndWrite("--");
+                else if (operator == PrefixExpression.Operator.PLUS)
+                    matchAndWrite("+");
+                else if (operator == PrefixExpression.Operator.MINUS)
+                    matchAndWrite("-");
+                else if (operator == PrefixExpression.Operator.COMPLEMENT)
+                    matchAndWrite("~");
+                else if (operator == PrefixExpression.Operator.NOT)
+                    matchAndWrite("!");
+                else throw invalidAST("Unknown prefix operator type: " + operator);
+
+                // In Swift there can't be any whitespace or comments between a unary prefix operator & its operand, so
+                // strip it, not copying anything here; otherwise copy
+                if (isSwift())
+                    skipSpaceAndComments();
+                else copySpaceAndComments();
+
+                writeNode(prefixExpression.getOperand());
+            }
+        });
+
+        // Postfix expression
+        addWriter(PostfixExpression.class, new CommonASTNodeWriter<PostfixExpression>(this) {
+            @Override
+            public void write(PostfixExpression postfixExpression) {
+                writeNode(postfixExpression.getOperand());
+
+                // In Swift there can't be any whitespace or comments between a postfix operator & its operand, so
+                // strip it; otherwise copy
+                if (isSwift())
+                    skipSpaceAndComments();
+                else copySpaceAndComments();
+
+                PostfixExpression.Operator operator = postfixExpression.getOperator();
+                if (operator == PostfixExpression.Operator.INCREMENT)
+                    matchAndWrite("++");
+                else if (operator == PostfixExpression.Operator.DECREMENT)
+                    matchAndWrite("--");
+                else throw invalidAST("Unknown postfix operator type: " + operator);
+            }
+        });
+
+        // Conditional expression
+        addWriter(ConditionalExpression.class, new CommonASTNodeWriter<ConditionalExpression>(this) {
+            @Override
+            public void write(ConditionalExpression conditionalExpression) {
+                writeNode(conditionalExpression.getExpression());
+
+                copySpaceAndComments();
+                matchAndWrite("?");
+
+                copySpaceAndComments();
+                writeNode(conditionalExpression.getThenExpression());
+
+                copySpaceAndComments();
+                matchAndWrite(":");
+
+                copySpaceAndComments();
+                writeNode(conditionalExpression.getElseExpression());
+            }
+        });
+
+        // Array access
+        addWriter(ArrayAccess.class, new CommonASTNodeWriter<ArrayAccess>(this) {
+            @Override
+            public void write(ArrayAccess arrayAccess) {
+                writeNode(arrayAccess.getArray());
+
+                copySpaceAndComments();
+                matchAndWrite("[");
+
+                copySpaceAndComments();
+                writeNode(arrayAccess.getIndex());
+
+                copySpaceAndComments();
+                matchAndWrite("]");
+            }
+        });
+
+        // Parenthesized expression
+        addWriter(ParenthesizedExpression.class, new CommonASTNodeWriter<ParenthesizedExpression>(this) {
+            @Override
+            public void write(ParenthesizedExpression parenthesizedExpression) {
+                matchAndWrite("(");
+
+                copySpaceAndComments();
+                writeNode(parenthesizedExpression.getExpression());
+
+                copySpaceAndComments();
+                matchAndWrite(")");
+            }
+        });
     }
 }

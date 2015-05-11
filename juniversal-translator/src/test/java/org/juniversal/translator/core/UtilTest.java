@@ -23,7 +23,7 @@
 package org.juniversal.translator.core;
 
 import static org.junit.Assert.*;
-import org.juniversal.translator.core.Util;
+import org.xuniversal.translator.core.Util;
 
 import org.junit.*;
 

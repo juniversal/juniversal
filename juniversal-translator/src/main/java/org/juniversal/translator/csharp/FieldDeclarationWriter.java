@@ -35,7 +35,7 @@ import static org.juniversal.translator.core.ASTUtil.isStatic;
 
 // TODO: Finish this
 public class FieldDeclarationWriter extends CSharpASTNodeWriter<FieldDeclaration> {
-    public FieldDeclarationWriter(CSharpSourceFileWriter cSharpASTWriters) {
+    public FieldDeclarationWriter(CSharpFileTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

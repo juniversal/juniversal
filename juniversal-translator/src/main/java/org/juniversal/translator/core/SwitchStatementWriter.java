@@ -20,18 +20,20 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.csharp;
+package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
+import org.juniversal.translator.csharp.CSharpASTNodeWriter;
+import org.juniversal.translator.csharp.CSharpFileTranslator;
 import org.xuniversal.translator.core.Var;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
-public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> {
-    public SwitchStatementWriter(CSharpFileTranslator cSharpASTWriters) {
-        super(cSharpASTWriters);
+public class SwitchStatementWriter extends CommonASTNodeWriter<SwitchStatement> {
+    public SwitchStatementWriter(FileTranslator fileTranslator) {
+        super(fileTranslator);
     }
 
     @Override
@@ -55,11 +57,14 @@ public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> 
         Var<Statement> previousStatement = new Var<>();
         Var<Integer> previousStatementIndent = new Var<>();
 
+        boolean isCSharp = getFileTranslator().isCSharp();
+
         forEach(switchStatement.statements(), (Statement statement, boolean first) -> {
             if (statement instanceof SwitchCase) {
                 SwitchCase switchCase = (SwitchCase) statement;
 
-                if (previousStatement.isSet() && !isSwitchExitStatement(previousStatement.value())) {
+                // CSharp doesn't allow implicit fall through & requires using goto instead to make explicit
+                if (isCSharp && previousStatement.isSet() && !isSwitchExitStatement(previousStatement.value())) {
                     copySpaceAndCommentsUntilEOL();
                     writeln();
                     indentToColumn(previousStatementIndent.value());
@@ -85,7 +90,7 @@ public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> 
 
         // In C#, unlike Java, the final case statement / default in the switch must end in an explicit break (assuming
         // it doesn't exit the scope in some other way)
-        if (previousStatement.isSet() && !isSwitchExitStatement(previousStatement.value())) {
+        if (isCSharp && previousStatement.isSet() && !isSwitchExitStatement(previousStatement.value())) {
             copySpaceAndCommentsUntilEOL();
             writeln();
             indentToColumn(previousStatementIndent.value());
@@ -136,7 +141,7 @@ public class SwitchStatementWriter extends CSharpASTNodeWriter<SwitchStatement> 
      * @param expression case label expression
      */
     private void writeCaseLabel(Expression expression) {
-        if (expression instanceof SimpleName) {
+        if (getFileTranslator().isCSharp() && expression instanceof SimpleName) {
             SimpleName simpleName = (SimpleName) expression;
 
             @Nullable ITypeBinding typeBinding = simpleName.resolveTypeBinding();

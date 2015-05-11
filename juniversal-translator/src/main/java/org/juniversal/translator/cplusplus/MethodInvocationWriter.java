@@ -24,23 +24,16 @@ package org.juniversal.translator.cplusplus;
 
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.JUniversalException;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
-
-public class MethodInvocationWriter extends CPlusPlusASTNodeWriter {
-	public MethodInvocationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
+public class MethodInvocationWriter extends CPlusPlusASTNodeWriter<Expression> {
+	public MethodInvocationWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node) {
+	public void write(Expression node) {
 		if (node instanceof SuperMethodInvocation) {
 			SuperMethodInvocation superMethodInvocation = (SuperMethodInvocation) node;
 
@@ -59,7 +52,7 @@ public class MethodInvocationWriter extends CPlusPlusASTNodeWriter {
 	}
 
 	private void writeMethodInvocation(boolean isSuper, Expression expression, IMethodBinding methodBinding,
-                                       SimpleName name, List<?> typeArguments, List<?> arguments) {
+                                       SimpleName name, List typeArguments, List<?> arguments) {
 
 		// See if the method call is static or not; we need to use the bindings to see that
 		boolean isStatic;
@@ -86,11 +79,24 @@ public class MethodInvocationWriter extends CPlusPlusASTNodeWriter {
 		}
 		// Otherwise the method is invoked on the object itself
 
-		matchAndWrite(name.getIdentifier());
 
-		// TODO: Handle type arguments
-		if (! typeArguments.isEmpty())
-			throw sourceNotSupported("Type arguments not currently supported on a method invocation");
+        // In C++ type arguments for methods come after the method name, not before ("foo.<String>bar(3)" in Java is
+        // "foo.bar<String>(3)" in C++).   So change the order around here.
+        if (typeArguments != null && !typeArguments.isEmpty()) {
+            writeNodeAtDifferentPosition(name);
+
+            matchAndWrite("<");
+
+            writeCommaDelimitedNodes(typeArguments, (Type type) -> {
+                copySpaceAndComments();
+                writeNode(type);
+            });
+
+            copySpaceAndComments();
+            matchAndWrite(">");
+
+            setPositionToEndOfNode(name);
+        } else matchAndWrite(name.getIdentifier());
 
 		// TODO: Handle different reference operator used for stack objects
 

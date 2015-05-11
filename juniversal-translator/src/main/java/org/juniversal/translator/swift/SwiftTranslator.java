@@ -27,11 +27,20 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.juniversal.translator.core.*;
+import org.xuniversal.translator.core.TargetProfile;
+import org.xuniversal.translator.csharp.CSharpProfile;
+import org.xuniversal.translator.swift.SwiftProfile;
 
 import java.io.*;
 
 public class SwiftTranslator extends Translator {
-    @Override public void translateFile(SourceFile sourceFile) {
+    private SwiftProfile swiftProfile = new SwiftProfile();
+
+    @Override public SwiftProfile getTargetProfile() {
+        return swiftProfile;
+    }
+
+    @Override public void translateFile(JavaSourceFile sourceFile) {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
 
@@ -41,7 +50,7 @@ public class SwiftTranslator extends Translator {
         File file = new File(getOutputDirectory(), fileName);
 
         try (FileWriter writer = new FileWriter(file)) {
-            SwiftSourceFileWriter swiftSourceFileWriter = new SwiftSourceFileWriter(this, sourceFile, writer);
+            SwiftFileTranslator swiftSourceFileWriter = new SwiftFileTranslator(this, sourceFile, writer);
 
             swiftSourceFileWriter.writeRootNode(compilationUnit);
         } catch (IOException e) {
@@ -49,9 +58,9 @@ public class SwiftTranslator extends Translator {
         }
     }
 
-    @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
+    @Override public String translateNode(JavaSourceFile sourceFile, ASTNode astNode) {
         try (StringWriter writer = new StringWriter()) {
-            SwiftSourceFileWriter swiftSourceFileWriter = new SwiftSourceFileWriter(this, sourceFile, writer);
+            SwiftFileTranslator swiftSourceFileWriter = new SwiftFileTranslator(this, sourceFile, writer);
 
             // Set the type declaration part of the context
             AbstractTypeDeclaration typeDeclaration = (AbstractTypeDeclaration) sourceFile.getCompilationUnit().types().get(0);

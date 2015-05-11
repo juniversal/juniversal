@@ -25,8 +25,10 @@ package org.juniversal.translator.csharp;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.juniversal.translator.core.SourceFile;
+import org.juniversal.translator.core.JavaSourceFile;
 import org.juniversal.translator.core.Translator;
+import org.xuniversal.translator.core.TargetProfile;
+import org.xuniversal.translator.csharp.CSharpProfile;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -36,17 +38,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CSharpTranslator extends Translator {
+    private CSharpProfile cSharpProfile = new CSharpProfile();
     private HashMap<String, String> annotationMap = new HashMap<>();
 
     public CSharpTranslator() {
         annotationMap.put("org.junit.Test", "NUnit.Framework.Test");
     }
 
+    @Override public TargetProfile getTargetProfile() {
+        return cSharpProfile;
+    }
+
     public Map<String, String> getAnnotationMap() {
         return annotationMap;
     }
 
-    @Override public void translateFile(SourceFile sourceFile) {
+    @Override public void translateFile(JavaSourceFile sourceFile) {
         CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
         AbstractTypeDeclaration mainTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
 
@@ -55,7 +62,7 @@ public class CSharpTranslator extends Translator {
 
         File file = new File(getPackageDirectory(mainTypeDeclaration), fileName);
         try (FileWriter writer = new FileWriter(file)) {
-            CSharpSourceFileWriter cSharpSourceFileWriter = new CSharpSourceFileWriter(this, sourceFile, writer);
+            CSharpFileTranslator cSharpSourceFileWriter = new CSharpFileTranslator(this, sourceFile, writer);
 
             cSharpSourceFileWriter.writeRootNode(compilationUnit);
         } catch (IOException e) {
@@ -63,9 +70,9 @@ public class CSharpTranslator extends Translator {
         }
     }
 
-    @Override public String translateNode(SourceFile sourceFile, ASTNode astNode) {
+    @Override public String translateNode(JavaSourceFile sourceFile, ASTNode astNode) {
         try (StringWriter writer = new StringWriter()) {
-            CSharpSourceFileWriter cSharpSourceFileWriter = new CSharpSourceFileWriter(this, sourceFile, writer);
+            CSharpFileTranslator cSharpSourceFileWriter = new CSharpFileTranslator(this, sourceFile, writer);
 
             // Set the type declaration part of the context
             AbstractTypeDeclaration typeDeclaration = (AbstractTypeDeclaration) sourceFile.getCompilationUnit().types().get(0);

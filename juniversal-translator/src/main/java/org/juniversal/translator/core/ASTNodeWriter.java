@@ -24,9 +24,15 @@ package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
+import org.xuniversal.translator.core.BufferTargetWriter;
+import org.xuniversal.translator.core.SourceNotSupportedException;
+import org.xuniversal.translator.core.TargetWriter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public abstract class ASTNodeWriter<T extends ASTNode> {
@@ -36,23 +42,23 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
         return false;
     }
 
-    protected abstract SourceFileWriter getSourceFileWriter();
+    protected abstract FileTranslator getFileTranslator();
 
     protected void writeNode(ASTNode node) {
-        getSourceFileWriter().writeNode(node);
+        getFileTranslator().writeNode(node);
     }
 
     protected void writeNodeFromOtherPosition(ASTNode node) {
         int savedPosition = getPosition();
 
         setPositionToStartOfNode(node);
-        getSourceFileWriter().writeNode(node);
+        getFileTranslator().writeNode(node);
 
         setPosition(savedPosition);
     }
 
     protected void writeNodeAtDifferentPosition(ASTNode node) {
-        getSourceFileWriter().writeNodeAtDifferentPosition(node);
+        getFileTranslator().writeNodeAtDifferentPosition(node);
     }
 
     public <TElmt> void writeCommaDelimitedNodes(List list, Consumer<TElmt> processList) {
@@ -71,29 +77,22 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
     }
 
     public void writeCommaDelimitedNodes(List list) {
-        boolean first = true;
-        for (Object astNodeObject : list) {
+        forEach(list, (ASTNode astNode, boolean first) -> {
             if (!first) {
                 copySpaceAndComments();
                 matchAndWrite(",");
             }
 
-            ASTNode astNode = (ASTNode) astNodeObject;
-
             copySpaceAndComments();
             writeNode(astNode);
-
-            first = false;
-        }
+        });
     }
 
     public void writeNodes(List list) {
-        for (Object astNodeObject : list) {
-            ASTNode astNode = (ASTNode) astNodeObject;
-
+        forEach(list, (ASTNode astNode) -> {
             copySpaceAndComments();
             writeNode(astNode);
-        }
+        });
     }
 
     public <TElmt> void writeNodes(List list, Consumer<TElmt> consumer) {
@@ -104,24 +103,34 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
         }
     }
 
+    public void writeWildcardTypeSyntheticName(ArrayList<WildcardType> wildcardTypes, WildcardType wildcardType) {
+        int index = wildcardTypes.indexOf(wildcardType);
+        if (index == -1)
+            throw new JUniversalException("Wildcard type not found in list");
+
+        if (wildcardTypes.size() == 1)
+            write("TWildcard");
+        else write("TWildcard" + (index + 1));
+    }
+
     public SourceNotSupportedException sourceNotSupported(String baseMessage) {
-        return getSourceFileWriter().sourceNotSupported(baseMessage);
+        return getFileTranslator().sourceNotSupported(baseMessage);
     }
 
     public JUniversalException invalidAST(String baseMessage) {
-        return getSourceFileWriter().invalidAST(baseMessage);
+        return getFileTranslator().invalidAST(baseMessage);
     }
 
     public int getTargetColumn() {
-        return getSourceFileWriter().getTargetColumn();
+        return getFileTranslator().getTargetColumn();
     }
 
     public TargetWriter getTargetWriter() {
-        return getSourceFileWriter().getTargetWriter();
+        return getFileTranslator().getTargetWriter();
     }
 
     public void copySpaceAndComments() {
-        getSourceFileWriter().copySpaceAndComments();
+        getFileTranslator().copySpaceAndComments();
     }
 
     public void copySpaceAndCommentsTranslatingJavadoc(@Nullable Javadoc javadoc) {
@@ -133,55 +142,55 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
     }
 
     public void copySpaceAndCommentsUntilPosition(int justUntilPosition) {
-        getSourceFileWriter().copySpaceAndCommentsUntilPosition(justUntilPosition);
+        getFileTranslator().copySpaceAndCommentsUntilPosition(justUntilPosition);
     }
 
     public void copySpaceAndCommentsEnsuringDelimiter() {
-        getSourceFileWriter().copySpaceAndCommentsEnsuringDelimiter();
+        getFileTranslator().copySpaceAndCommentsEnsuringDelimiter();
     }
 
     public void copySpaceAndCommentsUntilEOL() {
-        getSourceFileWriter().copySpaceAndCommentsUntilEOL();
+        getFileTranslator().copySpaceAndCommentsUntilEOL();
     }
 
     public void skipSpaceAndComments() {
-        getSourceFileWriter().skipSpaceAndComments();
+        getFileTranslator().skipSpaceAndComments();
     }
 
     public void skipSpaceAndCommentsBackward() {
-        getSourceFileWriter().skipSpaceAndCommentsBackward();
+        getFileTranslator().skipSpaceAndCommentsBackward();
     }
 
     public void skipSpaceAndCommentsUntilEOL() {
-        getSourceFileWriter().skipSpaceAndCommentsUntilEOL();
+        getFileTranslator().skipSpaceAndCommentsUntilEOL();
     }
 
     public void skipSpacesAndTabs() {
-        getSourceFileWriter().skipSpacesAndTabs();
+        getFileTranslator().skipSpacesAndTabs();
     }
 
     public void skipSpacesAndTabsBackward() {
-        getSourceFileWriter().skipSpacesAndTabsBackward();
+        getFileTranslator().skipSpacesAndTabsBackward();
     }
 
     public void skipNewline() {
-        getSourceFileWriter().skipNewline();
+        getFileTranslator().skipNewline();
     }
 
     public void skipBlankLines() {
-        getSourceFileWriter().skipBlankLines();
+        getFileTranslator().skipBlankLines();
     }
 
     public void setKnowinglyProcessedTrailingSpaceAndComments(boolean knowinglyProcessedTrailingSpaceAndComments) {
-        getSourceFileWriter().setKnowinglyProcessedTrailingSpaceAndComments(knowinglyProcessedTrailingSpaceAndComments);
+        getFileTranslator().setKnowinglyProcessedTrailingSpaceAndComments(knowinglyProcessedTrailingSpaceAndComments);
     }
 
     public void matchAndWrite(String matchAndWrite) {
-        getSourceFileWriter().matchAndWrite(matchAndWrite);
+        getFileTranslator().matchAndWrite(matchAndWrite);
     }
 
     public void matchAndWrite(String match, String write) {
-        getSourceFileWriter().matchAndWrite(match, write);
+        getFileTranslator().matchAndWrite(match, write);
     }
 
     public void matchNodeAndWrite(ASTNode node, String string) {
@@ -190,19 +199,19 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
     }
 
     public void match(String match) {
-        getSourceFileWriter().match(match);
+        getFileTranslator().match(match);
     }
 
     public void write(String string) {
-        getSourceFileWriter().write(string);
+        getFileTranslator().write(string);
     }
 
     public void write(BufferTargetWriter bufferTargetWriter) {
-        getSourceFileWriter().write(bufferTargetWriter);
+        getFileTranslator().write(bufferTargetWriter);
     }
 
     public void writeSpaces(int count) {
-        getSourceFileWriter().writeSpaces(count);
+        getFileTranslator().writeSpaces(count);
     }
 
     /**
@@ -218,55 +227,55 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
     }
 
     public void writeSpacesUntilColumn(int column) {
-        getSourceFileWriter().writeSpacesUntilColumn(column);
+        getFileTranslator().writeSpacesUntilColumn(column);
     }
 
     public void writeln(String string) {
-        getSourceFileWriter().writeln(string);
+        getFileTranslator().writeln(string);
     }
 
     public void writeln() {
-        getSourceFileWriter().writeln();
+        getFileTranslator().writeln();
     }
 
     public void setPosition(int position) {
-        getSourceFileWriter().setPosition(position);
+        getFileTranslator().setPosition(position);
     }
 
     public int getPosition() {
-        return getSourceFileWriter().getPosition();
+        return getFileTranslator().getPosition();
     }
 
     public int getSourceLogicalColumn() {
-        return getSourceFileWriter().getSourceLogicalColumn();
+        return getFileTranslator().getSourceLogicalColumn();
     }
 
     public void setPositionToStartOfNode(ASTNode node) {
-        getSourceFileWriter().setPositionToStartOfNode(node);
+        getFileTranslator().setPositionToStartOfNode(node);
     }
 
     public void setPositionToStartOfNodeSpaceAndComments(ASTNode node) {
-        getSourceFileWriter().setPositionToStartOfNodeSpaceAndComments(node);
+        getFileTranslator().setPositionToStartOfNodeSpaceAndComments(node);
     }
 
     public void setPositionToEndOfNode(ASTNode node) {
-        getSourceFileWriter().setPositionToEndOfNode(node);
+        getFileTranslator().setPositionToEndOfNode(node);
     }
 
     public void setPositionToEndOfNodeSpaceAndComments(ASTNode node) {
-        getSourceFileWriter().setPositionToEndOfNodeSpaceAndComments(node);
+        getFileTranslator().setPositionToEndOfNodeSpaceAndComments(node);
     }
 
     public void ensureModifiersJustFinalOrAnnotations(List<?> modifiers) {
-        getSourceFileWriter().ensureModifiersJustFinalOrAnnotations(modifiers);
+        getFileTranslator().ensureModifiersJustFinalOrAnnotations(modifiers);
     }
 
     public void skipModifiers(List extendedModifiers) {
-        getSourceFileWriter().skipModifiers(extendedModifiers);
+        getFileTranslator().skipModifiers(extendedModifiers);
     }
 
     public int getPreferredIndent() {
-        return getSourceFileWriter().getPreferredIndent();
+        return getFileTranslator().getPreferredIndent();
     }
 
     public MethodDeclaration getFunctionalInterfaceMethod(TypeDeclaration typeDeclaration) {

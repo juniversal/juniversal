@@ -22,73 +22,63 @@
 
 package org.juniversal.translator.cplusplus;
 
+import org.eclipse.jdt.core.dom.*;
+import org.xuniversal.translator.cplusplus.ReferenceKind;
+
 import java.util.List;
 
-import org.juniversal.translator.core.ASTUtil;
-
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
-
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
 public class VariableDeclarationWriter extends CPlusPlusASTNodeWriter {
-    public VariableDeclarationWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
+    public VariableDeclarationWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ASTNode node) {
-		// Variable declaration statements & expressions are quite similar, so we handle them both
-		// here together
+    public void write(ASTNode node) {
+        // Variable declaration statements & expressions are quite similar, so we handle them both
+        // here together
 
-		if (node instanceof VariableDeclarationStatement) {
-			VariableDeclarationStatement variableDeclarationStatement = (VariableDeclarationStatement) node;
+        if (node instanceof VariableDeclarationStatement) {
+            VariableDeclarationStatement variableDeclarationStatement = (VariableDeclarationStatement) node;
 
-			writeVariableDeclaration(variableDeclarationStatement.modifiers(), variableDeclarationStatement.getType(),
-					variableDeclarationStatement.fragments());
-			copySpaceAndComments();
+            writeVariableDeclaration(variableDeclarationStatement.modifiers(), variableDeclarationStatement.getType(),
+                    variableDeclarationStatement.fragments());
+            copySpaceAndComments();
 
-			matchAndWrite(";");
-		} else {
-			VariableDeclarationExpression variableDeclarationExpression = (VariableDeclarationExpression) node;
+            matchAndWrite(";");
+        } else {
+            VariableDeclarationExpression variableDeclarationExpression = (VariableDeclarationExpression) node;
 
-			writeVariableDeclaration(variableDeclarationExpression.modifiers(),
-					variableDeclarationExpression.getType(), variableDeclarationExpression.fragments());
-		}
-	}
+            writeVariableDeclaration(variableDeclarationExpression.modifiers(),
+                    variableDeclarationExpression.getType(), variableDeclarationExpression.fragments());
+        }
+    }
 
-	private void writeVariableDeclaration(List<?> modifiers, Type type, List<?> fragments) {
-		// Turn "final" into "const"
-		if (ASTUtil.containsFinal(modifiers)) {
+    private void writeVariableDeclaration(List<?> modifiers, Type type, List<?> fragments) {
+        // TODO:  Turn "final" into "const"
+/*
+        if (ASTUtil.containsFinal(modifiers)) {
 			write("const");
 			skipModifiers(modifiers);
 
 			copySpaceAndComments();
 		}
+*/
 
-		// Write the type
-        writeType(type, false);
+        // Write the type
+        writeType(type, ReferenceKind.SharedPtr);
 
-		boolean needStar = false;
-		getContext().setWritingVariableDeclarationNeedingStar(needStar);
+        // TODO: Write * or & where needed, if multiple variables (multiple fragments)
 
-		// Write the variable declaration(s)
-		boolean first = true;
-		for (Object fragment : fragments) {
-			VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) fragment;
-
-			copySpaceAndComments();
-			if (!first) {
-				matchAndWrite(",");
-				copySpaceAndComments();
-			}
+        // Write the variable declaration(s)
+        forEach(fragments, (VariableDeclarationFragment variableDeclarationFragment, boolean first) -> {
+            copySpaceAndComments();
+            if (!first) {
+                matchAndWrite(",");
+                copySpaceAndComments();
+            }
             writeNode(variableDeclarationFragment);
-
-			first = false;
-		}
-
-		getContext().setWritingVariableDeclarationNeedingStar(false);
-	}
+        });
+    }
 }

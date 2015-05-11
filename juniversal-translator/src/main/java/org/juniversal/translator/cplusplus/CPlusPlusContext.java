@@ -26,6 +26,7 @@ import org.juniversal.translator.core.Context;
 
 public class CPlusPlusContext extends Context {
     private boolean writingVariableDeclarationNeedingStar;
+    private OutputType outputType;
 
     public boolean isWritingVariableDeclarationNeedingStar() {
         return writingVariableDeclarationNeedingStar;
@@ -33,5 +34,13 @@ public class CPlusPlusContext extends Context {
 
     public void setWritingVariableDeclarationNeedingStar(boolean writingVariableDeclarationNeedingStar) {
         this.writingVariableDeclarationNeedingStar = writingVariableDeclarationNeedingStar;
+    }
+
+    public OutputType getOutputType() {
+        return outputType;
+    }
+
+    public void setOutputType(OutputType outputType) {
+        this.outputType = outputType;
     }
 }

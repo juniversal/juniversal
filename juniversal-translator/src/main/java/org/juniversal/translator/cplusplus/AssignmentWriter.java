@@ -26,7 +26,7 @@ import org.eclipse.jdt.core.dom.Assignment;
 
 
 public class AssignmentWriter extends CPlusPlusASTNodeWriter<Assignment> {
-    public AssignmentWriter(CPlusPlusSourceFileWriter cPlusPlusASTWriters) {
+    public AssignmentWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 

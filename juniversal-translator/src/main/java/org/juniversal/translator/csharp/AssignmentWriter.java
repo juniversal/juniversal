@@ -27,7 +27,7 @@ import org.eclipse.jdt.core.dom.Assignment;
 
 // TODO: Finish this
 public class AssignmentWriter extends CSharpASTNodeWriter<Assignment> {
-    public AssignmentWriter(CSharpSourceFileWriter cSharpASTWriters) {
+    public AssignmentWriter(CSharpFileTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 
