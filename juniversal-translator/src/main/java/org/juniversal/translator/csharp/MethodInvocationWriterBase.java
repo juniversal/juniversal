@@ -32,7 +32,7 @@ import java.util.List;
 import static org.juniversal.translator.core.ASTUtil.*;
 
 public abstract class MethodInvocationWriterBase<T extends Expression> extends CSharpASTNodeWriter<T> {
-    public MethodInvocationWriterBase(CSharpFileTranslator cSharpASTWriters) {
+    public MethodInvocationWriterBase(CSharpTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 
@@ -102,10 +102,7 @@ public abstract class MethodInvocationWriterBase<T extends Expression> extends C
 
                 matchAndWrite("<");
 
-                writeCommaDelimitedNodes(typeArguments, (Type type) -> {
-                    copySpaceAndComments();
-                    writeNode(type);
-                });
+                writeCommaDelimitedNodes(typeArguments);
 
                 copySpaceAndComments();
                 matchAndWrite(">");

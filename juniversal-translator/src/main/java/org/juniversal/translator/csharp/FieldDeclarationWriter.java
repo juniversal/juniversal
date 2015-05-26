@@ -25,7 +25,7 @@ package org.juniversal.translator.csharp;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.juniversal.translator.core.Context;
+import org.juniversal.translator.core.JavaSourceContext;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ import static org.juniversal.translator.core.ASTUtil.isStatic;
 
 // TODO: Finish this
 public class FieldDeclarationWriter extends CSharpASTNodeWriter<FieldDeclaration> {
-    public FieldDeclarationWriter(CSharpFileTranslator cSharpASTWriters) {
+    public FieldDeclarationWriter(CSharpTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 
@@ -68,7 +68,7 @@ public class FieldDeclarationWriter extends CSharpASTNodeWriter<FieldDeclaration
         matchAndWrite(";");
     }
 
-    private void writeVariableDeclarationFragment(Context context, VariableDeclarationFragment variableDeclarationFragment) {
+    private void writeVariableDeclarationFragment(JavaSourceContext javaSourceContext, VariableDeclarationFragment variableDeclarationFragment) {
         // TODO: Check for syntax with extra dimensions on array
         // TODO: Handle check for int foo[] syntax instead of int[] foo
 

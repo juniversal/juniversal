@@ -24,6 +24,7 @@ package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
+import org.juniversal.translator.cplusplus.HierarchicalName;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -68,7 +69,7 @@ public class ASTUtil {
 		CPPWriter cppWriter = new CPPWriter(writer, profile);
 
 		Context context = new Context((CompilationUnit) compilationUnit.getRoot(), source, 8, profile, cppWriter,
-				OutputType.SOURCE);
+				OutputType.SOURCE_FILE);
 
 		context.setPosition(typeDeclaration.getStartPosition());
 
@@ -98,12 +99,67 @@ public class ASTUtil {
 
     }
 
-    public static @Nullable TypeDeclaration getFirstTypeDeclaration(CompilationUnit compilationUnit) {
+    public static @Nullable AbstractTypeDeclaration getFirstTypeDeclaration(CompilationUnit compilationUnit) {
         return getFirst(compilationUnit.types());
     }
 
     public static @Nullable Statement getFirstStatement(Block block) {
         return getFirst(block.statements());
+    }
+
+    public static HierarchicalName typeBindingToHierarchicalName(ITypeBinding typeBinding) {
+        @Nullable IPackageBinding packageBinding = typeBinding.getPackage();
+        if (packageBinding == null)
+            return new HierarchicalName(typeBinding.getName());
+        else return new HierarchicalName(packageBinding.getNameComponents(), typeBinding.getName());
+    }
+
+    /**
+     * Convert a name (which can be null, a SimpleName, or a QualifiedName) to a HierarchicalName (essentially a list of
+     * strings for each component of the name).   Null maps to an empty list, a SimpleName to a single element list, and
+     * a QualifiedName to a list element for each qualifier followed by the SimpleName identifier at the end.
+     *
+     * @param name name in question
+     * @return name as a HierarchicalName
+     */
+    public static HierarchicalName toHierarchicalName(@Nullable Name name) {
+        HierarchicalName hierarchicalName = new HierarchicalName();
+
+        if (name != null)
+            addNameToHierarchicalName(name, hierarchicalName);
+
+        return hierarchicalName;
+    }
+
+    /**
+     * Get the HierarchicalName associated with the main type defined in the CompilationUnit.   The HierarchicalName is
+     * fully qualified, containing the package name followed by the type name.
+     *
+     * @param compilationUnit compilation unit
+     * @return
+     */
+    public static HierarchicalName toHierarchicalName(CompilationUnit compilationUnit) {
+        PackageDeclaration packageDeclaration = compilationUnit.getPackage();
+
+        HierarchicalName packageHierarchicalName;
+        if (packageDeclaration != null)
+            packageHierarchicalName = toHierarchicalName(packageDeclaration.getName());
+        else packageHierarchicalName = new HierarchicalName();
+
+        return new HierarchicalName(packageHierarchicalName,
+                getFirstTypeDeclaration(compilationUnit).getName().getIdentifier());
+    }
+
+    private static void addNameToHierarchicalName(Name name, HierarchicalName hierarchicalName) {
+        if (name.isQualifiedName()) {
+            QualifiedName qualifiedName = (QualifiedName) name;
+
+            addNameToHierarchicalName(qualifiedName.getQualifier(), hierarchicalName);
+            hierarchicalName.addComponent(qualifiedName.getName().getIdentifier());
+        } else {
+            SimpleName simpleName = (SimpleName) name;
+            hierarchicalName.addComponent(simpleName.getIdentifier());
+        }
     }
 
     /**
@@ -201,6 +257,47 @@ public class ASTUtil {
             if (extendedModifier.isModifier() && ((Modifier) extendedModifier).isAbstract())
                 return true;
         }
+        return false;
+    }
+
+    /**
+     * For the given type reference, see if it uses type variable anywhere.   For example, T, ArrayList<T>, and
+     * ArrayList<HashMap<String,T>> would all return true.
+     *
+     * This method is used for C++ templates to include the "typename" keyword where needed.
+     *
+     * @param type type reference
+     * @return true if the type reference includes a type variable inside it
+     */
+    public static boolean typeReferenceContainsTypeVariable(Type type) {
+        ITypeBinding typeBinding = type.resolveBinding();
+        return typeBinding != null && typeReferenceContainsTypeVariable(typeBinding);
+    }
+
+    /**
+     * For the given type reference, see if it uses type variable anywhere.   For example, T, ArrayList<T>, and
+     * ArrayList<HashMap<String,T>> would all return true.   Note that the ITypeBinding should be for a reference
+     * to a type, not the definition of the type.
+     *
+     * This method is used for C++ templates to include the "typename" keyword where needed.
+     *
+     * @param typeBinding type reference
+     * @return true if the type reference includes a type variable inside it
+     */
+    public static boolean typeReferenceContainsTypeVariable(ITypeBinding typeBinding) {
+        if (typeBinding.isTypeVariable())
+            return true;
+
+        if (typeBinding.isParameterizedType()) {
+            for (ITypeBinding typeArgument : typeBinding.getTypeArguments()) {
+                if (typeReferenceContainsTypeVariable(typeArgument))
+                    return true;
+            }
+        }
+
+        if (typeBinding.isArray())
+            return typeReferenceContainsTypeVariable(typeBinding.getComponentType());
+
         return false;
     }
 
@@ -433,8 +530,8 @@ public class ASTUtil {
         // TODO: Ensure no default implementation (I think) nor constants defined for the interface
     }
 
-    public static boolean isFunctionalInterfaceImplementation(FileTranslator fileTranslator, Type type) {
-        return isFunctionalInterface(fileTranslator.resolveTypeBinding(type));
+    public static boolean isFunctionalInterfaceImplementation(Translator translator, Type type) {
+        return isFunctionalInterface(translator.resolveTypeBinding(type));
     }
 
     /**
@@ -529,8 +626,7 @@ public class ASTUtil {
         if (iterator.hasNext()) {
             Object elmtObject = iterator.next();
             return (T) elmtObject;
-        }
-        else return null;
+        } else return null;
     }
 
     public static <T> boolean forEach(List list, ConsumerWithFirst<T> consumerWithFirst) {

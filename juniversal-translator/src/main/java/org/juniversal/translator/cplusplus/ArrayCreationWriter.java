@@ -22,53 +22,81 @@
 
 package org.juniversal.translator.cplusplus;
 
-import java.util.List;
-
-import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.JUniversalException;
-
 import org.eclipse.jdt.core.dom.ArrayCreation;
+import org.eclipse.jdt.core.dom.ArrayInitializer;
 import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.Expression;
+import org.jetbrains.annotations.Nullable;
+import org.juniversal.translator.core.JUniversalException;
+import org.xuniversal.translator.cplusplus.ReferenceKind;
+
+import java.util.List;
 
 
 public class ArrayCreationWriter extends CPlusPlusASTNodeWriter<ArrayCreation> {
-    public ArrayCreationWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
+    public ArrayCreationWriter(CPlusPlusTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
     @Override
-	public void write(ArrayCreation arrayCreation) {
-		matchAndWrite("new");
+    public void write(ArrayCreation arrayCreation) {
+        matchAndWrite("new");
 
-		List<?> dimensions = arrayCreation.dimensions();
-		// TODO: Support multidimensional arrays
-		if (dimensions.size() > 1)
-			throw new JUniversalException("Multidimensional arrays not currently supported");
+        @Nullable ArrayInitializer arrayInitializer = arrayCreation.getInitializer();
 
-		// TODO: Support array initializers
-		if (arrayCreation.getInitializer() != null)
-			throw sourceNotSupported("Array initializers not currently supported");
+        List<?> dimensions = arrayCreation.dimensions();
+        // TODO: Support multidimensional arrays
+        if (dimensions.size() > 1)
+            throw new JUniversalException("Multidimensional arrays not currently supported");
 
-		Expression dimensionSizeExpression = (Expression) dimensions.get(0);
+        if (dimensions.size() == 1) {
+            Expression dimensionSizeExpression = (Expression) dimensions.get(0);
 
-		setPosition(dimensionSizeExpression.getStartPosition());
+            setPosition(dimensionSizeExpression.getStartPosition());
 
-		write("(");
-        writeNode(dimensionSizeExpression);
-		copySpaceAndComments();
-		write(") ");
+            write("(");
+            writeNode(dimensionSizeExpression);
+            copySpaceAndComments();
+            write(") ");
+        }
+        else {
+            if (arrayInitializer == null)
+                throw sourceNotSupported("Unexpectedly, neither an array size nor an array initializer is specified");
 
-		ArrayType arrayType = arrayCreation.getType();
-		setPosition(arrayType.getStartPosition());
+            int size = arrayInitializer.expressions().size();
 
-		write("Array<");
-        writeNode(arrayType.getElementType());
-		skipSpaceAndComments();
-		write(">");
+            write("(");
+            write(Integer.toString(size));
+            write(") ");
+        }
 
-		setPosition(ASTUtil.getEndPosition(dimensionSizeExpression));
-		skipSpaceAndComments();
-		match("]");
-	}
+        ArrayType arrayType = arrayCreation.getType();
+        setPosition(arrayType.getStartPosition());
+
+        write("Array<");
+        writeTypeReference(arrayType.getElementType(), ReferenceKind.SharedPtr);
+        skipSpaceAndComments();
+        write(">");
+
+        if (dimensions.size() == 1) {
+            setPositionToEndOfNode((Expression) dimensions.get(0));
+            skipSpaceAndComments();
+            match("]");
+        }
+        else {
+            skipSpaceAndComments();
+            match("[");
+
+            skipSpaceAndComments();
+            match("]");
+        }
+
+        // TODO: Check all syntax combinations here
+        if (arrayInitializer != null) {
+            write(" = ");
+
+            copySpaceAndComments();
+            writeNode(arrayInitializer);
+        }
+    }
 }

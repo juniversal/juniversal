@@ -34,7 +34,7 @@ import static org.juniversal.translator.core.ASTUtil.isNumericPrimitiveType;
  * Created by Bret on 12/31/2014.
  */
 public class CastExpressionWriter extends CSharpASTNodeWriter<CastExpression> {
-    public CastExpressionWriter(CSharpFileTranslator cSharpASTWriters) {
+    public CastExpressionWriter(CSharpTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

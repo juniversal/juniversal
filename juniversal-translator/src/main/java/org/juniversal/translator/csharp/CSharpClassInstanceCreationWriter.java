@@ -22,16 +22,17 @@
 
 package org.juniversal.translator.csharp;
 
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.juniversal.translator.core.ClassInstanceCreationWriter;
-import org.juniversal.translator.core.FileTranslator;
 
-import static org.juniversal.translator.core.ASTUtil.*;
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public class CSharpClassInstanceCreationWriter extends ClassInstanceCreationWriter {
-    public CSharpClassInstanceCreationWriter(CSharpFileTranslator fileTranslator) {
-        super(fileTranslator);
+    public CSharpClassInstanceCreationWriter(CSharpTranslator translator) {
+        super(translator);
     }
 
     @Override protected void writeAnonymousInnerClassFunction(ClassInstanceCreation classInstanceCreation) {
@@ -39,7 +40,7 @@ public class CSharpClassInstanceCreationWriter extends ClassInstanceCreationWrit
 
         write("(");
         forEach(functionalMethod.parameters(), (SingleVariableDeclaration parameter, boolean first) -> {
-            if (! first)
+            if (!first)
                 write(", ");
             write(parameter.getName().getIdentifier());
         });

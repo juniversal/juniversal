@@ -23,17 +23,18 @@
 package org.juniversal.translator.cplusplus;
 
 import java.util.HashMap;
-import java.util.List;
 
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
+
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public class InfixExpressionWriter extends CPlusPlusASTNodeWriter<InfixExpression> {
 	private HashMap<InfixExpression.Operator, String> equivalentOperators;  // Operators that have the same token in both Java & C++
 
 
-	public InfixExpressionWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
+	public InfixExpressionWriter(CPlusPlusTranslator cPlusPlusASTWriters) {
 		super(cPlusPlusASTWriters);
 
 		equivalentOperators = new HashMap<>();
@@ -63,7 +64,6 @@ public class InfixExpressionWriter extends CPlusPlusASTNodeWriter<InfixExpressio
 		equivalentOperators.put(InfixExpression.Operator.CONDITIONAL_OR, "||");
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public void write(InfixExpression infixExpression) {
 		InfixExpression.Operator operator = infixExpression.getOperator();
@@ -92,14 +92,13 @@ public class InfixExpressionWriter extends CPlusPlusASTNodeWriter<InfixExpressio
             writeNode(infixExpression.getRightOperand());
 
 			if (infixExpression.hasExtendedOperands()) {
-				for (Expression extendedOperand : (List<Expression>) infixExpression.extendedOperands()) {
-					
+				forEach(infixExpression.extendedOperands(), (Expression extendedOperand) -> {
 					copySpaceAndComments();
 					matchAndWrite(operatorToken);
 
 					copySpaceAndComments();
                     writeNode(extendedOperand);
-				}
+				});
 			}
 		}
 	}

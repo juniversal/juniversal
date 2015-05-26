@@ -28,7 +28,7 @@ import org.eclipse.jdt.core.dom.EnumDeclaration;
 import java.util.List;
 
 public class EnumDeclarationWriter extends CSharpASTNodeWriter<EnumDeclaration> {
-    public EnumDeclarationWriter(CSharpFileTranslator cSharpASTWriters) {
+    public EnumDeclarationWriter(CSharpTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

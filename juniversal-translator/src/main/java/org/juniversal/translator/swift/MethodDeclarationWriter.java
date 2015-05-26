@@ -24,15 +24,15 @@ package org.juniversal.translator.swift;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.Context;
+import org.juniversal.translator.core.JavaSourceContext;
 
 import java.util.List;
 
 
 public class MethodDeclarationWriter extends SwiftASTNodeWriter {
-    private SwiftFileTranslator swiftASTWriters;
+    private SwiftTranslator swiftASTWriters;
 
-    public MethodDeclarationWriter(SwiftFileTranslator swiftASTWriters) {
+    public MethodDeclarationWriter(SwiftTranslator swiftASTWriters) {
         super(swiftASTWriters);
     }
 
@@ -173,7 +173,7 @@ public class MethodDeclarationWriter extends SwiftASTNodeWriter {
     }
 
     @SuppressWarnings("unchecked")
-    private void writeSuperConstructorInvocation(MethodDeclaration methodDeclaration, Context context) {
+    private void writeSuperConstructorInvocation(MethodDeclaration methodDeclaration, JavaSourceContext javaSourceContext) {
         Block body = methodDeclaration.getBody();
         if (body == null)
             return;

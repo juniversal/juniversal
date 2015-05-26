@@ -23,6 +23,6 @@
 package org.juniversal.translator.cplusplus;
 
 public enum OutputType {
-	HEADER,
-	SOURCE
+	HEADER_FILE,
+	SOURCE_FILE
 }

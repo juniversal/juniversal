@@ -23,10 +23,11 @@
 package org.juniversal.translator.cplusplus;
 
 import org.eclipse.jdt.core.dom.*;
-import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.ASTNodeWriter;
-import org.xuniversal.translator.cplusplus.CPlusPlusProfile;
+import org.juniversal.translator.core.ASTUtil;
+import org.juniversal.translator.core.ReferencedTypes;
+import org.xuniversal.translator.cplusplus.CPlusPlusTargetWriter;
 import org.xuniversal.translator.cplusplus.ReferenceKind;
 
 import java.util.List;
@@ -35,23 +36,26 @@ import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
-    private CPlusPlusFileTranslator cPlusPlusSourceFileWriter;
+    private CPlusPlusTranslator cPlusPlusTranslator;
 
-    protected CPlusPlusASTNodeWriter(CPlusPlusFileTranslator cPlusPlusSourceFileWriter) {
-        this.cPlusPlusSourceFileWriter = cPlusPlusSourceFileWriter;
-    }
-
-    public CPlusPlusProfile getCPPProfile() {
-        return cPlusPlusSourceFileWriter.getTranslator().getTargetProfile();
+    protected CPlusPlusASTNodeWriter(CPlusPlusTranslator cPlusPlusTranslator) {
+        this.cPlusPlusTranslator = cPlusPlusTranslator;
     }
 
     public CPlusPlusContext getContext() {
-        return getFileTranslator().getContext();
+        return getTranslator().getContext();
     }
 
-    @Override
-    protected CPlusPlusFileTranslator getFileTranslator() {
-        return cPlusPlusSourceFileWriter;
+    @Override protected CPlusPlusTranslator getTranslator() {
+        return cPlusPlusTranslator;
+    }
+
+    @Override public CPlusPlusTargetWriter getTargetWriter() {
+        return getContext().getTargetWriter();
+    }
+
+    public ReferencedTypes getReferencedTypes() {
+        return getContext().getReferencedTypes();
     }
 
     /**
@@ -59,22 +63,40 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
      *
      * @param type type to write
      */
-    public void writeType(Type type, ReferenceKind referenceKind) {
+    public void writeTypeReference(Type type, ReferenceKind referenceKind) {
         @Nullable ITypeBinding typeBinding = type.resolveBinding();
         boolean isTypeVariable = typeBinding != null && (typeBinding.isTypeVariable() || typeBinding.isWildcardType());
 
         if (type.isPrimitiveType() || isTypeVariable)
             writeNode(type);
         else {
+            getReferencedTypes().add(type,
+                    referenceKind == ReferenceKind.Value || getContext().isWritingMethodImplementation());
+
             switch (referenceKind) {
                 case SharedPtr:
+                    //addNameNeedingImport("std", "shared_ptr");
+                    write("std::shared_ptr<");
+                    writeNode(type);
+                    write(">");
+/*
+                    if (typeReferenceContainsTypeVariable(type))
+                        write("typename ");
                     writeNode(type);
                     write("::ptr");
+*/
                     break;
 
                 case WeakPtr:
+                    //addNameNeedingImport("std", "weak_ptr");
+                    write("std::weak_ptr<");
                     writeNode(type);
+                    write(">");
+/*
+                    if (typeReferenceContainsTypeVariable(type))
+                        write("typename ");
                     write("::weak_ptr");
+*/
                     break;
 
                 case ConstReference:
@@ -104,14 +126,7 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
     public static String getNamespaceNameForPackageName(String packageName) {
         if (packageName == null)
             return "unnamed";
-        else return packageName.replace('.', '_');
-    }
-
-    public void writeIncludeForTypeName(Name typeName) {
-        String typeNameString = typeName.getFullyQualifiedName();
-        String includePath = typeNameString.replace('.', '/');
-
-        writeln("#include \"" + includePath + ".h\"");
+        else return packageName.replace(".", "::");
     }
 
     /**
@@ -137,6 +152,17 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
         write(">");
     }
 
+    public void writeTypeDeclarationType(AbstractTypeDeclaration abstractTypeDeclaration) {
+        write(abstractTypeDeclaration.getName().getIdentifier());
+
+        if (abstractTypeDeclaration instanceof TypeDeclaration) {
+            List typeParameters = ((TypeDeclaration) abstractTypeDeclaration).typeParameters();
+            if (!typeParameters.isEmpty()) {
+                writeTypeParameters(typeParameters, false);
+            }
+        }
+    }
+
 /*
     public void writeIncludeForTypeName(Name typeName) {
         String typeNameString = typeName.getFullyQualifiedName();
@@ -145,4 +171,25 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
         writeln("#include \"" + includePath + ".h\"");
     }
 */
+
+    public void writeTypeForwardDeclaration(ITypeBinding typeBinding) {
+        if (typeBinding.isGenericType()) {
+            write("template ");
+            write("<");
+
+            ITypeBinding[] typeParameters = typeBinding.getTypeParameters();
+            boolean first = true;
+            for (ITypeBinding typeParameter : typeParameters) {
+                if (!first)
+                    write(", ");
+                write("typename ");
+                write(typeParameter.getName());
+                first = false;
+            }
+
+            write("> ");
+        }
+
+        writeln("class " + typeBinding.getName() + ";");
+    }
 }

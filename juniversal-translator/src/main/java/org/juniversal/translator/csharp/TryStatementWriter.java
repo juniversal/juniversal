@@ -32,7 +32,7 @@ import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public class TryStatementWriter extends CSharpASTNodeWriter<TryStatement> {
-    public TryStatementWriter(CSharpFileTranslator cSharpASTWriters) {
+    public TryStatementWriter(CSharpTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

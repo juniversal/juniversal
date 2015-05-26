@@ -33,7 +33,7 @@ import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public class FieldDeclarationWriter extends CPlusPlusASTNodeWriter<FieldDeclaration> {
-    public FieldDeclarationWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
+    public FieldDeclarationWriter(CPlusPlusTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
@@ -43,13 +43,13 @@ public class FieldDeclarationWriter extends CPlusPlusASTNodeWriter<FieldDeclarat
 
 		boolean isStatic = ASTUtil.containsStatic(fieldDeclaration.modifiers());
 
-		if (getContext().getOutputType() == OutputType.HEADER && isStatic)
+		if (getContext().getOutputType() == OutputType.HEADER_FILE && isStatic)
 			write("static ");
 		skipModifiers(fieldDeclaration.modifiers());
 
 		// Write the type
 		skipSpaceAndComments();
-        writeType(fieldDeclaration.getType(), ReferenceKind.SharedPtr);
+        writeTypeReference(fieldDeclaration.getType(), ReferenceKind.SharedPtr);
 
 		forEach(fieldDeclaration.fragments(), (VariableDeclarationFragment variableDeclarationFragment, boolean first) -> {
 			if (!first) {
@@ -66,7 +66,7 @@ public class FieldDeclarationWriter extends CPlusPlusASTNodeWriter<FieldDeclarat
 	}
 
 	private void writeVariableDeclarationFragment(VariableDeclarationFragment variableDeclarationFragment) {
-		boolean writingSourceFile = getContext().getOutputType() == OutputType.SOURCE;
+		boolean writingSourceFile = getContext().getOutputType() == OutputType.SOURCE_FILE;
 
 		// TODO: Handle syntax with extra dimensions on array
 		if (variableDeclarationFragment.getExtraDimensions() > 0)

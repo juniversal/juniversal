@@ -27,7 +27,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.juniversal.translator.core.JavaSourceFile;
 import org.xuniversal.translator.core.SourceNotSupportedException;
-import org.xuniversal.translator.cplusplus.CPlusPlusProfile;
+import org.xuniversal.translator.cplusplus.CPlusPlusTargetProfile;
 
 import static org.junit.Assert.*;
 
@@ -123,7 +123,7 @@ public @Ignore class WriteCPPTest {
 
     public void testWriteNode(ASTNode node, String javaSource, CompilationUnit compilationUnit, int sourceTabStop,
                               String expectedOutput) {
-        CPlusPlusProfile profile = new CPlusPlusProfile();
+        CPlusPlusTargetProfile profile = new CPlusPlusTargetProfile();
         profile.setTabStop(m_destTabStop);
 
         JavaSourceFile sourceFile = new JavaSourceFile(compilationUnit, javaSource, m_sourceTabStop);

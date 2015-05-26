@@ -31,10 +31,10 @@ import java.util.List;
 
 
 public class InfixExpressionWriter extends SwiftASTNodeWriter {
-    private SwiftFileTranslator swiftASTWriters;
+    private SwiftTranslator swiftASTWriters;
 	private HashMap<InfixExpression.Operator, String> equivalentOperators;  // Operators that have the same token in both Java & C++
 
-	public InfixExpressionWriter(SwiftFileTranslator swiftASTWriters) {
+	public InfixExpressionWriter(SwiftTranslator swiftASTWriters) {
 		super(swiftASTWriters);
 
         // TODO: Handle fact that Swift's operator precedence is different than Java's

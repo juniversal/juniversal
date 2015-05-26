@@ -22,12 +22,27 @@
 
 package org.juniversal.translator.csharp;
 
-import org.juniversal.translator.core.Context;
+import org.juniversal.translator.core.JavaSourceContext;
+import org.juniversal.translator.core.JavaSourceFile;
+import org.xuniversal.translator.core.OrderedSet;
+import org.xuniversal.translator.core.SourceFile;
+import org.xuniversal.translator.core.TargetWriter;
+import org.xuniversal.translator.csharp.CSharpTargetWriter;
 
 import java.util.HashSet;
 
-public class CSharpContext extends Context {
+public class CSharpContext extends JavaSourceContext {
+    private CSharpTargetWriter targetWriter;
     private HashSet<String> extraUsings = new HashSet<>();
+
+    public CSharpContext(JavaSourceFile sourceFile, CSharpTargetWriter targetWriter) {
+        super(sourceFile, targetWriter);
+        this.targetWriter = targetWriter;
+    }
+
+    @Override public CSharpTargetWriter getTargetWriter() {
+        return targetWriter;
+    }
 
     public void addExtraUsing(String extraUsing) {
         extraUsings.add(extraUsing);

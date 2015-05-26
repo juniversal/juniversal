@@ -26,59 +26,51 @@ import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.ASTUtil;
 import org.xuniversal.translator.core.SourceFile;
 
-import java.util.List;
+import static org.juniversal.translator.core.ASTUtil.forEach;
 
 public class SourceTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDeclaration> {
     private boolean outputSomething;
 
-    @SuppressWarnings("unchecked")
-    public SourceTypeDeclarationWriter(CPlusPlusFileTranslator sourceFileWriter) {
-        super(sourceFileWriter);
+    public SourceTypeDeclarationWriter(CPlusPlusTranslator translator) {
+        super(translator);
     }
 
     @Override
     public void write(TypeDeclaration typeDeclaration) {
-        outputSomething = false;
-
         // Write the static fields, if any
-        for (Object bodyDeclaration : typeDeclaration.bodyDeclarations()) {
+        forEach(typeDeclaration.bodyDeclarations(), (BodyDeclaration bodyDeclaration) -> {
             if (bodyDeclaration instanceof FieldDeclaration) {
                 FieldDeclaration fieldDeclaration = (FieldDeclaration) bodyDeclaration;
 
-                if (!ASTUtil.containsStatic(fieldDeclaration.modifiers()))
-                    continue;
+                if (ASTUtil.containsStatic(fieldDeclaration.modifiers())) {
+                    // Skip any Javadoc comments for the field; field comments are just output in the header
+                    setPositionToStartOfNode(fieldDeclaration);
 
-                // Skip any Javadoc comments for the field; field comments are just output in the
-                // header
-                setPositionToStartOfNode(fieldDeclaration);
-
-                writeNode(fieldDeclaration);
-                writeln();
-                outputSomething = true;
+                    writeNode(fieldDeclaration);
+                    writeln();
+                    outputSomething = true;
+                }
             }
-        }
+        });
 
-        for (BodyDeclaration bodyDeclaration : (List<BodyDeclaration>) typeDeclaration.bodyDeclarations()) {
+        forEach(typeDeclaration.bodyDeclarations(), (BodyDeclaration bodyDeclaration) -> {
             if (bodyDeclaration instanceof MethodDeclaration) {
                 MethodDeclaration methodDeclaration = (MethodDeclaration) bodyDeclaration;
-                if (methodDeclaration.getBody() == null)
-                    continue;
-
-                writeMethod(methodDeclaration);
+                if (methodDeclaration.getBody() != null)
+                    writeMethod(methodDeclaration);
             } else if (bodyDeclaration instanceof TypeDeclaration) {
                 TypeDeclaration nestedTypeDeclaration = (TypeDeclaration) bodyDeclaration;
-
                 writeNestedType(nestedTypeDeclaration);
             }
-        }
+        });
 
         setPosition(ASTUtil.getEndPosition(typeDeclaration));
     }
 
     private void writeNestedType(TypeDeclaration nestedTypeDeclaration) {
         if (outputSomething) {
-            getFileTranslator().writeln();
-            getFileTranslator().writeln();
+            getContext().writeln();
+            getContext().writeln();
         }
 
         writeln("/**");
@@ -96,7 +88,7 @@ public class SourceTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
         // isn't indented at all--there's nothing in the method left of it. Unindent the
         // whole method by that amount, since methods aren't indented in the C++ source.
 
-        SourceFile sourceFile = getFileTranslator().getSourceFile();
+        SourceFile sourceFile = getContext().getSourceFile();
         int methodLine = sourceFile.getLineNumber(methodDeclaration.getStartPosition());
         int methodLineStartPosition = sourceFile.getPosition(methodLine, 0);
         setPosition(methodLineStartPosition);

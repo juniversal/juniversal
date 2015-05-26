@@ -23,19 +23,14 @@
 package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
-import org.juniversal.translator.csharp.CSharpASTNodeWriter;
-import org.juniversal.translator.csharp.CSharpFileTranslator;
 
-import static org.juniversal.translator.core.ASTUtil.forEach;
 import static org.juniversal.translator.core.ASTUtil.isFunctionalInterfaceImplementation;
 
 
 public abstract class ClassInstanceCreationWriter extends CommonASTNodeWriter<ClassInstanceCreation> {
-    public ClassInstanceCreationWriter(FileTranslator fileTranslator) {
-        super(fileTranslator);
+    public ClassInstanceCreationWriter(Translator translator) {
+        super(translator);
     }
 
     @Override public void write(ClassInstanceCreation classInstanceCreation) {
@@ -48,7 +43,7 @@ public abstract class ClassInstanceCreationWriter extends CommonASTNodeWriter<Cl
         if (classInstanceCreation.getAnonymousClassDeclaration() != null) {
             Type type = classInstanceCreation.getType();
 
-            if (! isFunctionalInterfaceImplementation(getFileTranslator(), type))
+            if (!isFunctionalInterfaceImplementation(getTranslator(), type))
                 throw sourceNotSupported("Anonymous inner classes are only supported when they implement a functional interface (an interface with a single abstract method, no constants, and the @FunctionalInterface annotation).  Change to use a functional interface if you just want a single method/function or use a static (non-anonymous) inner class for a full class.");
 
             writeAnonymousInnerClassFunction(classInstanceCreation);

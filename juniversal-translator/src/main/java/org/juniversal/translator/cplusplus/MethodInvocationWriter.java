@@ -28,7 +28,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.JUniversalException;
 
 public class MethodInvocationWriter extends CPlusPlusASTNodeWriter<Expression> {
-	public MethodInvocationWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
+	public MethodInvocationWriter(CPlusPlusTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
@@ -86,11 +86,7 @@ public class MethodInvocationWriter extends CPlusPlusASTNodeWriter<Expression> {
             writeNodeAtDifferentPosition(name);
 
             matchAndWrite("<");
-
-            writeCommaDelimitedNodes(typeArguments, (Type type) -> {
-                copySpaceAndComments();
-                writeNode(type);
-            });
+            writeCommaDelimitedNodes(typeArguments);
 
             copySpaceAndComments();
             matchAndWrite(">");

@@ -30,8 +30,8 @@ import java.util.List;
 import static org.juniversal.translator.core.ASTUtil.*;
 
 public class TypeDeclarationWriter extends CSharpASTNodeWriter<TypeDeclaration> {
-    public TypeDeclarationWriter(CSharpFileTranslator cSharpASTWriters) {
-        super(cSharpASTWriters);
+    public TypeDeclarationWriter(CSharpTranslator translator) {
+        super(translator);
     }
 
     @Override

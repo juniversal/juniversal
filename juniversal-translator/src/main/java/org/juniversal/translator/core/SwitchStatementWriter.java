@@ -24,16 +24,14 @@ package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.csharp.CSharpASTNodeWriter;
-import org.juniversal.translator.csharp.CSharpFileTranslator;
 import org.xuniversal.translator.core.Var;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public class SwitchStatementWriter extends CommonASTNodeWriter<SwitchStatement> {
-    public SwitchStatementWriter(FileTranslator fileTranslator) {
-        super(fileTranslator);
+    public SwitchStatementWriter(Translator translator) {
+        super(translator);
     }
 
     @Override
@@ -57,7 +55,7 @@ public class SwitchStatementWriter extends CommonASTNodeWriter<SwitchStatement> 
         Var<Statement> previousStatement = new Var<>();
         Var<Integer> previousStatementIndent = new Var<>();
 
-        boolean isCSharp = getFileTranslator().isCSharp();
+        boolean isCSharp = getTranslator().isCSharp();
 
         forEach(switchStatement.statements(), (Statement statement, boolean first) -> {
             if (statement instanceof SwitchCase) {
@@ -141,7 +139,7 @@ public class SwitchStatementWriter extends CommonASTNodeWriter<SwitchStatement> 
      * @param expression case label expression
      */
     private void writeCaseLabel(Expression expression) {
-        if (getFileTranslator().isCSharp() && expression instanceof SimpleName) {
+        if (getTranslator().isCSharp() && expression instanceof SimpleName) {
             SimpleName simpleName = (SimpleName) expression;
 
             @Nullable ITypeBinding typeBinding = simpleName.resolveTypeBinding();

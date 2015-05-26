@@ -22,79 +22,78 @@
 
 package org.juniversal.translator.cplusplus;
 
-import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.core.ASTUtil;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.xuniversal.translator.core.TargetWriter;
+import org.xuniversal.translator.cplusplus.CPlusPlusTargetWriter;
+
+import static org.juniversal.translator.core.ASTUtil.getFirstTypeDeclaration;
+import static org.juniversal.translator.core.ASTUtil.toHierarchicalName;
 
 
 public class CompilationUnitWriter extends CPlusPlusASTNodeWriter<CompilationUnit> {
-    public CompilationUnitWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
-        super(cPlusPlusASTWriters);
+    public CompilationUnitWriter(CPlusPlusTranslator translator) {
+        super(translator);
     }
 
     public void write(CompilationUnit compilationUnit) {
-        TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
+        AbstractTypeDeclaration typeDeclaration = getFirstTypeDeclaration(compilationUnit);
 
-        setPosition(mainTypeDeclaration.getStartPosition());
+        // First visit & write out the guts of the type, using a BufferTargetWriter to capture all output.   We do
+        // this first to capture the usage of anything that needs an import.   The imports themselves are written
+        // after, via writeEntireFile
+        setPositionToStartOfNodeSpaceAndComments(typeDeclaration);
+        String typeBuffer;
+        try (TargetWriter.BufferedWriter bufferedWriter = getTargetWriter().startBuffering()) {
+            copySpaceAndComments();
+            writeNode(typeDeclaration);
+            copySpaceAndComments();
 
-        if (getContext().getOutputType() == OutputType.HEADER)
-            writeHeader(compilationUnit, mainTypeDeclaration);
-        else writeSource(compilationUnit, mainTypeDeclaration);
-    }
-
-    private void writeHeader(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration) {
-        String name = mainTypeDeclaration.getName().getIdentifier();
-        String multiIncludeDefine = name.toUpperCase() + "_H";
-        Type superclassType = mainTypeDeclaration.getSuperclassType();
-
-        writeln("#ifndef " + multiIncludeDefine);
-        writeln("#define " + multiIncludeDefine);
-        writeln();
-
-        writeln("#include \"juniversal.h\"");
-        if (superclassType != null) {
-            if (superclassType instanceof SimpleType)
-                writeIncludeForTypeName(((SimpleType) superclassType).getName());
-            else if (superclassType instanceof ParameterizedType) {
-                // TODO: Finish this; make check for dependencies everywhere in all code via visitor
-            }
+            typeBuffer = bufferedWriter.getBufferContents();
         }
+
+        setPositionToStartOfNode(compilationUnit);
+
+        HierarchicalName typeHierarchicalName = toHierarchicalName(compilationUnit);
+        HierarchicalName packageHierarchicalName = typeHierarchicalName.getQualifier();
+        CPlusPlusTargetWriter targetWriter = getTargetWriter();
+
+        if (getContext().getOutputType() == OutputType.HEADER_FILE) {
+            targetWriter.writeHeaderFileStart(typeHierarchicalName);
+            targetWriter.writeIncludesForHeaderFile(getContext().getReferencedTypes().getTypesNeedDefinitionNames());
+            writeln();
+        }
+        else {
+            targetWriter.writeIncludesForSourceFile(typeHierarchicalName,
+                    getContext().getReferencedTypes().getTypesNeedDefinitionNames());
+            writeln();
+        }
+
+        if (! packageHierarchicalName.isEmpty()) {
+            targetWriter.writeNamespaceStart(packageHierarchicalName);
+            writeln();
+        }
+
+        for (ITypeBinding typeBinding : getContext().getReferencedTypes().getTypesJustNeedingDeclaration()) {
+            writeTypeForwardDeclaration(typeBinding);
+        }
+
+        //targetWriter.writeUsings(getContext().getNamesNeedingImport());
         writeln();
 
-        writeln("namespace " + getPackageNamespaceName(compilationUnit) + " {");
-        //writeln("JU_USING_STD_NAMESPACES");
-        writeln();
-        
-        // Copy class Javadoc or other comments before the class starts
-        copySpaceAndComments();
+        // Write the guts, defining the class/enum
+        write(typeBuffer);
 
-        writeNode(mainTypeDeclaration);
-
-        copySpaceAndComments();
-
-        writeln();
-        writeln("}");   // Close namespace definition
-
-        writeln("#endif // " + multiIncludeDefine);
-    }
-
-    private void writeSource(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration) {
-        writeIncludeForTypeName(mainTypeDeclaration.getName());
-        writeln();
-
-        writeln("JU_USING_STD_NAMESPACES");
-        writeln("using namespace " + getPackageNamespaceName(compilationUnit) + ";");
-        writeln();
-
-        setPosition(mainTypeDeclaration.getStartPosition());
-        skipSpaceAndComments();   // Skip any Javadoc included in the node
-
-        writeNode(mainTypeDeclaration);
-
+        setPositionToEndOfNode(typeDeclaration);
         skipSpaceAndComments();
-    }
 
-    private String getPackageNamespaceName(CompilationUnit compilationUnit) {
-        PackageDeclaration packageDeclaration = compilationUnit.getPackage();
-        return getNamespaceNameForPackageName(packageDeclaration == null ? null : packageDeclaration.getName());
+        if (! packageHierarchicalName.isEmpty()) {
+            writeln();
+            targetWriter.writeNamespaceEnd(packageHierarchicalName);
+        }
+
+        if (getContext().getOutputType() == OutputType.HEADER_FILE)
+            targetWriter.writeHeaderFileEnd(typeHierarchicalName);
     }
 }

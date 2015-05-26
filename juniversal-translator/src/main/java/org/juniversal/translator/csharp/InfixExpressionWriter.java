@@ -35,7 +35,7 @@ import static org.juniversal.translator.core.ASTUtil.forEach;
 public class InfixExpressionWriter extends CSharpASTNodeWriter<InfixExpression> {
     private HashMap<InfixExpression.Operator, String> equivalentOperators;  // Operators that have the same token in both Java & C#
 
-    public InfixExpressionWriter(CSharpFileTranslator cSharpASTWriters) {
+    public InfixExpressionWriter(CSharpTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
 
         /*

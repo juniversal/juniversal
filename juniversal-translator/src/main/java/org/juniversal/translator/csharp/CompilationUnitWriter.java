@@ -24,8 +24,7 @@ package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.xuniversal.translator.core.BufferTargetWriter;
-import org.juniversal.translator.core.FileTranslator;
+import org.xuniversal.translator.core.TargetWriter;
 import org.xuniversal.translator.core.Var;
 
 import java.util.HashSet;
@@ -33,48 +32,83 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
+import static org.juniversal.translator.core.ASTUtil.getFirstTypeDeclaration;
 import static org.juniversal.translator.core.ASTUtil.isGenericImport;
 
 
 // TODO: Finish this
 
 class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
-    CompilationUnitWriter(CSharpFileTranslator cSharpASTWriters) {
-        super(cSharpASTWriters);
+    CompilationUnitWriter(CSharpTranslator translator) {
+        super(translator);
     }
 
     public void write(CompilationUnit compilationUnit) {
-        copySpaceAndComments();
+        AbstractTypeDeclaration typeDeclaration = getFirstTypeDeclaration(compilationUnit);
+        setPositionToStartOfNodeSpaceAndComments(typeDeclaration);
 
-        // First visit & write out the guts of the class, using a BufferTargetWriter to capture all output.   We do
-        // this first to capture the usage of anything that needs an explicit "using" statement in C# but doesn't
-        // have an import in Java.   The top of the file, with the "using" statements, is written later, down below
-        BufferTargetWriter bufferTargetWriter = new BufferTargetWriter(getFileTranslator().getTargetWriter());
-        try (FileTranslator.RestoreTargetWriter ignored = getFileTranslator().setTargetWriter(bufferTargetWriter)) {
-            writeNamespaceAndTypeDeclaration(compilationUnit);
+        // First visit & write out the guts of the type, using a BufferTargetWriter to capture all output.   We do
+        // this first to capture the usage of anything that needs an import.   The imports themselves are written
+        // after, via writeEntireFile
+        String typeBuffer;
+        try (TargetWriter.BufferedWriter bufferedWriter = getTargetWriter().startBuffering()) {
+            copySpaceAndComments();
+            writeType(compilationUnit, typeDeclaration);
+            copySpaceAndComments();
+
+            typeBuffer = bufferedWriter.getBufferContents();
         }
 
+        setPositionToStartOfNode(compilationUnit);
+        writeEntireFile(compilationUnit, typeBuffer);
+    }
+
+    protected void writeType(CompilationUnit compilationUnit, AbstractTypeDeclaration typeDeclaration) {
         @Nullable PackageDeclaration packageDeclaration = compilationUnit.getPackage();
+
+        int previsionAdditionalIndentation = 0;
         if (packageDeclaration != null) {
-            // TODO: This results in an extra newline normally; distinguish between case where package is only thing on line & multiple things on that line
-            setPositionToEndOfNodeSpaceAndComments(packageDeclaration);
-        } else {
-            setPositionToStartOfNode(compilationUnit);
-            skipSpaceAndComments();
+            previsionAdditionalIndentation = getTargetWriter().incrementAdditionalIndentation(getPreferredIndent());
+            writeln();
         }
 
-        // Write
         copySpaceAndComments();
-        writeUsingStatements(compilationUnit);
+        writeNode(typeDeclaration);
+        copySpaceAndComments();
 
+        if (packageDeclaration != null) {
+            getTargetWriter().setAdditionalIndentation(previsionAdditionalIndentation);
+            writeln();
+        }
+    }
+
+    protected void writeEntireFile(CompilationUnit compilationUnit, String typeBuffer) {
+        @Nullable PackageDeclaration packageDeclaration = compilationUnit.getPackage();
+
+        if (packageDeclaration != null) {
+            setPositionToStartOfNode(packageDeclaration);
+            matchAndWrite("package", "namespace");
+
+            copySpaceAndComments();
+            writeNode(packageDeclaration.getName());
+
+            write(" {");
+        }
+
+        writeUsings(compilationUnit);
+
+        // Write out the body contents
         copySpaceAndComments();
-        write(bufferTargetWriter);
+        write(typeBuffer);
+
+        if (packageDeclaration != null)
+            writeln("}");
 
         setPositionToEndOfNode(compilationUnit);
     }
 
-    private void writeUsingStatements(CompilationUnit compilationUnit) {
-        Map<String, String> annotationMap = getFileTranslator().getTranslator().getAnnotationMap();
+    private void writeUsings(CompilationUnit compilationUnit) {
+        Map<String, String> annotationMap = ((CSharpTranslator) getTranslator()).getAnnotationMap();
         Set<String> genericUsings = new HashSet<>();
 
         Var<Boolean> wroteUsing = new Var<>(false);
@@ -119,8 +153,7 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
                     write(namespaceToImportForGenericClass);
                     genericUsings.add(namespaceToImportForGenericClass);
                     setPositionToEndOfNode(qualifiedName);
-                }
-                else {
+                } else {
                     writeNodeAtDifferentPosition(qualifiedName.getName());
                     write(" = ");
                     writeNode(qualifiedName);
@@ -135,59 +168,10 @@ class CompilationUnitWriter extends CSharpASTNodeWriter<CompilationUnit> {
         if (wroteUsing.value())
             writeln();
 
-        for (String extraUsing : getContext().getExtraUsings()) {
+        for (String extraUsing : ((CSharpContext) getContext()).getExtraUsings()) {
             write("using ");
             write(extraUsing);
             writeln(";");
         }
-    }
-
-    private void writeNamespaceAndTypeDeclaration(CompilationUnit compilationUnit) {
-        @Nullable PackageDeclaration packageDeclaration = compilationUnit.getPackage();
-
-        int previousIndent = 0;
-        if (packageDeclaration != null) {
-            int previousPosition = getPosition();
-            setPositionToStartOfNode(packageDeclaration);
-            matchAndWrite("package", "namespace");
-
-            copySpaceAndComments();
-            writeNode(packageDeclaration.getName());
-
-            write(" {");
-            previousIndent = getTargetWriter().incrementAdditionalIndentation(getPreferredIndent());
-            writeln();
-
-            setPosition(previousPosition);
-        }
-
-/*
-
-        if (packageDeclaration != null)
-        return getNamespaceNameForPackageName(packageDeclaration == null ? null : packageDeclaration
-                .getName());
-*/
-
-        AbstractTypeDeclaration firstTypeDeclaration = (AbstractTypeDeclaration) compilationUnit.types().get(0);
-
-        //copySpaceAndComments();
-        setPositionToStartOfNode(firstTypeDeclaration);
-        writeNode(firstTypeDeclaration);
-        copySpaceAndComments();
-
-        if (packageDeclaration != null) {
-            getTargetWriter().setAdditionalIndentation(previousIndent);
-            writeln();
-            writeln("}");
-        }
-
-/*
-        writeln();
-
-        context.setPosition(firstTypeDeclaration.getStartPosition());
-        copySpaceAndComments();   // Skip any Javadoc included in the node
-
-        writeNode(context, firstTypeDeclaration);
-*/
     }
 }

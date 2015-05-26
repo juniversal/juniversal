@@ -92,7 +92,7 @@ public class SourceCopier {
         while (true) {
             int currChar = getSourceCharAt(position);
 
-            if (currChar == -1)
+           if (currChar == -1)
                 return position;
             else if (currChar == ' ' || currChar == '\t')
                 position = skipSpacesAndTabs(position);

@@ -24,8 +24,9 @@ package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.xuniversal.translator.core.BufferTargetWriter;
+import org.juniversal.translator.cplusplus.HierarchicalName;
 import org.xuniversal.translator.core.SourceNotSupportedException;
+import org.xuniversal.translator.core.TargetProfile;
 import org.xuniversal.translator.core.TargetWriter;
 
 import java.util.ArrayList;
@@ -33,47 +34,62 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
+import static org.juniversal.translator.core.ASTUtil.isAnnotation;
+import static org.juniversal.translator.core.ASTUtil.isFinal;
 
 
 public abstract class ASTNodeWriter<T extends ASTNode> {
-    abstract public void write(T node);
+    public abstract void write(T node);
 
     public boolean canProcessTrailingWhitespaceOrComments() {
         return false;
     }
 
-    protected abstract FileTranslator getFileTranslator();
+    protected abstract Translator getTranslator();
+
+    protected abstract JavaSourceContext getContext();
 
     protected void writeNode(ASTNode node) {
-        getFileTranslator().writeNode(node);
+        getTranslator().writeNode(node);
     }
+
+    public abstract TargetWriter getTargetWriter();
 
     protected void writeNodeFromOtherPosition(ASTNode node) {
         int savedPosition = getPosition();
 
         setPositionToStartOfNode(node);
-        getFileTranslator().writeNode(node);
+        getTranslator().writeNode(node);
 
         setPosition(savedPosition);
     }
 
+    /**
+     * Write a node that's not at the current context position. The context position is unchanged by this method--the
+     * position is restored to the original position when done. No comments before/after the node are written. This
+     * method can be used to write a node multiple times.
+     *
+     * @param node node to write
+     */
     protected void writeNodeAtDifferentPosition(ASTNode node) {
-        getFileTranslator().writeNodeAtDifferentPosition(node);
+        JavaSourceContext context = getContext();
+
+        int originalPosition = context.getPosition();
+        context.setPosition(node.getStartPosition());
+        getTranslator().writeNode(node);
+        context.setPosition(originalPosition);
     }
 
     public <TElmt> void writeCommaDelimitedNodes(List list, Consumer<TElmt> processList) {
-        boolean first = true;
-        for (Object elmtObject : list) {
+        forEach(list, (TElmt elmt, boolean first) -> {
             if (!first) {
                 copySpaceAndComments();
                 matchAndWrite(",");
             }
 
-            TElmt elmt = (TElmt) elmtObject;
             processList.accept(elmt);
-
             first = false;
-        }
+        });
     }
 
     public void writeCommaDelimitedNodes(List list) {
@@ -114,23 +130,19 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
     }
 
     public SourceNotSupportedException sourceNotSupported(String baseMessage) {
-        return getFileTranslator().sourceNotSupported(baseMessage);
+        return getContext().sourceNotSupported(baseMessage);
     }
 
     public JUniversalException invalidAST(String baseMessage) {
-        return getFileTranslator().invalidAST(baseMessage);
+        return new JUniversalException(baseMessage + "\n" + getContext().getCurrentPositionDescription());
     }
 
     public int getTargetColumn() {
-        return getFileTranslator().getTargetColumn();
-    }
-
-    public TargetWriter getTargetWriter() {
-        return getFileTranslator().getTargetWriter();
+        return getContext().getTargetColumn();
     }
 
     public void copySpaceAndComments() {
-        getFileTranslator().copySpaceAndComments();
+        getContext().copySpaceAndComments();
     }
 
     public void copySpaceAndCommentsTranslatingJavadoc(@Nullable Javadoc javadoc) {
@@ -142,55 +154,55 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
     }
 
     public void copySpaceAndCommentsUntilPosition(int justUntilPosition) {
-        getFileTranslator().copySpaceAndCommentsUntilPosition(justUntilPosition);
+        getContext().copySpaceAndCommentsUntilPosition(justUntilPosition);
     }
 
     public void copySpaceAndCommentsEnsuringDelimiter() {
-        getFileTranslator().copySpaceAndCommentsEnsuringDelimiter();
+        getContext().copySpaceAndCommentsEnsuringDelimiter();
     }
 
     public void copySpaceAndCommentsUntilEOL() {
-        getFileTranslator().copySpaceAndCommentsUntilEOL();
+        getContext().copySpaceAndCommentsUntilEOL();
     }
 
     public void skipSpaceAndComments() {
-        getFileTranslator().skipSpaceAndComments();
+        getContext().skipSpaceAndComments();
     }
 
     public void skipSpaceAndCommentsBackward() {
-        getFileTranslator().skipSpaceAndCommentsBackward();
+        getContext().skipSpaceAndCommentsBackward();
     }
 
     public void skipSpaceAndCommentsUntilEOL() {
-        getFileTranslator().skipSpaceAndCommentsUntilEOL();
+        getContext().skipSpaceAndCommentsUntilEOL();
     }
 
     public void skipSpacesAndTabs() {
-        getFileTranslator().skipSpacesAndTabs();
+        getContext().skipSpacesAndTabs();
     }
 
     public void skipSpacesAndTabsBackward() {
-        getFileTranslator().skipSpacesAndTabsBackward();
+        getContext().skipSpacesAndTabsBackward();
     }
 
     public void skipNewline() {
-        getFileTranslator().skipNewline();
+        getContext().skipNewline();
     }
 
     public void skipBlankLines() {
-        getFileTranslator().skipBlankLines();
+        getContext().skipBlankLines();
     }
 
     public void setKnowinglyProcessedTrailingSpaceAndComments(boolean knowinglyProcessedTrailingSpaceAndComments) {
-        getFileTranslator().setKnowinglyProcessedTrailingSpaceAndComments(knowinglyProcessedTrailingSpaceAndComments);
+        getContext().setKnowinglyProcessedTrailingSpaceAndComments(knowinglyProcessedTrailingSpaceAndComments);
     }
 
     public void matchAndWrite(String matchAndWrite) {
-        getFileTranslator().matchAndWrite(matchAndWrite);
+        getContext().matchAndWrite(matchAndWrite);
     }
 
     public void matchAndWrite(String match, String write) {
-        getFileTranslator().matchAndWrite(match, write);
+        getContext().matchAndWrite(match, write);
     }
 
     public void matchNodeAndWrite(ASTNode node, String string) {
@@ -198,20 +210,45 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
         write(string);
     }
 
+    public HierarchicalName getTypeTargetHierarchicalName(Name name) {
+        ITypeBinding typeBinding = name.resolveTypeBinding();
+        // TODO: Error out if can't resolve?
+
+        // Type variables don't need import
+        if (typeBinding.isTypeVariable())
+            return new HierarchicalName(typeBinding.getName());
+
+        if (typeBinding.isGenericType() || typeBinding.isParameterizedType()) {
+            typeBinding = typeBinding.getErasure();
+        }
+
+        TargetProfile targetProfile = getTranslator().getTargetProfile();
+
+        HierarchicalName hierarchicalName;
+        String qualifiedName = typeBinding.getQualifiedName();
+        if (qualifiedName.equals("java.lang.Object"))
+            hierarchicalName = targetProfile.getObjectType();
+        else if (qualifiedName.equals("java.lang.String"))
+            hierarchicalName = targetProfile.getStringType();
+        else if (qualifiedName.equals("java.lang.StringBuilder"))
+            hierarchicalName = targetProfile.getStringBuilderType();
+        else if (typeBinding.isArray())
+            hierarchicalName = targetProfile.getArrayType();
+        else hierarchicalName = new HierarchicalName(typeBinding.getPackage().getNameComponents(), typeBinding.getName());
+
+        return hierarchicalName;
+    }
+
     public void match(String match) {
-        getFileTranslator().match(match);
+        getContext().match(match);
     }
 
     public void write(String string) {
-        getFileTranslator().write(string);
-    }
-
-    public void write(BufferTargetWriter bufferTargetWriter) {
-        getFileTranslator().write(bufferTargetWriter);
+        getContext().write(string);
     }
 
     public void writeSpaces(int count) {
-        getFileTranslator().writeSpaces(count);
+        getContext().writeSpaces(count);
     }
 
     /**
@@ -227,55 +264,113 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
     }
 
     public void writeSpacesUntilColumn(int column) {
-        getFileTranslator().writeSpacesUntilColumn(column);
+        getContext().writeSpacesUntilColumn(column);
     }
 
     public void writeln(String string) {
-        getFileTranslator().writeln(string);
+        getContext().writeln(string);
     }
 
     public void writeln() {
-        getFileTranslator().writeln();
+        getContext().writeln();
     }
 
     public void setPosition(int position) {
-        getFileTranslator().setPosition(position);
+        getContext().setPosition(position);
     }
 
     public int getPosition() {
-        return getFileTranslator().getPosition();
+        return getContext().getPosition();
     }
 
     public int getSourceLogicalColumn() {
-        return getFileTranslator().getSourceLogicalColumn();
+        return getContext().getSourceLogicalColumn();
     }
 
+    /**
+     * Sets the position to the beginning of the node's code. The AST parser includes Javadoc before a node with the
+     * node; we skip past that as we treat spaces/comments separately. Use setPositionToStartOfNodeSpaceAndComments if
+     * you want to include the space/comments that our heuristics pair to a node.
+     *
+     * @param node
+     */
     public void setPositionToStartOfNode(ASTNode node) {
-        getFileTranslator().setPositionToStartOfNode(node);
+        JavaSourceContext context = getTranslator().getContext();
+        context.setPosition(node.getStartPosition());
+        context.skipSpaceAndComments();
     }
 
+    /**
+     * Set the position to the beginning of the whitespace/comments for a node, ignoring any comments associated with
+     * the previous node. The heuristic used here is that whitespace/comments that come before a node are for that node,
+     * unless they are on the end of a line containing the previous node.
+     * <p/>
+     * One consequence of these rules is that if the previous node (or its trailing comment) & current node are on the
+     * same line, all comments/space between them are assumed to be for the previous node. Otherwise, the position will
+     * be set to the beginning of the line following the previous node / previous node's line ending comment.
+     *
+     * @param node node in question
+     */
     public void setPositionToStartOfNodeSpaceAndComments(ASTNode node) {
-        getFileTranslator().setPositionToStartOfNodeSpaceAndComments(node);
+        JavaSourceContext context = getContext();
+
+        context.setPosition(node.getStartPosition());
+        context.skipSpaceAndCommentsBackward();      // Now at the end of the previous node
+        context.skipSpaceAndCommentsUntilEOL();      // Skip any comments on previous node's line
+        context.skipNewline();                       // Skip the newline character if present
     }
 
     public void setPositionToEndOfNode(ASTNode node) {
-        getFileTranslator().setPositionToEndOfNode(node);
+        setPosition(ASTUtil.getEndPosition(node));
     }
 
+    /**
+     * Sets the position to the end of the node & any trailing spaces/comments for the node. When called on a statement
+     * node or other node that's the last thing on a line, normally the context will now be positioned at the newline
+     * character.
+     *
+     * @param node node in question
+     */
     public void setPositionToEndOfNodeSpaceAndComments(ASTNode node) {
-        getFileTranslator().setPositionToEndOfNodeSpaceAndComments(node);
+        setPositionToEndOfNode(node);
+        getContext().skipSpaceAndCommentsUntilEOL();
     }
 
-    public void ensureModifiersJustFinalOrAnnotations(List<?> modifiers) {
-        getFileTranslator().ensureModifiersJustFinalOrAnnotations(modifiers);
+    /**
+     * See if the specified node starts on the same line as we're on currently.   This is used, for instance, when
+     * formatting if statements when adding required braces.
+     *
+     * @param node ASTNode in question
+     * @return true if node starts on the current line, false if it starts on a different (presumably later) line
+     */
+    public boolean startsOnSameLine(ASTNode node) {
+        return getContext().getSourceLineNumber() == getContext().getSourceLineNumber(node.getStartPosition());
     }
 
+    public void ensureModifiersJustFinalOrAnnotations(List modifiers) {
+        forEach(modifiers, (IExtendedModifier extendedModifier) -> {
+            if (!(isFinal(extendedModifier) || isAnnotation(extendedModifier)))
+                throw getTranslator().getContext().sourceNotSupported("Modifier isn't supported supported here: " + extendedModifier.toString());
+        });
+    }
+
+    /**
+     * Set the context's current position to just after the end of the modifiers, including (if there are modifiers) any
+     * trailing spaces/comments after the last one. If there are no modifiers in the list, the position remains
+     * unchanged.
+     *
+     * @param extendedModifiers modifiers
+     */
     public void skipModifiers(List extendedModifiers) {
-        getFileTranslator().skipModifiers(extendedModifiers);
+        int size = extendedModifiers.size();
+        if (size == 0)
+            return;
+        IExtendedModifier lastExtendedModifier = (IExtendedModifier) extendedModifiers.get(size - 1);
+        setPositionToEndOfNodeSpaceAndComments((ASTNode) lastExtendedModifier);
     }
 
     public int getPreferredIndent() {
-        return getFileTranslator().getPreferredIndent();
+        return getTranslator().getPreferredIndent();
     }
 
     public MethodDeclaration getFunctionalInterfaceMethod(TypeDeclaration typeDeclaration) {

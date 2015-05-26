@@ -31,7 +31,7 @@ import java.util.List;
  * @since 12/10/2014
  */
 public class JavadocCommentWriter extends CSharpASTNodeWriter<Javadoc> {
-    protected JavadocCommentWriter(CSharpFileTranslator cSharpASTWriters) {
+    protected JavadocCommentWriter(CSharpTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 
@@ -44,7 +44,7 @@ public class JavadocCommentWriter extends CSharpASTNodeWriter<Javadoc> {
             TagElement tag = (TagElement) tagObj;
             String tagName = tag.getTagName();
             int position = tag.getStartPosition();
-            int lineNumber = getFileTranslator().getSourceLineNumber(position);
+            int lineNumber = getContext().getSourceLineNumber(position);
             //String prefix = tagCount++ == 0 ? "/// " : "\n/// ";
 
             if (tagName == null) {
@@ -93,7 +93,7 @@ public class JavadocCommentWriter extends CSharpASTNodeWriter<Javadoc> {
     }
 
     private int writeFragment(int previousLineNumber, ASTNode fragment) {
-        int lineNumber = getFileTranslator().getSourceLineNumber(fragment.getStartPosition());
+        int lineNumber = getContext().getSourceLineNumber(fragment.getStartPosition());
         int lineNumberDiff = lineNumber - previousLineNumber;
         writeLineBreaks(lineNumberDiff);
         if (fragment instanceof TagElement) {

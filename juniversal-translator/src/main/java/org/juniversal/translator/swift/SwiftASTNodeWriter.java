@@ -24,28 +24,36 @@ package org.juniversal.translator.swift;
 
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.ASTNodeWriter;
-import org.juniversal.translator.core.Context;
+import org.juniversal.translator.core.JavaSourceContext;
+import org.xuniversal.translator.core.TargetWriter;
+import org.xuniversal.translator.swift.SwiftTargetWriter;
 
 import java.util.List;
 
 
 public abstract class SwiftASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
-    private SwiftFileTranslator swiftASTWriters;
+    private SwiftTranslator translator;
 
-    protected SwiftASTNodeWriter(SwiftFileTranslator swiftASTWriters) {
-        this.swiftASTWriters = swiftASTWriters;
+    protected SwiftASTNodeWriter(SwiftTranslator translator) {
+        this.translator = translator;
     }
 
-    @Override protected SwiftFileTranslator getFileTranslator() {
-        return swiftASTWriters;
+    @Override protected SwiftTranslator getTranslator() {
+        return translator;
     }
+
+    @Override public SwiftTargetWriter getTargetWriter() {
+        return getContext().getTargetWriter();
+    }
+
+    public SwiftContext getContext() { return getTranslator().getContext(); }
 
     public void writeStatementEnsuringBraces(Statement statement, int blockStartColumn, boolean forceSeparateLine) {
         if (statement instanceof Block) {
             copySpaceAndComments();
             writeNode(statement);
         } else {
-            if (getFileTranslator().startsOnSameLine(statement)) {
+            if (startsOnSameLine(statement)) {
                 if (forceSeparateLine) {
                     write(" {\n");
 
@@ -143,6 +151,4 @@ public abstract class SwiftASTNodeWriter<T extends ASTNode> extends ASTNodeWrite
 
         write(">");
     }
-
-    public Context getContext() { return getFileTranslator().getContext(); }
 }

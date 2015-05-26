@@ -30,7 +30,7 @@ import java.util.List;
 import static org.juniversal.translator.core.ASTUtil.forEach;
 
 public class VariableDeclarationWriter extends CPlusPlusASTNodeWriter {
-    public VariableDeclarationWriter(CPlusPlusFileTranslator cPlusPlusASTWriters) {
+    public VariableDeclarationWriter(CPlusPlusTranslator cPlusPlusASTWriters) {
         super(cPlusPlusASTWriters);
     }
 
@@ -55,7 +55,10 @@ public class VariableDeclarationWriter extends CPlusPlusASTNodeWriter {
         }
     }
 
-    private void writeVariableDeclaration(List<?> modifiers, Type type, List<?> fragments) {
+    private void writeVariableDeclaration(List modifiers, Type type, List<?> fragments) {
+        ensureModifiersJustFinalOrAnnotations(modifiers);
+        skipModifiers(modifiers);
+
         // TODO:  Turn "final" into "const"
 /*
         if (ASTUtil.containsFinal(modifiers)) {
@@ -67,7 +70,7 @@ public class VariableDeclarationWriter extends CPlusPlusASTNodeWriter {
 */
 
         // Write the type
-        writeType(type, ReferenceKind.SharedPtr);
+        writeTypeReference(type, ReferenceKind.SharedPtr);
 
         // TODO: Write * or & where needed, if multiple variables (multiple fragments)
 

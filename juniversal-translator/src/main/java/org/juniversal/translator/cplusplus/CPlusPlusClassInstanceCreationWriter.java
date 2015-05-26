@@ -26,14 +26,13 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.juniversal.translator.core.ClassInstanceCreationWriter;
-import org.juniversal.translator.csharp.CSharpFileTranslator;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
 
 
 public class CPlusPlusClassInstanceCreationWriter extends ClassInstanceCreationWriter {
-    public CPlusPlusClassInstanceCreationWriter(CPlusPlusFileTranslator fileTranslator) {
-        super(fileTranslator);
+    public CPlusPlusClassInstanceCreationWriter(CPlusPlusTranslator translator) {
+        super(translator);
     }
 
     @Override protected void writeAnonymousInnerClassFunction(ClassInstanceCreation classInstanceCreation) {

@@ -22,19 +22,26 @@
 
 package org.juniversal.translator.core;
 
-import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.core.ASTNodeWriter;
-import org.juniversal.translator.core.FileTranslator;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.xuniversal.translator.core.TargetWriter;
 
 
 public abstract class CommonASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
-    private FileTranslator fileTranslator;
+    private Translator translator;
 
-    public CommonASTNodeWriter(FileTranslator fileTranslator) {
-        this.fileTranslator = fileTranslator;
+    public CommonASTNodeWriter(Translator translator) {
+        this.translator = translator;
     }
 
-    @Override protected FileTranslator getFileTranslator() {
-        return fileTranslator;
+    @Override protected Translator getTranslator() {
+        return translator;
+    }
+
+    @Override protected JavaSourceContext getContext() {
+        return translator.getContext();
+    }
+
+    @Override public TargetWriter getTargetWriter() {
+        return getContext().getTargetWriter();
     }
 }

@@ -26,6 +26,8 @@ import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.ASTNodeWriter;
 import org.juniversal.translator.core.AccessLevel;
+import org.xuniversal.translator.cplusplus.CPlusPlusTargetWriter;
+import org.xuniversal.translator.csharp.CSharpTargetWriter;
 
 import java.util.List;
 
@@ -33,18 +35,22 @@ import static org.juniversal.translator.core.ASTUtil.*;
 
 
 public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
-    private CSharpFileTranslator cSharpASTWriters;
+    private CSharpTranslator translator;
 
-    protected CSharpASTNodeWriter(CSharpFileTranslator cSharpASTWriters) {
-        this.cSharpASTWriters = cSharpASTWriters;
+    protected CSharpASTNodeWriter(CSharpTranslator translator) {
+        this.translator = translator;
     }
 
-    @Override protected CSharpFileTranslator getFileTranslator() {
-        return cSharpASTWriters;
+    @Override protected CSharpTranslator getTranslator() {
+        return translator;
+    }
+
+    @Override public CSharpTargetWriter getTargetWriter() {
+        return getContext().getTargetWriter();
     }
 
     public CSharpContext getContext() {
-        return getFileTranslator().getContext();
+        return getTranslator().getContext();
     }
 
     public void writeAccessModifier(List<?> modifiers) {
@@ -106,7 +112,7 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
                     String annotationTypeName = annotationBinding.getAnnotationType().getQualifiedName();
 
                     // See if the annotation has a mapping
-                    @Nullable String mappedAnnotationTypeName = cSharpASTWriters.getTranslator().getAnnotationMap().get(annotationTypeName);
+                    @Nullable String mappedAnnotationTypeName = translator.getAnnotationMap().get(annotationTypeName);
                     if (mappedAnnotationTypeName != null) {
                         @Nullable String qualifier = qualifierFromQualifiedName(mappedAnnotationTypeName);
 
@@ -130,10 +136,7 @@ public abstract class CSharpASTNodeWriter<T extends ASTNode> extends ASTNodeWrit
         writeNode(type);
 
         // Write the variable declaration(s)
-        writeCommaDelimitedNodes(fragments, (VariableDeclarationFragment variableDeclarationFragment) -> {
-            copySpaceAndComments();
-            writeNode(variableDeclarationFragment);
-        });
+        writeCommaDelimitedNodes(fragments);
     }
 
     public void writeMethodInvocationArgumentList(List<?> arguments) {

@@ -22,11 +22,26 @@
 
 package org.juniversal.translator.cplusplus;
 
-import org.juniversal.translator.core.Context;
+import org.juniversal.translator.core.JavaSourceContext;
+import org.juniversal.translator.core.JavaSourceFile;
+import org.juniversal.translator.core.ReferencedTypes;
+import org.xuniversal.translator.cplusplus.CPlusPlusTargetWriter;
 
-public class CPlusPlusContext extends Context {
-    private boolean writingVariableDeclarationNeedingStar;
+public class CPlusPlusContext extends JavaSourceContext {
+    private CPlusPlusTargetWriter targetWriter;
     private OutputType outputType;
+    private boolean writingVariableDeclarationNeedingStar;
+    private ReferencedTypes referencedTypes = new ReferencedTypes();
+
+    public CPlusPlusContext(JavaSourceFile sourceFile, CPlusPlusTargetWriter targetWriter, OutputType outputType) {
+        super(sourceFile, targetWriter);
+        this.targetWriter = targetWriter;
+        this.outputType = outputType;
+    }
+
+    @Override public CPlusPlusTargetWriter getTargetWriter() {
+        return targetWriter;
+    }
 
     public boolean isWritingVariableDeclarationNeedingStar() {
         return writingVariableDeclarationNeedingStar;
@@ -40,7 +55,7 @@ public class CPlusPlusContext extends Context {
         return outputType;
     }
 
-    public void setOutputType(OutputType outputType) {
-        this.outputType = outputType;
+    public ReferencedTypes getReferencedTypes() {
+        return referencedTypes;
     }
 }

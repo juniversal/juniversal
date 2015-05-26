@@ -27,7 +27,7 @@ import org.juniversal.translator.core.JUniversalException;
 import java.io.*;
 
 
-public class TargetWriter {
+public abstract class TargetWriter implements AutoCloseable {
     private int currColumn;                           // Current column on line (0 based)
     private boolean accumulatingSpacesAtBeginningOfLine;
     private int spacesAtBeginningOfLine;
@@ -37,13 +37,21 @@ public class TargetWriter {
     private int destTabStop = -1;
 
 
-    public TargetWriter(Writer writer, int destTabStop) {
+    public TargetWriter(Writer writer, TargetProfile targetProfile) {
         this.writer = writer;
-        this.destTabStop = destTabStop;
+        this.destTabStop = targetProfile.getTabStop();
 
         currColumn = 0;
         accumulatingSpacesAtBeginningOfLine = true;
         spacesAtBeginningOfLine = 0;
+    }
+
+    @Override public void close() {
+        try {
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -63,6 +71,8 @@ public class TargetWriter {
         return writer;
     }
 
+    public abstract TargetProfile getTargetProfile();
+
     public void write(String string) {
         try {
             int length = string.length();
@@ -73,12 +83,13 @@ public class TargetWriter {
         }
     }
 
-    public void write(BufferTargetWriter bufferTargetWriter) {
-        try {
-            writer.write(bufferTargetWriter.getBufferContents());
-        } catch (IOException e) {
-            throw new JUniversalException(e);
-        }
+    public void writeln() {
+        write('\n');
+    }
+
+    public void writeln(String string) {
+        write(string);
+        writeln();
     }
 
     public void write(char character) {
@@ -180,5 +191,77 @@ public class TargetWriter {
 
     public int incrementAdditionalIndentation(int increment) {
         return setAdditionalIndentation(additionalIndentation + increment);
+    }
+
+    public BufferedWriter startBuffering() {
+        return new BufferedWriter();
+    }
+
+    public class BufferedWriter implements AutoCloseable {
+        private Writer originalWriter;
+        private MyStringWriter bufferedWriter;
+
+        public BufferedWriter() {
+            this.originalWriter = writer;
+            bufferedWriter = new MyStringWriter();
+            writer = bufferedWriter;
+        }
+
+        public String getBufferContents() { return bufferedWriter.toString(); }
+
+        @Override public void close() {
+            writer = originalWriter;
+        }
+    }
+
+    /**
+     * The standard Java StringWriter class uses a StringBuffer, which is synchronized, so we have our own version that
+     * uses a StringBuilder internally, which is unsynchrnoized and should perform better.   I'm not sure if this makes
+     * any difference in practice, but nearly all translated output goes through this class & it couldn't hurt.
+     */
+    private static class MyStringWriter extends Writer {
+        private StringBuilder stringBuilder = new StringBuilder();
+
+        @Override
+        public void write(char[] cbuf, int off, int len) throws IOException {
+            stringBuilder.append(cbuf, off, len);
+        }
+
+        @Override
+        public void write(String str, int off, int len) throws IOException {
+            stringBuilder.append(str, off, off + len);
+        }
+
+        @Override
+        public Writer append(CharSequence csq) throws IOException {
+            stringBuilder.append(csq);
+            return this;
+        }
+
+        @Override
+        public Writer append(CharSequence csq, int start, int end) throws IOException {
+            stringBuilder.append(csq, start, end);
+            return this;
+        }
+
+        @Override
+        public Writer append(char c) throws IOException {
+            stringBuilder.append(c);
+            return this;
+        }
+
+        @Override
+        public void flush() throws IOException {
+
+        }
+
+        @Override
+        public void close() throws IOException {
+        }
+
+        @Override
+        public String toString() {
+            return stringBuilder.toString();
+        }
     }
 }

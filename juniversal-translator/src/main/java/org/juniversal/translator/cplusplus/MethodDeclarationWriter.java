@@ -24,52 +24,72 @@ package org.juniversal.translator.cplusplus;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.core.ASTUtil;
+import org.xuniversal.translator.cplusplus.ReferenceKind;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.juniversal.translator.core.ASTUtil.addWildcardTypes;
-import static org.juniversal.translator.core.ASTUtil.forEach;
+import static org.juniversal.translator.core.ASTUtil.*;
 
 
 public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclaration> {
-    public MethodDeclarationWriter(CPlusPlusFileTranslator cPlusPlusFileTranslator) {
+    public MethodDeclarationWriter(CPlusPlusTranslator cPlusPlusFileTranslator) {
         super(cPlusPlusFileTranslator);
     }
 
     @Override
     public void write(MethodDeclaration methodDeclaration) {
         AbstractTypeDeclaration typeDeclaration = getContext().getTypeDeclaration();
+        boolean classIsFinal = isFinal(typeDeclaration);
+        boolean methodIsAbstract = isAbstract(methodDeclaration);
+        boolean methodIsFinal = isFinal(methodDeclaration);
+        boolean methodIsStatic = isStatic(methodDeclaration);
+        boolean methodIsConstructor = isConstructor(methodDeclaration);
 
         // Get return type if present
         @Nullable Type returnType = null;
-        if (!methodDeclaration.isConstructor())
+        if (!methodIsConstructor)
             returnType = methodDeclaration.getReturnType2();
 
-        // If we're writing the implementation of a generic method, include the "template<...>" prefix
-        List typeParameters = new ArrayList<>();
+        List classTypeParameters = new ArrayList<>();
         if (typeDeclaration instanceof TypeDeclaration) {
-            typeParameters = ((TypeDeclaration) typeDeclaration).typeParameters();
+            classTypeParameters = ((TypeDeclaration) typeDeclaration).typeParameters();
         }
 
-        boolean isGeneric = !typeParameters.isEmpty();
-        if (isGeneric && getContext().isWritingMethodImplementation()) {
+        List methodTypeParameters = methodDeclaration.typeParameters();
+
+        // If we're writing the declaration of a generic method (with type parameters for the method itself, regardless
+        // of where the class in generic), include the "template<...>" prefix
+        if (! getContext().isWritingMethodImplementation() && ! methodTypeParameters.isEmpty()) {
             write("template ");
-            writeTypeParameters(typeParameters, true);
+            writeTypeParameters(methodTypeParameters, true);
+            write("  ");
+        }
+
+        boolean isGeneric = !classTypeParameters.isEmpty();
+        if (getContext().isWritingMethodImplementation() && (! classTypeParameters.isEmpty() || ! methodTypeParameters.isEmpty())) {
+            write("template ");
+
+            ArrayList<TypeParameter> consolidatedTypeParameters = new ArrayList<>();
+            consolidatedTypeParameters.addAll(classTypeParameters);
+            consolidatedTypeParameters.addAll(methodTypeParameters);
+
+            writeTypeParameters(consolidatedTypeParameters, true);
             writeln();
         }
 
-        // Writer static & virtual modifiers, in the class definition
+        // Write static & virtual modifiers, in the class definition
         if (!getContext().isWritingMethodImplementation()) {
-            if (ASTUtil.containsStatic(methodDeclaration.modifiers()))
+            if (methodIsStatic)
                 write("static ");
-            else {
-                boolean isFinal = ASTUtil.containsFinal(typeDeclaration.modifiers())
-                        || ASTUtil.containsFinal(methodDeclaration.modifiers());
-
-                if (!isFinal)
-                    write("virtual ");
+            else if (methodIsConstructor) {
+                // Constructors can't take modifiers
+            }
+            else if (!classIsFinal && !methodIsFinal && !isPrivate(methodDeclaration)) {
+                // In Java methods are virtual by default whereas in C# they aren't, so add the virtual keyword when
+                // appropriate. If the type is final nothing can be overridden.   If the method is final or private it
+                // can't be overridden, so again no need for virtual.   Otherwise, mark as virtual
+                write("virtual ");
             }
         }
 
@@ -77,18 +97,14 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
         setPositionToStartOfNode(returnType != null ? returnType : methodDeclaration.getName());
 
         if (returnType != null)
-            writeNode(returnType);
+            writeTypeReference(returnType, ReferenceKind.SharedPtr);
 
         copySpaceAndComments();
 
         // TODO: Handle arrays with extra dimensions
 
         if (getContext().isWritingMethodImplementation()) {
-            write(getContext().getTypeDeclaration().getName().getIdentifier());
-
-            if (isGeneric)
-                writeTypeParameters(typeParameters, false);
-
+            writeTypeDeclarationType(getContext().getTypeDeclaration());
             write("::");
         }
         matchAndWrite(methodDeclaration.getName().getIdentifier());
@@ -112,7 +128,7 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
             copySpaceAndComments();
             writeNode(methodDeclaration.getBody());
         } else {
-            if (methodDeclaration.getBody() == null) {
+            if (methodIsAbstract) {
                 write(" = 0");
                 copySpaceAndComments();
                 matchAndWrite(";");

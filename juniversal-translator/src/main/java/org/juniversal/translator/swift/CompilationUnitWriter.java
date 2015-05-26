@@ -24,31 +24,31 @@ package org.juniversal.translator.swift;
 
 import org.eclipse.jdt.core.dom.*;
 import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.Context;
+import org.juniversal.translator.core.JavaSourceContext;
 
 
 public class CompilationUnitWriter extends SwiftASTNodeWriter {
-    private SwiftFileTranslator swiftASTWriters;
+    private SwiftTranslator swiftASTWriters;
 
-    public CompilationUnitWriter(SwiftFileTranslator swiftASTWriters) {
+    public CompilationUnitWriter(SwiftTranslator swiftASTWriters) {
         super(swiftASTWriters);
     }
     
     public void write(ASTNode node) {
 		CompilationUnit compilationUnit = (CompilationUnit) node;
 
-		TypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
+		AbstractTypeDeclaration mainTypeDeclaration = ASTUtil.getFirstTypeDeclaration(compilationUnit);
 
 		setPosition(mainTypeDeclaration.getStartPosition());
 
 /*
-		if (context.getOutputType() == OutputType.HEADER)
+		if (context.getOutputType() == OutputType.HEADER_FILE)
 			writeHeader(compilationUnit, mainTypeDeclaration, context);
 		else writeSource(compilationUnit, mainTypeDeclaration, context);
 */
 	}
 
-	private void writeHeader(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration, Context context) {
+	private void writeHeader(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration, JavaSourceContext javaSourceContext) {
 		String name = mainTypeDeclaration.getName().getIdentifier();
 		String multiIncludeDefine = name.toUpperCase() + "_H";
 		Type superclassType = mainTypeDeclaration.getSuperclassType();
@@ -85,7 +85,7 @@ public class CompilationUnitWriter extends SwiftASTNodeWriter {
 		writeln("#endif // " + multiIncludeDefine);
 	}
 
-	private void writeSource(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration, Context context) {
+	private void writeSource(CompilationUnit compilationUnit, TypeDeclaration mainTypeDeclaration, JavaSourceContext javaSourceContext) {
 		//writeIncludeForTypeName(mainTypeDeclaration.getName(), context);
 		writeln();
 		

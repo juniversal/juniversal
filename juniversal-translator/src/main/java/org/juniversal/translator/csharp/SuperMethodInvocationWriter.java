@@ -25,7 +25,7 @@ package org.juniversal.translator.csharp;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
 public class SuperMethodInvocationWriter extends MethodInvocationWriterBase<SuperMethodInvocation> {
-    public SuperMethodInvocationWriter(CSharpFileTranslator cSharpASTWriters) {
+    public SuperMethodInvocationWriter(CSharpTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

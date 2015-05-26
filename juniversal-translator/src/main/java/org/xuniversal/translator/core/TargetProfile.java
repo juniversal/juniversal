@@ -22,13 +22,16 @@
 
 package org.xuniversal.translator.core;
 
+import org.juniversal.translator.cplusplus.HierarchicalName;
+
 /**
  * @author Bret Johnson
  * @since 7/20/2014 6:45 PM
  */
-public class TargetProfile {
+public abstract class TargetProfile {
     private int tabStop = -1;
     private boolean classBraceOnSameLine = true;
+    private int preferredIndent = 4;    // TODO: Set
 
     /**
      * Returns how many spaces a tab should correspond to in the C++ output (e.g. 4 or 2). If tabs
@@ -69,6 +72,36 @@ public class TargetProfile {
     public void setClassBraceOnSameLine(boolean value) {
         classBraceOnSameLine = value;
     }
+
+    public int getPreferredIndent() {
+        return preferredIndent;
+    }
+
+    public abstract String getInt8Type();
+
+    public abstract String getInt16Type();
+
+    public abstract String getInt32Type();
+
+    public abstract String getInt64Type();
+
+    public abstract String getFloat32Type();
+
+    public abstract String getFloat64Type();
+
+    public abstract String getCharType();
+
+    public abstract String getBooleanType();
+
+    public abstract String getVoidType();
+
+    public abstract HierarchicalName getObjectType();
+
+    public abstract HierarchicalName getStringType();
+
+    public abstract HierarchicalName getStringBuilderType();
+
+    public abstract HierarchicalName getArrayType();
 
     public boolean isCSharp() { return false; }
 

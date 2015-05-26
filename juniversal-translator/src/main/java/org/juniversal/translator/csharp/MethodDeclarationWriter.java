@@ -33,7 +33,7 @@ import static org.juniversal.translator.core.ASTUtil.*;
 // TODO: Finish this
 
 public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclaration> {
-    public MethodDeclarationWriter(CSharpFileTranslator cSharpASTWriters) {
+    public MethodDeclarationWriter(CSharpTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
     }
 

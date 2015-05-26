@@ -31,7 +31,7 @@ import java.util.HashMap;
 public class SimpleTypeWriter extends CSharpASTNodeWriter<SimpleType> {
     private HashMap<String, String> primitiveWrapperClassMapping;
 
-    public SimpleTypeWriter(CSharpFileTranslator cSharpASTWriters) {
+    public SimpleTypeWriter(CSharpTranslator cSharpASTWriters) {
         super(cSharpASTWriters);
 
         // TODO: Finalize how will handle Java primitive type wrappers, considering when will allow to be nullable

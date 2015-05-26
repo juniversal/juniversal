@@ -28,9 +28,9 @@ import org.juniversal.translator.core.JUniversalException;
 import java.util.List;
 
 public class MethodInvocationWriter extends SwiftASTNodeWriter {
-    private SwiftFileTranslator swiftASTWriters;
+    private SwiftTranslator swiftASTWriters;
 
-    public MethodInvocationWriter(SwiftFileTranslator swiftASTWriters) {
+    public MethodInvocationWriter(SwiftTranslator swiftASTWriters) {
         super(swiftASTWriters);
     }
 
