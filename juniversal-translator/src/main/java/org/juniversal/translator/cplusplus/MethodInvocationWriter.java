@@ -25,7 +25,9 @@ package org.juniversal.translator.cplusplus;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.*;
+import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.JUniversalException;
+import org.xuniversal.translator.core.TypeName;
 
 public class MethodInvocationWriter extends CPlusPlusASTNodeWriter<Expression> {
 	public MethodInvocationWriter(CPlusPlusTranslator cPlusPlusASTWriters) {
@@ -53,7 +55,6 @@ public class MethodInvocationWriter extends CPlusPlusASTNodeWriter<Expression> {
 
 	private void writeMethodInvocation(boolean isSuper, Expression expression, IMethodBinding methodBinding,
                                        SimpleName name, List typeArguments, List<?> arguments) {
-
 		// See if the method call is static or not; we need to use the bindings to see that
 		boolean isStatic;
 		if (methodBinding == null)
@@ -70,6 +71,11 @@ public class MethodInvocationWriter extends CPlusPlusASTNodeWriter<Expression> {
 
 			copySpaceAndComments();
 		} else if (expression != null) {
+			if (isStatic ) {
+				@Nullable ITypeBinding typeBinding = expression.resolveTypeBinding();
+				getContext().addReferencedTargetType(getTargetType(typeBinding));
+			}
+
             writeNode(expression);
 
 			copySpaceAndComments();

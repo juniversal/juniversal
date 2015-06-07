@@ -24,12 +24,12 @@ package org.juniversal.translator.cplusplus;
 
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.xuniversal.translator.core.HierarchicalName;
 import org.xuniversal.translator.core.TargetWriter;
+import org.xuniversal.translator.core.TypeName;
 import org.xuniversal.translator.cplusplus.CPlusPlusTargetWriter;
 
 import static org.juniversal.translator.core.ASTUtil.getFirstTypeDeclaration;
-import static org.juniversal.translator.core.ASTUtil.toHierarchicalName;
 
 
 public class CompilationUnitWriter extends CPlusPlusASTNodeWriter<CompilationUnit> {
@@ -55,29 +55,30 @@ public class CompilationUnitWriter extends CPlusPlusASTNodeWriter<CompilationUni
 
         setPositionToStartOfNode(compilationUnit);
 
-        HierarchicalName typeHierarchicalName = toHierarchicalName(compilationUnit);
-        HierarchicalName packageHierarchicalName = typeHierarchicalName.getQualifier();
         CPlusPlusTargetWriter targetWriter = getTargetWriter();
 
+        TypeName typeName = getContext().getOutermostTypeName();
+        HierarchicalName packageName = typeName.getPackage();
+
         if (getContext().getOutputType() == OutputType.HEADER_FILE) {
-            targetWriter.writeHeaderFileStart(typeHierarchicalName);
-            targetWriter.writeIncludesForHeaderFile(getContext().getReferencedTypes().getTypesNeedDefinitionNames());
+            targetWriter.writeHeaderFileStart(typeName);
+            targetWriter.writeIncludesForHeaderFile(getContext().getReferencedOutermostTypes());
             writeln();
-        }
-        else {
-            targetWriter.writeIncludesForSourceFile(typeHierarchicalName,
-                    getContext().getReferencedTypes().getTypesNeedDefinitionNames());
-            writeln();
-        }
-
-        if (! packageHierarchicalName.isEmpty()) {
-            targetWriter.writeNamespaceStart(packageHierarchicalName);
+        } else {
+            targetWriter.writeIncludesForSourceFile(typeName, getContext().getReferencedOutermostTypes());
             writeln();
         }
 
+        if (!packageName.isEmpty()) {
+            targetWriter.writeNamespaceStart(packageName);
+            writeln();
+        }
+
+/*
         for (ITypeBinding typeBinding : getContext().getReferencedTypes().getTypesJustNeedingDeclaration()) {
             writeTypeForwardDeclaration(typeBinding);
         }
+*/
 
         //targetWriter.writeUsings(getContext().getNamesNeedingImport());
         writeln();
@@ -88,12 +89,12 @@ public class CompilationUnitWriter extends CPlusPlusASTNodeWriter<CompilationUni
         setPositionToEndOfNode(typeDeclaration);
         skipSpaceAndComments();
 
-        if (! packageHierarchicalName.isEmpty()) {
+        if (!packageName.isEmpty()) {
             writeln();
-            targetWriter.writeNamespaceEnd(packageHierarchicalName);
+            targetWriter.writeNamespaceEnd(packageName);
         }
 
         if (getContext().getOutputType() == OutputType.HEADER_FILE)
-            targetWriter.writeHeaderFileEnd(typeHierarchicalName);
+            targetWriter.writeHeaderFileEnd(typeName);
     }
 }

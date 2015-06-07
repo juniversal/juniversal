@@ -24,34 +24,48 @@ package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
+import org.xuniversal.translator.core.HierarchicalName;
 import org.xuniversal.translator.core.Context;
-import org.xuniversal.translator.core.OrderedSet;
-import org.xuniversal.translator.core.SourceFile;
 import org.xuniversal.translator.core.TargetWriter;
+import org.xuniversal.translator.core.TypeName;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
+
+import static org.juniversal.translator.core.ASTUtil.getFirstTypeDeclaration;
+import static org.juniversal.translator.core.ASTUtil.toHierarchicalName;
 
 public abstract class JavaSourceContext extends Context {
     private JavaSourceFile sourceFile;
+    private TypeName outermostTypeName;
     private AbstractTypeDeclaration typeDeclaration;
     private @Nullable Set<String> typeMethodNames = null;
     private ArrayList<WildcardType> methodWildcardTypes = null;
-    private boolean writingMethodImplementation;
 
     public JavaSourceContext(JavaSourceFile sourceFile, TargetWriter targetWriter) {
         super(sourceFile, targetWriter);
         this.sourceFile = sourceFile;
+
+        CompilationUnit compilationUnit = sourceFile.getCompilationUnit();
+
+        HierarchicalName packageName = toHierarchicalName(compilationUnit.getPackage().getName());
+        @Nullable AbstractTypeDeclaration typeDeclaration = getFirstTypeDeclaration(compilationUnit);
+        outermostTypeName = typeDeclaration != null ?
+                new TypeName(packageName, typeDeclaration.getName().getIdentifier()) :
+                new TypeName(packageName, new HierarchicalName());
     }
 
-    @Override public SourceFile getSourceFile() {
+    @Override public JavaSourceFile getSourceFile() {
         return sourceFile;
     }
 
     public AbstractTypeDeclaration getTypeDeclaration() {
         return typeDeclaration;
+    }
+
+    public TypeName getOutermostTypeName() {
+        return outermostTypeName;
     }
 
     /**
@@ -92,13 +106,5 @@ public abstract class JavaSourceContext extends Context {
 
     public void setMethodWildcardTypes(ArrayList<WildcardType> methodWildcardTypes) {
         this.methodWildcardTypes = methodWildcardTypes;
-    }
-
-    public boolean isWritingMethodImplementation() {
-        return writingMethodImplementation;
-    }
-
-    public void setWritingMethodImplementation(boolean writingMethodImplementation) {
-        this.writingMethodImplementation = writingMethodImplementation;
     }
 }

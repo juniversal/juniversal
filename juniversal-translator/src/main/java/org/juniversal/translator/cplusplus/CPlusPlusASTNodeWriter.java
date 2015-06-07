@@ -25,14 +25,16 @@ package org.juniversal.translator.cplusplus;
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
 import org.juniversal.translator.core.ASTNodeWriter;
-import org.juniversal.translator.core.ASTUtil;
-import org.juniversal.translator.core.ReferencedTypes;
+import org.xuniversal.translator.core.Flag;
+import org.xuniversal.translator.core.TypeName;
 import org.xuniversal.translator.cplusplus.CPlusPlusTargetWriter;
 import org.xuniversal.translator.cplusplus.ReferenceKind;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
+import static org.juniversal.translator.core.ASTUtil.typeReferenceContainsTypeVariable;
 
 
 public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeWriter<T> {
@@ -54,9 +56,11 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
         return getContext().getTargetWriter();
     }
 
+/*
     public ReferencedTypes getReferencedTypes() {
         return getContext().getReferencedTypes();
     }
+*/
 
     /**
      * Write out a type, when it's used (as opposed to defined).
@@ -70,33 +74,36 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
         if (type.isPrimitiveType() || isTypeVariable)
             writeNode(type);
         else {
+/*
             getReferencedTypes().add(type,
                     referenceKind == ReferenceKind.Value || getContext().isWritingMethodImplementation());
+*/
 
             switch (referenceKind) {
                 case SharedPtr:
                     //addNameNeedingImport("std", "shared_ptr");
+/*
                     write("std::shared_ptr<");
                     writeNode(type);
                     write(">");
-/*
-                    if (typeReferenceContainsTypeVariable(type))
-                        write("typename ");
-                    writeNode(type);
-                    write("::ptr");
 */
+                    //if (typeReferenceContainsTypeVariable(type))
+                    write("std::shared_ptr< ");
+                    writeNode(type);
+                    write(" >");
                     break;
 
                 case WeakPtr:
                     //addNameNeedingImport("std", "weak_ptr");
+/*
                     write("std::weak_ptr<");
                     writeNode(type);
                     write(">");
-/*
-                    if (typeReferenceContainsTypeVariable(type))
-                        write("typename ");
-                    write("::weak_ptr");
 */
+                    //if (typeReferenceContainsTypeVariable(type))
+                    write("std::weak_ptr < ");
+                    writeNode(type);
+                    write(" >");
                     break;
 
                 case ConstReference:
@@ -129,37 +136,70 @@ public abstract class CPlusPlusASTNodeWriter<T extends ASTNode> extends ASTNodeW
         else return packageName.replace(".", "::");
     }
 
-    /**
-     * Write out the type parameters in the specified list, surrounded by "<" and ">".
-     *
-     * @param typeParameters         list of TypeParameter objects
-     * @param includeTypenameKeyword if true, each parameter is prefixed with "typename "
-     */
-    public void writeTypeParameters(List typeParameters, boolean includeTypenameKeyword) {
-        // If we're writing the implementation of a generic method, include the "template<...>" prefix
-
+    protected void writeTypeParameters(List typeParameters, @Nullable String prefix, @Nullable String suffix) {
         write("<");
 
-        forEach(typeParameters, (TypeParameter typeParameter, boolean first) -> {
-            if (!first)
+        Flag outputTypeParameter = new Flag();
+        forEach(typeParameters, (TypeParameter typeParameter) -> {
+            if (outputTypeParameter.isSet())
                 write(", ");
 
-            if (includeTypenameKeyword)
-                write("typename ");
+            if (prefix != null)
+                write(prefix);
             write(typeParameter.getName().getIdentifier());
+            if (suffix != null)
+                write(suffix);
+
+            outputTypeParameter.set();
         });
 
         write(">");
     }
 
-    public void writeTypeDeclarationType(AbstractTypeDeclaration abstractTypeDeclaration) {
+    protected void writeTypeParameters(List typeParameters, ArrayList<WildcardType> wildcardTypes,
+                                       @Nullable String prefix, @Nullable String suffix) {
+        write("<");
+
+        Flag outputTypeParameter = new Flag();
+        forEach(typeParameters, (TypeParameter typeParameter) -> {
+            if (outputTypeParameter.isSet())
+                write(", ");
+
+            if (prefix != null)
+                write(prefix);
+            write(typeParameter.getName().getIdentifier());
+            if (suffix != null)
+                write(suffix);
+
+            outputTypeParameter.set();
+        });
+
+        for (WildcardType wildcardType : wildcardTypes) {
+            if (outputTypeParameter.isSet())
+                write(", ");
+
+            if (prefix != null)
+                write(prefix);
+            writeWildcardTypeSyntheticName(wildcardTypes, wildcardType);
+            if (suffix != null)
+                write(suffix);
+
+            outputTypeParameter.set();
+        }
+
+        write(">");
+    }
+
+    public void writeTypeDeclarationType(AbstractTypeDeclaration abstractTypeDeclaration,
+                                         @Nullable String typeParameterSuffix) {
         write(abstractTypeDeclaration.getName().getIdentifier());
 
         if (abstractTypeDeclaration instanceof TypeDeclaration) {
-            List typeParameters = ((TypeDeclaration) abstractTypeDeclaration).typeParameters();
-            if (!typeParameters.isEmpty()) {
-                writeTypeParameters(typeParameters, false);
-            }
+            TypeDeclaration typeDeclaration = (TypeDeclaration) abstractTypeDeclaration;
+
+            List typeParameters = typeDeclaration.typeParameters();
+            if (!typeParameters.isEmpty())
+                writeTypeParameters(typeParameters, null, typeParameterSuffix);
         }
     }
 

@@ -40,8 +40,6 @@ public class ArrayCreationWriter extends CPlusPlusASTNodeWriter<ArrayCreation> {
 
     @Override
     public void write(ArrayCreation arrayCreation) {
-        matchAndWrite("new");
-
         @Nullable ArrayInitializer arrayInitializer = arrayCreation.getInitializer();
 
         List<?> dimensions = arrayCreation.dimensions();
@@ -49,7 +47,8 @@ public class ArrayCreationWriter extends CPlusPlusASTNodeWriter<ArrayCreation> {
         if (dimensions.size() > 1)
             throw new JUniversalException("Multidimensional arrays not currently supported");
 
-        if (dimensions.size() == 1) {
+/*
+        if (dimensions.length() == 1) {
             Expression dimensionSizeExpression = (Expression) dimensions.get(0);
 
             setPosition(dimensionSizeExpression.getStartPosition());
@@ -61,34 +60,47 @@ public class ArrayCreationWriter extends CPlusPlusASTNodeWriter<ArrayCreation> {
         }
         else {
             if (arrayInitializer == null)
-                throw sourceNotSupported("Unexpectedly, neither an array size nor an array initializer is specified");
+                throw sourceNotSupported("Unexpectedly, neither an array length nor an array initializer is specified");
 
-            int size = arrayInitializer.expressions().size();
+            int length = arrayInitializer.expressions().length();
 
             write("(");
-            write(Integer.toString(size));
+            write(Integer.toString(length));
             write(") ");
         }
+*/
 
         ArrayType arrayType = arrayCreation.getType();
-        setPosition(arrayType.getStartPosition());
 
-        write("Array<");
-        writeTypeReference(arrayType.getElementType(), ReferenceKind.SharedPtr);
+        matchAndWrite("new", "xuniv::Array<");
+
         skipSpaceAndComments();
-        write(">");
+        writeTypeReference(arrayType.getElementType(), ReferenceKind.SharedPtr);
+
+        skipSpaceAndComments();
+        write(">::make");
 
         if (dimensions.size() == 1) {
-            setPositionToEndOfNode((Expression) dimensions.get(0));
-            skipSpaceAndComments();
-            match("]");
+            matchAndWrite("[", "(");
+
+            copySpaceAndComments();
+            writeNode((Expression) dimensions.get(0));
+
+            copySpaceAndComments();
+            matchAndWrite("]", ")");
         }
         else {
-            skipSpaceAndComments();
+            if (arrayInitializer == null)
+                throw sourceNotSupported("Unexpectedly, neither an array size nor an array initializer is specified");
+
             match("[");
 
             skipSpaceAndComments();
-            match("]");
+            int size = arrayInitializer.expressions().size();
+            write(Integer.toString(size));
+
+            skipSpaceAndComments();
+            matchAndWrite("]", ")");
         }
 
         // TODO: Check all syntax combinations here

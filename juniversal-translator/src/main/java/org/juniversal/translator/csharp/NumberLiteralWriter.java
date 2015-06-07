@@ -65,7 +65,7 @@ public class NumberLiteralWriter extends CSharpASTNodeWriter<NumberLiteral> {
             if (token.length() < 8)
                 write(token);
             else {
-                // If the literal exceeds the max size of an int/long, then C# will automatically treat its type as an
+                // If the literal exceeds the max length of an int/long, then C# will automatically treat its type as an
                 // unsigned int/long instead of signed.   In that case, add an explicit cast, with the unchecked modifier,
                 // to convert the type back to signed
 

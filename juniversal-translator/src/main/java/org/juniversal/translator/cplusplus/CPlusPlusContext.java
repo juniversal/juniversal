@@ -24,14 +24,15 @@ package org.juniversal.translator.cplusplus;
 
 import org.juniversal.translator.core.JavaSourceContext;
 import org.juniversal.translator.core.JavaSourceFile;
-import org.juniversal.translator.core.ReferencedTypes;
+import org.juniversal.translator.core.TypeNames;
+import org.xuniversal.translator.core.TypeName;
 import org.xuniversal.translator.cplusplus.CPlusPlusTargetWriter;
 
 public class CPlusPlusContext extends JavaSourceContext {
     private CPlusPlusTargetWriter targetWriter;
     private OutputType outputType;
     private boolean writingVariableDeclarationNeedingStar;
-    private ReferencedTypes referencedTypes = new ReferencedTypes();
+    private TypeNames referencedOutermostTypes = new TypeNames();
 
     public CPlusPlusContext(JavaSourceFile sourceFile, CPlusPlusTargetWriter targetWriter, OutputType outputType) {
         super(sourceFile, targetWriter);
@@ -55,7 +56,11 @@ public class CPlusPlusContext extends JavaSourceContext {
         return outputType;
     }
 
-    public ReferencedTypes getReferencedTypes() {
-        return referencedTypes;
+    public TypeNames getReferencedOutermostTypes() {
+        return referencedOutermostTypes;
+    }
+
+    public void addReferencedTargetType(TypeName typeName) {
+        referencedOutermostTypes.add(typeName.getOutermostType());
     }
 }

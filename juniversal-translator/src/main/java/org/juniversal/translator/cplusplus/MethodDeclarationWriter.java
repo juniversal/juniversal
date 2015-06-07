@@ -28,6 +28,7 @@ import org.xuniversal.translator.cplusplus.ReferenceKind;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.juniversal.translator.core.ASTUtil.*;
 
@@ -58,24 +59,48 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
 
         List methodTypeParameters = methodDeclaration.typeParameters();
 
-        // If we're writing the declaration of a generic method (with type parameters for the method itself, regardless
-        // of where the class in generic), include the "template<...>" prefix
-        if (! getContext().isWritingMethodImplementation() && ! methodTypeParameters.isEmpty()) {
-            write("template ");
-            writeTypeParameters(methodTypeParameters, true);
-            write("  ");
+        ArrayList<WildcardType> wildcardTypes = new ArrayList<>();
+        forEach(methodDeclaration.parameters(), (SingleVariableDeclaration parameter) -> {
+            addWildcardTypes(parameter.getType(), wildcardTypes);
+        });
+
+        @Nullable AbstractTypeDeclaration parentTypeDeclaration = null;
+        ASTNode parent = getContext().getTypeDeclaration().getParent();
+        if (parent != null && parent instanceof AbstractTypeDeclaration)
+            parentTypeDeclaration = (AbstractTypeDeclaration) parent;
+
+        boolean classIsGeneric = ! classTypeParameters.isEmpty();
+        boolean methodIsGeneric = ! methodDeclaration.typeParameters().isEmpty() || ! wildcardTypes.isEmpty();
+
+        if (!getContext().isWritingMethodImplementation()) {
+            // If we're writing the declaration of a generic method (with type parameters for the method itself,
+            // regardless of where the class in generic), include the "template<...>" prefix
+            if (methodIsGeneric) {
+                write("template ");
+                writeTypeParameters(methodDeclaration.typeParameters(), wildcardTypes, "typename ", null);
+                write("  ");
+            }
         }
+        else {
+            if (parentTypeDeclaration != null && parentTypeDeclaration instanceof TypeDeclaration) {
+                List typeParameters = ((TypeDeclaration) parentTypeDeclaration).typeParameters();
+                if (! typeParameters.isEmpty()) {
+                    write("template ");
+                    writeTypeParameters(typeParameters, "typename ", "Unused");
+                    writeln();
+                }
+            }
 
-        boolean isGeneric = !classTypeParameters.isEmpty();
-        if (getContext().isWritingMethodImplementation() && (! classTypeParameters.isEmpty() || ! methodTypeParameters.isEmpty())) {
-            write("template ");
+            if (classIsGeneric || methodIsGeneric) {
+                write("template ");
 
-            ArrayList<TypeParameter> consolidatedTypeParameters = new ArrayList<>();
-            consolidatedTypeParameters.addAll(classTypeParameters);
-            consolidatedTypeParameters.addAll(methodTypeParameters);
+                ArrayList<TypeParameter> consolidatedTypeParameters = new ArrayList<>();
+                forEach(classTypeParameters, (Consumer<TypeParameter>) consolidatedTypeParameters::add);
+                forEach(methodTypeParameters, (Consumer<TypeParameter>) consolidatedTypeParameters::add);
 
-            writeTypeParameters(consolidatedTypeParameters, true);
-            writeln();
+                writeTypeParameters(consolidatedTypeParameters, wildcardTypes, "typename ", null);
+                writeln();
+            }
         }
 
         // Write static & virtual modifiers, in the class definition
@@ -104,16 +129,16 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
         // TODO: Handle arrays with extra dimensions
 
         if (getContext().isWritingMethodImplementation()) {
-            writeTypeDeclarationType(getContext().getTypeDeclaration());
+            if (parentTypeDeclaration != null) {
+                writeTypeDeclarationType(parentTypeDeclaration, "Unused");
+                write("::");
+            }
+
+            writeTypeDeclarationType(getContext().getTypeDeclaration(), null);
             write("::");
         }
         matchAndWrite(methodDeclaration.getName().getIdentifier());
         copySpaceAndComments();
-
-        ArrayList<WildcardType> wildcardTypes = new ArrayList<>();
-        forEach(methodDeclaration.parameters(), (SingleVariableDeclaration parameter) -> {
-            addWildcardTypes(parameter.getType(), wildcardTypes);
-        });
 
         getContext().setMethodWildcardTypes(wildcardTypes);
         writeParameterList(methodDeclaration);
@@ -121,10 +146,9 @@ public class MethodDeclarationWriter extends CPlusPlusASTNodeWriter<MethodDeclar
 
         writeThrownExceptions(methodDeclaration);
 
-        if (getContext().isWritingMethodImplementation())
+        if (getContext().isWritingMethodImplementation()) {
             writeAlternateConstructorInvocation(methodDeclaration);
 
-        if (getContext().isWritingMethodImplementation()) {
             copySpaceAndComments();
             writeNode(methodDeclaration.getBody());
         } else {

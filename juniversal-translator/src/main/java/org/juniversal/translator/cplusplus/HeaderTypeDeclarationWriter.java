@@ -61,7 +61,7 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 
         if (isGeneric) {
             write("template ");
-            writeTypeParameters(typeParameters, true);
+            writeTypeParameters(typeParameters, "typename ", null);
             writeln();
             writeSpaces(typeIndent);
         }
@@ -108,7 +108,7 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 
         // If there's no superclass & no super interfaces, then derive from Object
         if (superclassType == null && typeDeclaration.superInterfaceTypes().isEmpty()) {
-            write(" : public xu::Object");
+            write(" : public xuniv::Object");
             return;
         }
 
@@ -119,7 +119,7 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
 
             copySpaceAndComments();
 
-            getReferencedTypes().add(superclassType, true);
+            //getReferencedTypes().add(superclassType, true);
             writeTypeReference(superclassType, ReferenceKind.Value);
         }
 
@@ -294,20 +294,20 @@ public class HeaderTypeDeclarationWriter extends CPlusPlusASTNodeWriter<TypeDecl
         write("typedef ");
         Type superclassType = typeDeclaration.getSuperclassType();
         if (superclassType == null)
-            write("xu::Object");
+            write("xuniv::Object");
         else writeNodeAtDifferentPosition(superclassType);
         writeln(" super;");
 
 /*
         writeSpaces(typeIndent + getPreferredIndent());
         write("typedef std::shared_ptr<");
-        writeTypeDeclarationType(typeDeclaration);
+        writeTypeDeclarationType(typeDeclaration, null);
         write(">");
         writeln(" ptr;");
 
         writeSpaces(typeIndent + getPreferredIndent());
         write("typedef std::weak_ptr<");
-        writeTypeDeclarationType(typeDeclaration);
+        writeTypeDeclarationType(typeDeclaration, null);
         write(">");
         writeln(" weak_ptr;");
 */

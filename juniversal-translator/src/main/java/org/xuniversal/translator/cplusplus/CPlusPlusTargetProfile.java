@@ -22,8 +22,9 @@
 
 package org.xuniversal.translator.cplusplus;
 
-import org.juniversal.translator.cplusplus.HierarchicalName;
+import org.xuniversal.translator.core.TypeName;
 import org.xuniversal.translator.core.TargetProfile;
+import org.xuniversal.translator.core.TypeName;
 
 /**
  * The CPPProfile class describes how the C++ should be generated.  Primarily this class gives
@@ -33,14 +34,13 @@ import org.xuniversal.translator.core.TargetProfile;
  * @author bretjohn
  */
 public class CPlusPlusTargetProfile extends TargetProfile {
-    private static HierarchicalName objectType = new HierarchicalName("xu", "Object");
-    private static HierarchicalName stringType = new HierarchicalName("xu", "String");
-    private static HierarchicalName stringBuilderType = new HierarchicalName("xu", "StringBuilder");
-    private static HierarchicalName arrayType = new HierarchicalName("xu", "Array");
-    private static HierarchicalName boxType = new HierarchicalName("xu", "Box");
-    private static HierarchicalName makeSharedFunction = new HierarchicalName("std", "make_shared");
-    private static HierarchicalName sharedPtrType = new HierarchicalName("std", "shared_ptr");
-    private static HierarchicalName weakPtrType = new HierarchicalName("std", "weak_ptr");
+    private static TypeName objectType = new TypeName("xuniv", "Object");
+    private static TypeName stringType = new TypeName("xuniv", "String");
+    private static TypeName stringBuilderType = new TypeName("xuniv", "StringBuilder");
+    private static TypeName arrayType = new TypeName("xuniv", "Array");
+    private static TypeName boxType = new TypeName("xuniv", "Box");
+    private static TypeName sharedPtrType = new TypeName("std", "shared_ptr");
+    private static TypeName weakPtrType = new TypeName("std", "weak_ptr");
 
     @Override public boolean isCPlusPlus() {
         return true;
@@ -81,35 +81,31 @@ public class CPlusPlusTargetProfile extends TargetProfile {
     @Override public String getVoidType() {
         return "void";
     }
-    @Override public HierarchicalName getObjectType() {
+    @Override public TypeName getObjectType() {
         return objectType;
     }
 
-    @Override public HierarchicalName getStringType() {
+    @Override public TypeName getStringType() {
         return stringType;
     }
 
-    @Override public HierarchicalName getStringBuilderType() {
+    @Override public TypeName getStringBuilderType() {
         return stringBuilderType;
     }
 
-    @Override public HierarchicalName getArrayType() {
+    @Override public TypeName getArrayType() {
         return arrayType;
     }
 
-    public HierarchicalName getBoxType() {
+    public TypeName getBoxType() {
         return boxType;
     }
 
-    public HierarchicalName getMakeSharedFunction() {
-        return makeSharedFunction;
-    }
-
-    public HierarchicalName getSharedPtrType() {
+    public TypeName getSharedPtrType() {
         return sharedPtrType;
     }
 
-    public HierarchicalName getWeakPtrType() {
+    public TypeName getWeakPtrType() {
         return weakPtrType;
     }
 }

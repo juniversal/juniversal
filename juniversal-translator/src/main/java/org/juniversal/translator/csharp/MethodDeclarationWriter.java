@@ -24,6 +24,8 @@ package org.juniversal.translator.csharp;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
+import org.xuniversal.translator.core.Flag;
+import org.xuniversal.translator.core.Var;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -136,10 +138,13 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
             addWildcardTypes(parameter.getType(), wildcardTypes);
         });
 
+        boolean methodIsGeneric = ! methodDeclaration.typeParameters().isEmpty() || ! wildcardTypes.isEmpty();
+
         if (methodIsConstructor && !wildcardTypes.isEmpty())
             throw sourceNotSupported("C# constructors can't take arguments that use generic wildcard types; consider replacing this constructor with a static create method instead, taking the same generic arguments");
 
-        writeTypeParameters(methodDeclaration, wildcardTypes);
+        if (methodIsGeneric)
+            writeTypeParameters(methodDeclaration.typeParameters(), wildcardTypes);
 
         copySpaceAndComments();
 
@@ -189,30 +194,27 @@ public class MethodDeclarationWriter extends CSharpASTNodeWriter<MethodDeclarati
                 anyMatch(superclass.getDeclaredMethods(), methodBinding::overrides));
     }
 
-    private void writeTypeParameters(MethodDeclaration methodDeclaration, ArrayList<WildcardType> wildcardTypes) {
-        boolean outputTypeParameter = false;
-        for (Object typeParameterObject : methodDeclaration.typeParameters()) {
-            TypeParameter typeParameter = (TypeParameter) typeParameterObject;
+    private void writeTypeParameters(List typeParameters, ArrayList<WildcardType> wildcardTypes) {
+        write("<");
 
-            if (!outputTypeParameter)
-                write("<");
-            else write(", ");
+        Flag outputTypeParameter = new Flag();
+        forEach(typeParameters, (TypeParameter typeParameter) -> {
+            if (outputTypeParameter.isSet())
+                write(", ");
 
             write(typeParameter.getName().getIdentifier());
-            outputTypeParameter = true;
-        }
+            outputTypeParameter.set();
+        });
 
         for (WildcardType wildcardType : wildcardTypes) {
-            if (!outputTypeParameter)
-                write("<");
-            else write(", ");
+            if (outputTypeParameter.isSet())
+                write(", ");
 
             writeWildcardTypeSyntheticName(wildcardTypes, wildcardType);
-            outputTypeParameter = true;
+            outputTypeParameter.set();
         }
 
-        if (outputTypeParameter)
-            write(">");
+        write(">");
     }
 
     private void writeTypeConstraints(MethodDeclaration methodDeclaration, ArrayList<WildcardType> wildcardTypes) {

@@ -182,7 +182,7 @@ public class TypeDeclarationWriter extends SwiftASTNodeWriter {
     }
 
     private void writeNestedTypeDeclarationsForAccessLevel(List<TypeDeclaration> typeDeclarations, AccessLevel accessLevel) {
-        if (typeDeclarations.size() == 0)
+        if (typeDeclarations.length() == 0)
             return;
 
         // If we've already output something for the class, add a blank line separator
@@ -252,7 +252,7 @@ public class TypeDeclarationWriter extends SwiftASTNodeWriter {
     }
 
     private void writeMethodsForAccessLevel(List<MethodDeclaration> methodDeclarations, AccessLevel accessLevel) {
-        if (methodDeclarations.size() == 0)
+        if (methodDeclarations.length() == 0)
             return;
 
         // If we've already output something for the class, add a blank line separator

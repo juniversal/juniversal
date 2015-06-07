@@ -22,8 +22,6 @@
 
 package org.xuniversal.translator.core;
 
-import org.juniversal.translator.cplusplus.HierarchicalName;
-
 /**
  * @author Bret Johnson
  * @since 7/20/2014 6:45 PM
@@ -95,13 +93,13 @@ public abstract class TargetProfile {
 
     public abstract String getVoidType();
 
-    public abstract HierarchicalName getObjectType();
+    public abstract TypeName getObjectType();
 
-    public abstract HierarchicalName getStringType();
+    public abstract TypeName getStringType();
 
-    public abstract HierarchicalName getStringBuilderType();
+    public abstract TypeName getStringBuilderType();
 
-    public abstract HierarchicalName getArrayType();
+    public abstract TypeName getArrayType();
 
     public boolean isCSharp() { return false; }
 

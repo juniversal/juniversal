@@ -23,8 +23,10 @@
 package org.xuniversal.translator.cplusplus;
 
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.cplusplus.HierarchicalName;
+import org.juniversal.translator.core.TypeNames;
+import org.xuniversal.translator.core.HierarchicalName;
 import org.xuniversal.translator.core.TargetWriter;
+import org.xuniversal.translator.core.TypeName;
 
 import java.io.Writer;
 import java.util.ArrayList;
@@ -47,7 +49,7 @@ public class CPlusPlusTargetWriter extends TargetWriter {
         return targetProfile;
     }
 
-    public void writeHeaderFileStart(HierarchicalName typeName) {
+    public void writeHeaderFileStart(TypeName typeName) {
         String multiIncludeDefine = getMultiIncludeDefine(typeName);
 
         writeln("#ifndef " + multiIncludeDefine);
@@ -55,32 +57,32 @@ public class CPlusPlusTargetWriter extends TargetWriter {
         writeln();
     }
 
-    public void writeHeaderFileEnd(HierarchicalName typeName) {
+    public void writeHeaderFileEnd(TypeName typeName) {
         writeln("#endif // " + getMultiIncludeDefine(typeName));
     }
 
-    private String getMultiIncludeDefine(HierarchicalName typeName) {
+    private String getMultiIncludeDefine(TypeName typeName) {
         return typeName.toString("_").toUpperCase() + "_H";
     }
 
-    public void writeIncludesForHeaderFile(Set<HierarchicalName> names) {
+    public void writeIncludesForHeaderFile(TypeNames names) {
         writeln("#include \"xuniversal/xuniversal.h\"");
         writeIncludes(null, names);
     }
 
-    public void writeIncludesForSourceFile(HierarchicalName typeName, Set<HierarchicalName> names) {
+    public void writeIncludesForSourceFile(TypeName typeName, TypeNames names) {
         writeln("#include \"first.h\"");
         writeIncludes(typeName, names);
     }
 
-    public void writeIncludes(@Nullable HierarchicalName typeNameForSourceFile, Set<HierarchicalName> names) {
+    public void writeIncludes(@Nullable TypeName typeNameForSourceFile, TypeNames typeNames) {
         // For a source file, the first include should be for the type/class defined in that file
         if (typeNameForSourceFile != null)
             writeInclude(typeNameForSourceFile);
 
-        for (HierarchicalName name : sortNames(names)) {
+        for (TypeName name : typeNames.sort()) {
             // "std" namespace names don't need to be #included
-            if (name.qualifierIs("std"))
+            if (name.packageIs("std"))
                 continue;
 
             // The xuniversal Object, String, and Array types are predefined in xuniversal.h and don't need to be
@@ -115,8 +117,8 @@ public class CPlusPlusTargetWriter extends TargetWriter {
         return sortedNames;
     }
 
-    public void writeInclude(HierarchicalName name) {
-        writeln("#include \"" + name.toString("/") + ".h\"");
+    public void writeInclude(TypeName typeName) {
+        writeln("#include \"" + typeName.toString("/") + ".h\"");
     }
 
     public void writeUsing(HierarchicalName name) {

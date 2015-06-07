@@ -20,11 +20,10 @@
  * THE SOFTWARE.
  */
 
-package org.juniversal.translator.cplusplus;
-
-import org.juniversal.translator.core.JUniversalException;
+package org.xuniversal.translator.core;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -45,6 +44,10 @@ public class HierarchicalName implements Comparable<HierarchicalName> {
         for (String component : nameComponents) {
             components.add(component);
         }
+    }
+
+    public HierarchicalName(List<String> nameComponents) {
+        components.addAll(nameComponents);
     }
 
     public HierarchicalName(String[] nameQualifierComponents, String name) {
@@ -98,6 +101,13 @@ public class HierarchicalName implements Comparable<HierarchicalName> {
         return components.get(index);
     }
 
+    public String getFirstComponent() {
+        int componentsSize = components.size();
+        if (componentsSize == 0)
+            throw new RuntimeException("HierarchicalName is empty; it doesn't have a first component");
+        else return getComponent(0);
+    }
+
     public String getLastComponent() {
         int componentsSize = components.size();
         if (componentsSize == 0)
@@ -105,12 +115,8 @@ public class HierarchicalName implements Comparable<HierarchicalName> {
         else return getComponent(componentsSize - 1);
     }
 
-    public int size() {
+    public int length() {
         return components.size();
-    }
-
-    public void addComponent(String component) {
-        components.add(component);
     }
 
     public boolean isEmpty() {
@@ -126,11 +132,12 @@ public class HierarchicalName implements Comparable<HierarchicalName> {
         if (components.size() == 0)
             throw new RuntimeException("HierarchicalName is empty; it doesn't have a qualifier");
 
-        HierarchicalName qualifier = new HierarchicalName();
-        for (int i = 0; i < components.size() - 1; ++i)
-            qualifier.addComponent(getComponent(i));
+        int qualifierSize = components.size() - 1;
+        ArrayList<String> qualifierComponents = new ArrayList<String>(qualifierSize);
+        for (int i = 0; i < qualifierSize; ++i)
+            qualifierComponents.add(components.get(i));
 
-        return qualifier;
+        return new HierarchicalName(qualifierComponents);
     }
 
     /**
@@ -172,5 +179,9 @@ public class HierarchicalName implements Comparable<HierarchicalName> {
             first = false;
         }
         return buffer.toString();
+    }
+
+    @Override public String toString() {
+        return toString(".");
     }
 }

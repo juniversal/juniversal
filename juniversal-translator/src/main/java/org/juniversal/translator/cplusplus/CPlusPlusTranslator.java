@@ -23,10 +23,9 @@
 package org.juniversal.translator.cplusplus;
 
 import org.eclipse.jdt.core.dom.*;
-import org.juniversal.translator.core.ASTNodeWriter;
-import org.juniversal.translator.core.JUniversalException;
-import org.juniversal.translator.core.JavaSourceFile;
-import org.juniversal.translator.core.Translator;
+import org.jetbrains.annotations.Nullable;
+import org.juniversal.translator.core.*;
+import org.xuniversal.translator.core.TypeName;
 import org.xuniversal.translator.cplusplus.CPlusPlusTargetProfile;
 import org.xuniversal.translator.cplusplus.CPlusPlusTargetWriter;
 import org.xuniversal.translator.cplusplus.ReferenceKind;
@@ -37,7 +36,6 @@ import java.io.Writer;
 import java.util.List;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
-import static org.juniversal.translator.core.ASTUtil.toHierarchicalName;
 
 public class CPlusPlusTranslator extends Translator {
     private CPlusPlusTargetProfile targetProfile = new CPlusPlusTargetProfile();
@@ -91,7 +89,7 @@ public class CPlusPlusTranslator extends Translator {
             context.setTypeDeclaration(typeDeclaration);
 
             writeRootNode(astNode);
-            
+
             return writer.getBuffer().toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -158,9 +156,9 @@ public class CPlusPlusTranslator extends Translator {
                     //addNameNeedingImport(getTargetProfile().getSharedPtrType());
                     //addNameNeedingImport(getTargetProfile().getArrayType());
 
-                    write("std::shared_ptr<xu::Array<");
+                    write("std::shared_ptr< xuniv::Array<");
                     writeTypeReference(type, ReferenceKind.SharedPtr);
-                    write(">>");
+                    write("> >");
 
                     copySpaceAndComments();
                     match("...");
@@ -203,14 +201,26 @@ public class CPlusPlusTranslator extends Translator {
             @Override
             public void write(SimpleType simpleType) {
                 Name name = simpleType.getName();
-                if (name instanceof QualifiedName) {
-                    QualifiedName qualifiedName = (QualifiedName) name;
 
-                    write(toHierarchicalName(qualifiedName).toString("::"));
-                    setPositionToEndOfNode(qualifiedName);
-                } else {
-                    SimpleName simpleName = (SimpleName) name;
-                    matchAndWrite(simpleName.getIdentifier(), getTypeTargetHierarchicalName(simpleName).toString("::"));
+                @Nullable ITypeBinding typeBinding = simpleType.resolveBinding();
+                if (typeBinding == null) {
+                    write(name.getFullyQualifiedName());
+                    setPositionToEndOfNode(name);
+                } else if (typeBinding.isTypeVariable())
+                    matchAndWrite(((SimpleName) name).getIdentifier());
+                else {
+                    TypeName typeName = getTargetType(typeBinding);
+
+                    getContext().addReferencedTargetType(typeName);
+
+                    if (name instanceof QualifiedName ||
+                        !typeName.inSamePackageAs(getContext().getOutermostTypeName())) {
+                        write(typeName.toString("::"));
+                        setPositionToEndOfNode(name);
+                    } else {
+                        SimpleName simpleName = (SimpleName) name;
+                        matchAndWrite(simpleName.getIdentifier(), typeName.getType().getLastComponent());
+                    }
                 }
             }
         });
@@ -221,9 +231,9 @@ public class CPlusPlusTranslator extends Translator {
             public void write(ArrayType arrayType) {
                 int dimensions = arrayType.getDimensions();
 
-                //addNameNeedingImport(getTargetProfile().getArrayType());
+                //getContext().getReferencedTypes().add(getTargetProfile().getArrayType());
                 for (int i = 0; i < dimensions; i++)
-                    write("xu::Array<");
+                    write("xuniv::Array<");
 
                 writeTypeReference(arrayType.getElementType(), ReferenceKind.SharedPtr);
 
@@ -258,7 +268,7 @@ public class CPlusPlusTranslator extends Translator {
 
                 matchAndWrite("{");
 
-                // TODO: Check that number of expressions matches array size (I think, as I think C# requires exact number and Java allows less)
+                // TODO: Check that number of expressions matches array length (I think, as I think C# requires exact number and Java allows less)
                 writeCommaDelimitedNodes(arrayInitializer.expressions());
                 // TODO: Skip extra trailing commas here
 
@@ -409,8 +419,7 @@ public class CPlusPlusTranslator extends Translator {
                     fieldAccess.getName().getIdentifier().equals("length")) {
                     write("length()");
                     setPositionToEndOfNode(fieldAccess.getName());
-                }
-                else writeNode(fieldAccess.getName());
+                } else writeNode(fieldAccess.getName());
             }
         });
 
@@ -423,10 +432,29 @@ public class CPlusPlusTranslator extends Translator {
                 // Here assume that a QualifiedName refers to field access; if it refers to a type,
                 // the caller should catch that case itself and ensure it never gets here
 
-                writeNode(qualifiedName.getQualifier());
-                copySpaceAndComments();
+                IBinding binding = qualifiedName.resolveBinding();
 
-                matchAndWrite(".", "->");
+                boolean wroteQualifier = false;
+                @Nullable ITypeBinding typeBinding = qualifiedName.getQualifier().resolveTypeBinding();
+                if (typeBinding != null) {
+                    TypeName typeName = getTargetType(typeBinding);
+                    getContext().addReferencedTargetType(typeName);
+
+                    if (!typeName.inSamePackageAs(getContext().getOutermostTypeName())) {
+                        write(typeName.toString("::"));
+                        setPositionToEndOfNode(qualifiedName.getQualifier());
+                        wroteQualifier = true;
+
+                    }
+                }
+
+                if (! wroteQualifier)
+                    writeNode(qualifiedName.getQualifier());
+
+                copySpaceAndComments();
+                if (binding.getKind() == IBinding.VARIABLE && (binding.getModifiers() & Modifier.STATIC) != 0)
+                    matchAndWrite(".", "::");
+                else matchAndWrite(".", "->");
 
                 // If accessing array "length" property (which can either look like a FieldAccess or QualifiedName),
                 // turn that into a method call in C++
@@ -434,8 +462,7 @@ public class CPlusPlusTranslator extends Translator {
                     qualifiedName.getName().getIdentifier().equals("length")) {
                     write("length()");
                     setPositionToEndOfNode(qualifiedName);
-                }
-                else writeNode(qualifiedName.getName());
+                } else writeNode(qualifiedName.getName());
             }
         });
 
@@ -467,11 +494,34 @@ public class CPlusPlusTranslator extends Translator {
             }
         });
 
+        replaceWriter(ArrayAccess.class, new CommonASTNodeWriter<ArrayAccess>(this) {
+            @Override
+            public void write(ArrayAccess arrayAccess) {
+                writeNode(arrayAccess.getArray());
+
+                copySpaceAndComments();
+                matchAndWrite("[", "->at(");
+
+                copySpaceAndComments();
+                writeNode(arrayAccess.getIndex());
+
+                copySpaceAndComments();
+                matchAndWrite("]", ")");
+            }
+        });
+
         // Number literal
         addWriter(NumberLiteral.class, new CPlusPlusASTNodeWriter<NumberLiteral>(this) {
             @Override
             public void write(NumberLiteral numberLiteral) {
-                matchAndWrite(numberLiteral.getToken());
+                String literal = numberLiteral.getToken();
+                if (literal.endsWith("L"))
+                    literal = literal.replace("L", "LL");
+                else if (literal.endsWith("l"))
+                    literal = literal.replace("l", "LL");
+
+                // TODO: Error out if floating point literal ends in f or F and doesn't contain a "." or "e"/"E" (that is, "12f" is a valid floating point literal in Java but you need to say 12.0f in C++).
+                matchAndWrite(numberLiteral.getToken(), literal);
             }
         });
 
@@ -505,7 +555,7 @@ public class CPlusPlusTranslator extends Translator {
             @Override
             public void write(StringLiteral stringLiteral) {
                 //addNameNeedingImport(getTargetProfile().getMakeSharedFunction());
-                write("std::make_shared<String>(u" + stringLiteral.getEscapedValue() + ")");
+                write("xuniv::String::make(u" + stringLiteral.getEscapedValue() + ")");
                 match(stringLiteral.getEscapedValue());
             }
         });
@@ -524,8 +574,8 @@ public class CPlusPlusTranslator extends Translator {
         String boxedTargetTypeName = primitiveTypeNameToTargetName(typeBinding.getName());
 
         //getContext().addNameNeedingImport(getTargetProfile().getMakeSharedFunction());
-        //getContext().addNameNeedingImport(getTargetProfile().getBoxType());
-        getContext().write("std::make_shared<xu::Box<" + boxedTargetTypeName + ">>(");
+        getContext().addReferencedTargetType(getTargetProfile().getBoxType());
+        getContext().write("xuniv::Box<" + boxedTargetTypeName + ">::make(");
         visitor.write(expression);
         getContext().write(")");
     }
@@ -541,5 +591,4 @@ public class CPlusPlusTranslator extends Translator {
     @Override protected void writeUnboxedExpressionNode(Expression expression, ASTNodeWriter visitor) {
         super.writeUnboxedExpressionNode(expression, visitor);
     }
-
 }

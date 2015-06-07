@@ -23,19 +23,15 @@
 package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.cplusplus.HierarchicalName;
-import org.xuniversal.translator.core.SourceNotSupportedException;
-import org.xuniversal.translator.core.TargetProfile;
-import org.xuniversal.translator.core.TargetWriter;
+import org.xuniversal.translator.core.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static org.juniversal.translator.core.ASTUtil.forEach;
-import static org.juniversal.translator.core.ASTUtil.isAnnotation;
-import static org.juniversal.translator.core.ASTUtil.isFinal;
+import static org.juniversal.translator.core.ASTUtil.*;
 
 
 public abstract class ASTNodeWriter<T extends ASTNode> {
@@ -210,33 +206,47 @@ public abstract class ASTNodeWriter<T extends ASTNode> {
         write(string);
     }
 
-    public HierarchicalName getTypeTargetHierarchicalName(Name name) {
-        ITypeBinding typeBinding = name.resolveTypeBinding();
-        // TODO: Error out if can't resolve?
+    public TypeName getTargetType(ITypeBinding typeBinding) {
+        assert ! typeBinding.isParameterizedType() && ! typeBinding.isTypeVariable();
 
-        // Type variables don't need import
-        if (typeBinding.isTypeVariable())
-            return new HierarchicalName(typeBinding.getName());
+        // Get the ITypeBinding corresponding to the type declaration, not the type reference.   For one thing,
+        // this gets rid of any generic type parameter values for generic type references
+        typeBinding = typeBinding.getTypeDeclaration();
 
-        if (typeBinding.isGenericType() || typeBinding.isParameterizedType()) {
-            typeBinding = typeBinding.getErasure();
+/*
+        // If the TypeBinding is null then there must be a Java compile error, so just fall back to using the simple
+        // type name.   And for type variables, we don't change them in any way, just returning that
+        if (typeBinding == null || typeBinding.isTypeVariable()) {
+            return new TypeName(typeBinding.getName());
         }
+*/
 
         TargetProfile targetProfile = getTranslator().getTargetProfile();
 
-        HierarchicalName hierarchicalName;
         String qualifiedName = typeBinding.getQualifiedName();
         if (qualifiedName.equals("java.lang.Object"))
-            hierarchicalName = targetProfile.getObjectType();
+            return targetProfile.getObjectType();
         else if (qualifiedName.equals("java.lang.String"))
-            hierarchicalName = targetProfile.getStringType();
+            return targetProfile.getStringType();
         else if (qualifiedName.equals("java.lang.StringBuilder"))
-            hierarchicalName = targetProfile.getStringBuilderType();
+            return targetProfile.getStringBuilderType();
         else if (typeBinding.isArray())
-            hierarchicalName = targetProfile.getArrayType();
-        else hierarchicalName = new HierarchicalName(typeBinding.getPackage().getNameComponents(), typeBinding.getName());
+            return targetProfile.getArrayType();
 
-        return hierarchicalName;
+        // If the type is an inner class, get its fully nested name
+        ArrayList<String> nestedTypeName = new ArrayList<>();
+        ITypeBinding currType = typeBinding;
+        while (currType != null) {
+            nestedTypeName.add(0, currType.getName());
+            currType = currType.getDeclaringClass();
+        }
+
+        boolean found = false;
+        if (nestedTypeName.size() > 1)
+            found = true;
+
+        return new TypeName(new HierarchicalName(typeBinding.getPackage().getNameComponents()),
+                new HierarchicalName(nestedTypeName));
     }
 
     public void match(String match) {

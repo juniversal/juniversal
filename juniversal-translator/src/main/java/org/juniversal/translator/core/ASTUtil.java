@@ -24,7 +24,7 @@ package org.juniversal.translator.core;
 
 import org.eclipse.jdt.core.dom.*;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.cplusplus.HierarchicalName;
+import org.xuniversal.translator.core.HierarchicalName;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -48,7 +48,7 @@ public class ASTUtil {
 			filePathsList.add(file.getPath());
 		}
 
-		String[] filePaths = filePathsList.toArray(new String[filePathsList.size()]);
+		String[] filePaths = filePathsList.toArray(new String[filePathsList.length()]);
 
 		ASTParser parser = ASTParser.newParser(AST.JLS3);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
@@ -123,12 +123,13 @@ public class ASTUtil {
      * @return name as a HierarchicalName
      */
     public static HierarchicalName toHierarchicalName(@Nullable Name name) {
-        HierarchicalName hierarchicalName = new HierarchicalName();
-
-        if (name != null)
-            addNameToHierarchicalName(name, hierarchicalName);
-
-        return hierarchicalName;
+        if (name == null)
+            return new HierarchicalName();
+        else {
+            ArrayList<String> nameComponents = new ArrayList<>();
+            addNameToNameComponents(name, nameComponents);
+            return new HierarchicalName(nameComponents);
+        }
     }
 
     /**
@@ -150,15 +151,15 @@ public class ASTUtil {
                 getFirstTypeDeclaration(compilationUnit).getName().getIdentifier());
     }
 
-    private static void addNameToHierarchicalName(Name name, HierarchicalName hierarchicalName) {
+    private static void addNameToNameComponents(Name name, ArrayList<String> nameComponents) {
         if (name.isQualifiedName()) {
             QualifiedName qualifiedName = (QualifiedName) name;
 
-            addNameToHierarchicalName(qualifiedName.getQualifier(), hierarchicalName);
-            hierarchicalName.addComponent(qualifiedName.getName().getIdentifier());
+            addNameToNameComponents(qualifiedName.getQualifier(), nameComponents);
+            nameComponents.add(qualifiedName.getName().getIdentifier());
         } else {
             SimpleName simpleName = (SimpleName) name;
-            hierarchicalName.addComponent(simpleName.getIdentifier());
+            nameComponents.add(simpleName.getIdentifier());
         }
     }
 
@@ -263,7 +264,7 @@ public class ASTUtil {
     /**
      * For the given type reference, see if it uses type variable anywhere.   For example, T, ArrayList<T>, and
      * ArrayList<HashMap<String,T>> would all return true.
-     *
+     * <p/>
      * This method is used for C++ templates to include the "typename" keyword where needed.
      *
      * @param type type reference
@@ -276,9 +277,9 @@ public class ASTUtil {
 
     /**
      * For the given type reference, see if it uses type variable anywhere.   For example, T, ArrayList<T>, and
-     * ArrayList<HashMap<String,T>> would all return true.   Note that the ITypeBinding should be for a reference
-     * to a type, not the definition of the type.
-     *
+     * ArrayList<HashMap<String,T>> would all return true.   Note that the ITypeBinding should be for a reference to a
+     * type, not the definition of the type.
+     * <p/>
      * This method is used for C++ templates to include the "typename" keyword where needed.
      *
      * @param typeBinding type reference
@@ -417,6 +418,36 @@ public class ASTUtil {
             return false;
         @Nullable ITypeBinding binding = qualifiedName.getQualifier().resolveTypeBinding();
         return binding != null;
+    }
+
+    /**
+     * For a given type, get its outermost declaring class.   That is, if typeBinding corresponds to class C which is an
+     * inner class inside class B which is in turn an inner class inside class A, class A (the outermost class) is
+     * returned here.   This method can be used to get the compilation unit (e.g. mapping to a C++ header file) where
+     * the type is defined.
+     *
+     * @param typeBinding type in question
+     * @return outermost class that defines that type
+     */
+    public static ITypeBinding getOuterDeclaringType(ITypeBinding typeBinding) {
+        // TODO: Test all cases here
+        typeBinding = typeBinding.getTypeDeclaration();
+
+        @Nullable ITypeBinding declaringClassTypeBinding = typeBinding.getDeclaringClass();
+        while (declaringClassTypeBinding != null) {
+            typeBinding = declaringClassTypeBinding;
+            declaringClassTypeBinding = typeBinding.getDeclaringClass();
+        }
+        return typeBinding;
+    }
+
+    public static HierarchicalName getModuleHierarchicalName(ITypeBinding typeBinding) {
+        ITypeBinding outerDeclaringType = getOuterDeclaringType(typeBinding);
+        return new HierarchicalName(outerDeclaringType.getPackage().getNameComponents(), outerDeclaringType.getName());
+    }
+
+    public static HierarchicalName getPackageHierarchicalName(IPackageBinding packageBinding) {
+        return new HierarchicalName(packageBinding.getNameComponents());
     }
 
     /**

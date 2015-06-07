@@ -229,7 +229,7 @@ public class CSharpTranslator extends Translator {
 
                 matchAndWrite("{");
 
-                // TODO: Check that number of expressions matches array size (I think, as I think C# requires exact number and Java allows less)
+                // TODO: Check that number of expressions matches array length (I think, as I think C# requires exact number and Java allows less)
                 writeCommaDelimitedNodes(arrayInitializer.expressions());
                 // TODO: Skip extra trailing commas here
 

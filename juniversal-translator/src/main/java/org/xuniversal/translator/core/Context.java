@@ -22,26 +22,11 @@
 
 package org.xuniversal.translator.core;
 
-import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.WildcardType;
-import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.cplusplus.HierarchicalName;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-
 public abstract class Context {
     private String source;
     private SourceCopier sourceCopier;
     private int position;
     private boolean knowinglyProcessedTrailingSpaceAndComments = false;
-
-    private AbstractTypeDeclaration typeDeclaration;
-    private @Nullable Set<String> typeMethodNames = null;
-    private ArrayList<WildcardType> methodWildcardTypes = null;
     private boolean writingMethodImplementation;
 
     public Context(SourceFile sourceFile, TargetWriter targetWriter) {
@@ -81,7 +66,6 @@ public abstract class Context {
     public void setKnowinglyProcessedTrailingSpaceAndComments(boolean knowinglyProcessedTrailingSpaceAndComments) {
         this.knowinglyProcessedTrailingSpaceAndComments = knowinglyProcessedTrailingSpaceAndComments;
     }
-
 
 
     /**
@@ -283,49 +267,8 @@ public abstract class Context {
                                                        + "\n  when expected it to be positioned here or after:\n" + getPositionDescription(expectedPositionMin));
     }
 
-    public void throwSourceNotSupported(String baseMessage) {
-        throw new SourceNotSupportedException(baseMessage, getCurrentPositionDescription());
-    }
-
     public SourceNotSupportedException sourceNotSupported(String baseMessage) {
         return new SourceNotSupportedException(baseMessage, getCurrentPositionDescription());
-    }
-
-    public AbstractTypeDeclaration getTypeDeclaration() {
-        return typeDeclaration;
-    }
-
-    public Set<String> getTypeMethodNames() {
-        if (typeMethodNames != null)
-            return typeMethodNames;
-
-        typeMethodNames = new HashSet<>();
-
-        ITypeBinding typeBinding = typeDeclaration.resolveBinding();
-        while (typeBinding != null) {
-            for (IMethodBinding methodBinding : typeBinding.getDeclaredMethods()) {
-                typeMethodNames.add(methodBinding.getName());
-            }
-
-            typeBinding = typeBinding.getSuperclass();
-        }
-
-        return typeMethodNames;
-    }
-
-    public void setTypeDeclaration(AbstractTypeDeclaration typeDeclaration) {
-        if (typeDeclaration != this.typeDeclaration) {
-            this.typeDeclaration = typeDeclaration;
-            this.typeMethodNames = null;
-        }
-    }
-
-    public ArrayList<WildcardType> getMethodWildcardTypes() {
-        return methodWildcardTypes;
-    }
-
-    public void setMethodWildcardTypes(ArrayList<WildcardType> methodWildcardTypes) {
-        this.methodWildcardTypes = methodWildcardTypes;
     }
 
     public boolean isWritingMethodImplementation() {

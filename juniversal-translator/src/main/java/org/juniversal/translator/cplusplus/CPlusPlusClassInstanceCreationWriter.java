@@ -25,9 +25,11 @@ package org.juniversal.translator.cplusplus;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Type;
 import org.juniversal.translator.core.ClassInstanceCreationWriter;
 
 import static org.juniversal.translator.core.ASTUtil.forEach;
+import static org.juniversal.translator.core.ASTUtil.isType;
 
 
 public class CPlusPlusClassInstanceCreationWriter extends ClassInstanceCreationWriter {
@@ -54,5 +56,39 @@ public class CPlusPlusClassInstanceCreationWriter extends ClassInstanceCreationW
         writeNode(functionalMethod.getBody());
 
         setPositionToEndOfNode(classInstanceCreation);
+    }
+
+    @Override protected void writeNormalClassInstanceCreation(ClassInstanceCreation classInstanceCreation) {
+        Type type = classInstanceCreation.getType();
+
+        if (isType(type, "java.lang.String")) {
+            matchAndWrite("new", "xu::String::make_shared");
+            setPositionToEndOfNode(type);
+
+            skipSpaceAndComments();
+            matchAndWrite("(");
+
+            writeCommaDelimitedNodes(classInstanceCreation.arguments());
+
+            copySpaceAndComments();
+            matchAndWrite(")");
+        }
+        else {
+            matchAndWrite("new", "std::make_shared<");
+
+            skipSpaceAndComments();
+            writeNode(type);
+
+            skipSpaceAndComments();
+            write(">");
+
+            copySpaceAndComments();
+            matchAndWrite("(");
+
+            writeCommaDelimitedNodes(classInstanceCreation.arguments());
+
+            copySpaceAndComments();
+            matchAndWrite(")");
+        }
     }
 }

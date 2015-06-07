@@ -69,7 +69,7 @@ public class InfixExpressionWriter extends CPlusPlusASTNodeWriter<InfixExpressio
 		InfixExpression.Operator operator = infixExpression.getOperator();
 
 		if (operator == InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED) {
-			write("rightShiftUnsigned(");
+			write("xu::rightShiftUnsigned(");
             writeNode(infixExpression.getLeftOperand());
 
 			// Skip spaces before the >>> but if there's a newline (or comments) there, copy them

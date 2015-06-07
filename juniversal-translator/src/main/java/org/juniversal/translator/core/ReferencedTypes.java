@@ -25,7 +25,7 @@ package org.juniversal.translator.core;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.Type;
 import org.jetbrains.annotations.Nullable;
-import org.juniversal.translator.cplusplus.HierarchicalName;
+import org.xuniversal.translator.core.HierarchicalName;
 
 import java.util.HashSet;
 

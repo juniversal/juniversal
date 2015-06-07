@@ -22,9 +22,10 @@
 
 package org.xuniversal.translator.csharp;
 
-import org.eclipse.jdt.core.dom.PrimitiveType;
-import org.juniversal.translator.cplusplus.HierarchicalName;
+import org.xuniversal.translator.core.HierarchicalName;
+import org.xuniversal.translator.core.TypeName;
 import org.xuniversal.translator.core.TargetProfile;
+import org.xuniversal.translator.core.TypeName;
 
 /**
  * The CPPProfile class describes how the C++ should be generated.  Primarily this class gives
@@ -34,10 +35,10 @@ import org.xuniversal.translator.core.TargetProfile;
  * @author bretjohn
  */
 public class CSharpTargetProfile extends TargetProfile {
-    private static HierarchicalName objectType = new HierarchicalName("System", "Object");
-    private static HierarchicalName stringType = new HierarchicalName("System", "String");
-    private static HierarchicalName stringBuilderType = new HierarchicalName("System", "Text", "StringBuilder");
-    private static HierarchicalName arrayType = new HierarchicalName("System", "Array");
+    private static TypeName objectType = new TypeName("System", "Object");
+    private static TypeName stringType = new TypeName("System", "String");
+    private static TypeName stringBuilderType = new TypeName(new HierarchicalName("System", "Text"), "StringBuilder");
+    private static TypeName arrayType = new TypeName("System", "Array");
 
     @Override public String getInt8Type() {
         return "sbyte";
@@ -75,19 +76,19 @@ public class CSharpTargetProfile extends TargetProfile {
         return "void";
     }
 
-    @Override public HierarchicalName getObjectType() {
+    @Override public TypeName getObjectType() {
         return objectType;
     }
 
-    @Override public HierarchicalName getStringType() {
+    @Override public TypeName getStringType() {
         return stringType;
     }
 
-    @Override public HierarchicalName getStringBuilderType() {
+    @Override public TypeName getStringBuilderType() {
         return stringBuilderType;
     }
 
-    @Override public HierarchicalName getArrayType() {
+    @Override public TypeName getArrayType() {
         return arrayType;
     }
 }
